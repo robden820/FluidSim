@@ -105,3 +105,8 @@ source/.vs/FluidSim/v16/.suo
 *.ilk
 *.exe
 *.ipch
+source/FluidSim/App/FluidSim.dir/Debug/FluidSim.vcxproj.FileListAbsolute.txt
+*.stamp
+*.depend
+source/FluidSim/App/cmake_install.cmake
+source/x64/Debug/ZERO_CHECK/ZERO_CHECK.vcxproj.FileListAbsolute.txt
