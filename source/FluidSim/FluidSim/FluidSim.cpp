@@ -85,7 +85,7 @@ int main()
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Set up our shaders ~~~~~ */
 
-	Shader shader("D:/C++ Code/OpenGL/OpenGL/src/VertexShaders/vertex.txt", "D:/C++ Code/OpenGL/OpenGL/src/FragmentShaders/fragment.txt");
+	Shader shader("./FluidSim/vertex.txt", "./FluidSim/fragment.txt");
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Set up our triangle vertices ~~~~~ */
