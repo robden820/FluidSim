@@ -101,3 +101,7 @@ source/.vs/FluidSim/v16/.suo
 *.db-shm
 *.db-wal
 *.opendb
+*.obj
+*.ilk
+*.exe
+*.ipch
