@@ -91,3 +91,13 @@ source/CMakeFiles/3.22.0/CMakeDetermineCompilerABI_CXX.bin
 source/CMakeFiles/3.22.0/CMakeDetermineCompilerABI_C.bin
 source/CMakeFiles/3.22.0/CMakeCXXCompiler.cmake
 source/CMakeFiles/3.22.0/CMakeCCompiler.cmake
+*.user
+*.tlog
+*.pdb
+*.log
+*.recipe
+source/.vs/FluidSim/v16/.suo
+*.db
+*.db-shm
+*.db-wal
+*.opendb
