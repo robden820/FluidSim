@@ -4,16 +4,19 @@
 #include "FluidSim.h"
 
 #include <iostream>
+#include <memory>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include "Camera.h"
-#include "Shader.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Application.h"
+#include "Camera.h"
+#include "Shader.h"
+
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -35,8 +38,14 @@ float lastX = SCREEN_WIDTH / 2;
 float lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 
+Application* gApplication = 0;
+
+
 int main()
 {
+
+	gApplication = new Application();
+
 	// Initialize the glfw library
 	glfwInit();
 
@@ -81,11 +90,6 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-	/* ~~~~~ Set up our shaders ~~~~~ */
-
-	Shader shader("../FluidSim/App/Shaders/vertex.txt", "../FluidSim/App/Shaders/fragment.txt");
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Set up our triangle vertices ~~~~~ */
@@ -146,41 +150,21 @@ int main()
 		0, 2, 3    // Triangle two
 	};
 
-	glm::vec3 cubePositions[] = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
-		glm::vec3(2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3(1.3f, -2.0f, -2.5f),
-		glm::vec3(1.5f,  2.0f, -2.5f),
-		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
-
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-	/* ~~~~~ Set up some transformations ~~~~~ */
-
-//	glm::mat4 trans = glm::mat4(1.0f);   // Create our 4x4 identity matrix that will store the transform.
-//	trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));   // Apply a rotation of 90 degrees (converted to radians) around the z axis. NOTE:: axis of rotation must be a unit vector.
-//	trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));   // Apply a scale of 0.5 on each axis.
-
-	/* ~~~~~ We can set up our MVP matrices here ~~~~~ */
-
-//	glm::mat4 model = glm::mat4(1.0f);
-//	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-	//glm::mat4 view = glm::mat4(1.0f);
-	//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));   // NOTE: moving our camera along +ve z is the same as moving the scene in -ve z. OpenGL uses a right handed system.
-
-//	glm::mat4 projection;
-	// The first value here is the viewing angle of our camera, the second is the aspect ratio. The last two define our near and far clip planes.
-//	projection = glm::perspective(glm::radians(40.0f), (float)(SCREEN_WIDTH / SCREEN_HEIGHT), 0.1f, 100.0f);
-
 	/* ~~~~~ Here we can set up our camera ~~~~~ */
 	Camera cam(glm::vec3(0.0f, 0.0f, 3.0f));
 	camera = cam;
+
+	/* ~~~~~ Set up our shaders ~~~~~ */
+	Shader shader("../FluidSim/App/Shaders/vertex.txt", "../FluidSim/App/Shaders/fragment.txt");
+
+	/* ~~~~~ Set those in the application ~~~~~ */
+	gApplication->SetShader(std::make_shared<Shader>(shader));
+	gApplication->SetCamera(std::make_shared<Camera>(camera));
+
+	gApplication->SetScreenWidth((float)SCREEN_WIDTH);
+	gApplication->SetScreenHeight((float)SCREEN_HEIGHT);
+
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Set up our vertex array and buffer objects ~~~~~ */
 
@@ -232,16 +216,16 @@ int main()
 
 	// We want to enable depth testing using the z-buffer.
 	glEnable(GL_DEPTH_TEST);
+	// Enable face culling. Do we want this? TO_DO
+	//glEnable(GL_CULL_FACE);
+
+
+	gApplication->Initialize();
 
 	// The render loop. Checks if the widnow has been told to close.
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
-
-		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
 		// Any rendering commands go here.
 		// ~~~ RENDERING ~~~ //
 
@@ -250,51 +234,17 @@ int main()
 		// Clears the specified buffer with the color we just set. We also want to clear our depth buffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Assign the shader program we want to use.
-		shader.Use();
-
-		// Let our cube spin
-		//glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-
-		// Rotate our camera around the origin.
-		//const float radius = 10.0f;
-		//float cameraX = sin(glfwGetTime()) * radius;
-		//float cameraZ = cos(glfwGetTime()) * radius;
-
-		glm::mat4 view = glm::lookAt(camera.Position, camera.Position + camera.Forward, camera.Up);
-
-		// Update or camera target based on mouse input and position based on keyboard input. 
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
-		//glm::mat4 view = camera.GetViewMatrix();
-
-		// Set our MVP matrices in our vertex shader.
-
-		//shader.SetMatrix("model", model);
-		shader.SetMatrix("view", view);
-		shader.SetMatrix("projection", projection);
-
 		// Bind our vertex array object.
 		glBindVertexArray(VAO);
-		// Now draw our elements.
-		// - First parameter is the mode we want to draw in.
-		// - The second is the number of elements, here we have 6 vertices.
-		// - The third is the data type of our indices.
-		// - The last is the EBO offset.
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);  // -- AS TUTORIAL
-		//glDrawArrays(GL_TRIANGLES, 0, 36);  // Drawing triangles next to each other using glDrawArrays. Requires extra vertices in vertex array.
 
-		for (int i = 0; i < 10; i++)
+		// Render the application
+		if (gApplication != 0)
 		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-
-			model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-
-			shader.SetMatrix("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			// Do we need to do this every frame?
+			glBindVertexArray(VAO);
+			float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+			gApplication->Render(aspect);
 		}
-
 
 		// ~~~~~~~~~~~~~~~~~ //
 
@@ -313,6 +263,13 @@ int main()
 
 	// Properly clean up all of GLFW's allocated resources.
 	glfwTerminate();
+
+	// Clear application resources.
+	if (gApplication != 0)
+	{
+		std::cout << "Expected application to be null on exit\n";
+		delete gApplication;
+	}
 	return 0;
 }
 
