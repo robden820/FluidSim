@@ -20,7 +20,6 @@ class DrawFluid
 
 		DrawFluid(std::shared_ptr<Fluid> inFluid);
 
-
 		void FromFluid(std::shared_ptr<Fluid> inFluid);
 
 		void UpdateOpenGLBuffers();

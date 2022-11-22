@@ -6,6 +6,8 @@
 #include "Shader.h"
 #include "DrawFluid.h"
 
+#include "Sphere.h"
+
 class Application
 {
 public:
@@ -25,6 +27,8 @@ public:
 
 private:
 
+	void InitGLObjects();
+
 	std::shared_ptr<Camera> mCamera;
 	std::shared_ptr<Shader> mShader;
 
@@ -34,4 +38,10 @@ private:
 	DrawFluid mDrawFluid;
 
 	Fluid mFluid;
+
+	Sphere mSphere; // Contains vertex & index information to draw particles.
+
+	unsigned int VBO;
+	unsigned int VAO;
+	unsigned int EBO;
 };

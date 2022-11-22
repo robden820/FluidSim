@@ -8,6 +8,7 @@ DrawFluid::DrawFluid(std::shared_ptr<Fluid> inFluid)
 
 void DrawFluid::FromFluid(std::shared_ptr<Fluid> inFluid)
 {
+	mParticlePoints.clear();
 	mParticlePoints.reserve(inFluid.get()->GetNumParticles());
 
 	std::vector<Particle>::iterator itr;

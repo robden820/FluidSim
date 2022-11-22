@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <memory>
+#include <chrono>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -15,8 +16,6 @@
 #include "Application.h"
 #include "Camera.h"
 #include "Shader.h"
-
-
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -87,72 +86,13 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	// Tell glfw we want our cursor to be captured for input. We also want the scroll wheel as well.
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+//	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-	/* ~~~~~ Set up our triangle vertices ~~~~~ */
-
-	float vertices[] = {
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,
-
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
-
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 1.0f
-	};
-
-	float verticesWithColor[] = {
-		// positions         // colors
-		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-	};
-
-	unsigned int indices[] = {
-		0, 1, 2,   // Triangle one
-		0, 2, 3    // Triangle two
-	};
-
-	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Here we can set up our camera ~~~~~ */
-	Camera cam(glm::vec3(0.0f, 0.0f, 3.0f));
+	Camera cam(glm::vec3(0.0f, 0.0f, 40.0f));
 	camera = cam;
 
 	/* ~~~~~ Set up our shaders ~~~~~ */
@@ -166,53 +106,6 @@ int main()
 	gApplication->SetScreenHeight((float)SCREEN_HEIGHT);
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-	/* ~~~~~ Set up our vertex array and buffer objects ~~~~~ */
-
-	// Generate a buffer object with a unique ID.
-	// We also need to assign a vertex array object, and vertex attribute calls can be stored inside the VAO. This saves us having to make lots of calls the set up our vertex attributes.
-	// This is used in conjunction with our VBO.
-	unsigned int VBO;
-	unsigned int VAO;
-	unsigned int EBO;
-	glGenVertexArrays(1, &VAO); // Can generate multiple array and buffer objects at the same time.
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	// Bind our vertex array object first.
-	glBindVertexArray(VAO);
-
-	// Bind our buffer object to the array buffer type. This is the type needed for a vertex buffer object.
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	// Now any buffer calls we make to GL_ARRAY_BUFFER will be used with the currently bound buffer, which is our VBO.
-	// This function copies our vertex data into the buffer.
-	// GL_STATIC_DRAW means we are going to set the data once and use it multiple times.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// Similarly for our element buffer object and our indices
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// We can specify any input we want to a vertex shader, so we need to tell openGl how to interpret our vertex data.
-	// - The first parameter specifies which vertex attribute in the shader we want to configure. In the shader we used layout(location=0), so we pass in 0 to match that attribute.
-	// - The second parameter is the size of our attribute. Each vertex is a vec3, so the size of the vertex attribute is 3.
-	// - The third parameter is the type of data we are using.
-	// - The fourth specifies if we want to normalize the data.
-	// - The fifth argument is the stide of the data, and is the space between consecutive pieces of data. Since each vertex is separated by 3 floats, we note that as the stride here.
-	// - The final argument is the offset of where the data begins in the buffer, which for us is 0.
-
-	// Deals with out position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// Deal with our color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // Our color data is offset by 3 floats.
-	glEnableVertexAttribArray(1);
-
-	// We can now safely unbind our VAO and VBO.
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	// - WARNING - we cannot unbind the EBO while the VAO is active as the bound EBO is stored in the VAO.
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	// We want to enable depth testing using the z-buffer.
 	glEnable(GL_DEPTH_TEST);
@@ -222,10 +115,14 @@ int main()
 
 	gApplication->Initialize();
 
+	// Timing 
+	float deltaTime = 0.0f;   // Time between previous and current frame
+	float lastFrame = 0.0f;   // Time of the last frame.
+
 	// The render loop. Checks if the widnow has been told to close.
 	while (!glfwWindowShouldClose(window))
 	{
-		processInput(window);
+		//processInput(window);
 		// Any rendering commands go here.
 		// ~~~ RENDERING ~~~ //
 
@@ -234,14 +131,16 @@ int main()
 		// Clears the specified buffer with the color we just set. We also want to clear our depth buffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Bind our vertex array object.
-		glBindVertexArray(VAO);
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 
 		// Render the application
 		if (gApplication != 0)
 		{
+			gApplication->Update(deltaTime);
 			// Do we need to do this every frame?
-			glBindVertexArray(VAO);
+//			glBindVertexArray(VAO);
 			float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
 			gApplication->Render(aspect);
 		}
@@ -257,9 +156,7 @@ int main()
 	}
 
 	// De-allocate all of our resources.
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
+	gApplication->Shutdown();
 
 	// Properly clean up all of GLFW's allocated resources.
 	glfwTerminate();

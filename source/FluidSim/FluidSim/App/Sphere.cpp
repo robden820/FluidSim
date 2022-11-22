@@ -2,20 +2,73 @@
 
 #define GOLDEN_RATIO 1.61803398875
 
-float* Sphere::GetVertices()
+Sphere::Sphere()
 {
-	float vertices[] =
-	{
-		-0.5f, -0.5f, -0.5f, // left bottom back
-		0.5f, -0.5f, -0.5f,  // right bottom back
-		-0.5f, 0.5f, -0.5f,  // left top back
-		0.5f, 0.5f, -0.5f,   // right top back
-		-0.5f, -0.5f, 0.5f, // left bottom front
-		0.5f, -0.5f, 0.5f,  // right bottom front
-		-0.5f, 0.5f, 0.5f,  // left top front
-		0.5f, 0.5f, 0.5f,   // right top front
+	mRadius = 1.0f;
 
+	mVertices =
+	{
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+
+		-0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+		-0.5f, -0.5f, -0.5f,
+
+		-0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		 0.5f,  0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f
 	};
 
-	return vertices;
+	mNumVertices = mVertices.size();
+
+	mIndices =
+	{
+		0, 1, 2,
+		0, 2, 3
+	};
+	
+}
+
+void Sphere::SetRadius(float inRadius)
+{
+	float invCurrentRadius = 1.0f / mRadius;
+	mRadius = inRadius;
+
+	for (int v = 0; v < mNumVertices; v++)
+	{
+		mVertices[v] *= invCurrentRadius;
+		mVertices[v] *= mRadius;
+	}
 }
