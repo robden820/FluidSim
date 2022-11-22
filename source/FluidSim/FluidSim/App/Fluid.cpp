@@ -1,17 +1,18 @@
 #include "Fluid.h"
+#include <iostream>
 
 Fluid::Fluid(float numParticles, float gridResolution)
 {
 	mParticles.reserve(numParticles);
 
-	for (int x = -5; x < 5; x++)
+	for (int x = 0; x < 10; x++)
 	{
 		for (int y = 0; y < 10; y++)
 		{
 			for (int z = 0; z < 10; z++)
 			{
-				glm::vec3 position(x, y, z);
-				glm::vec3 velocity(x, y, z);
+				glm::vec3 position(rand() % 20 - 10, rand() % 20, rand() % 20 - 10);
+				glm::vec3 velocity(rand() % 100 * 0.01f, rand() % 100 * 0.01f, rand() % 100 * 0.01f);
 
 				Particle particle(position, velocity);
 
@@ -22,6 +23,9 @@ Fluid::Fluid(float numParticles, float gridResolution)
 
 	Domain d(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(10.0f, 10.0f, 10.0f));
 	mDomain = d;
+
+	ContactResolver resolver(100);
+	mContactResolver = resolver;
 }
 
 Fluid::Fluid(std::vector<Particle> inParticles, std::vector<GridNode> inGridNodes)
@@ -41,6 +45,14 @@ void Fluid::StepSimulation(float deltaTime)
 			ClampParticleToDomain(mParticles[p]);
 		}
 	}
+
+	CheckParticleCollisions();
+	if (mContacts.size() > 0)
+	{
+		mContactResolver.ResolveContacts(mContacts.data(), mContacts.size(), deltaTime);
+		mContacts.clear();
+	}
+	
 }
 
 void Fluid::ClampParticleToDomain(Particle& particle)
@@ -83,4 +95,22 @@ void Fluid::ClampParticleToDomain(Particle& particle)
 
 	particle.SetPosition(particlePos);
 	particle.SetVelocity(particleVel);
+}
+
+void Fluid::CheckParticleCollisions()
+{
+	for (int p1 = 0; p1 < GetNumParticles(); p1++)
+	{
+		for (int p2 = p1 + 1; p2 < GetNumParticles(); p2++)
+		{
+			glm::vec3 dist = mParticles[p1].GetPosition() - mParticles[p2].GetPosition();
+			
+			if (glm::length(dist) < mParticles[p1].GetRadius() + mParticles[p2].GetRadius())
+			{
+				Contact contact(mParticles[p1], mParticles[p2], 1.0f, mParticles[p1].GetRadius() + mParticles[p2].GetRadius() - glm::length(dist) , glm::normalize(dist));
+
+				mContacts.push_back(contact);
+			}
+		}
+	}
 }
