@@ -13,6 +13,10 @@ class Domain
 
 		bool IsPointInDomain(glm::vec3 point);
 
+		float GetLength() const { return mLength; }
+		float GetWidth() const { return mWidth; }
+		float GetHeight() const { return mHeight; }
+
 		float GetBottom() { return mBottom; }
 		float GetTop() { return mTop; }
 		float GetLeft() { return mLeft; }

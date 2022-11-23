@@ -1,8 +1,9 @@
 #include "Fluid.h"
 #include <iostream>
 
-Fluid::Fluid(float numParticles, float gridResolution)
+Fluid::Fluid(float numParticles)
 {
+	// Initialize particles
 	mParticles.reserve(numParticles);
 
 	for (int x = 0; x < 10; x++)
@@ -11,48 +12,56 @@ Fluid::Fluid(float numParticles, float gridResolution)
 		{
 			for (int z = 0; z < 10; z++)
 			{
-				glm::vec3 position(rand() % 20 - 10, rand() % 20, rand() % 20 - 10);
-				glm::vec3 velocity(rand() % 100 * 0.01f, rand() % 100 * 0.01f, rand() % 100 * 0.01f);
+				glm::vec3 position(x, y, z);
 
-				Particle particle(position, velocity);
+				Particle particle(position);
 
 				mParticles.push_back(particle);
 			}
 		}
 	}
-
-	Domain d(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(10.0f, 10.0f, 10.0f));
+	
+	// Initialize simulation Domain.
+	Domain d(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(5.0f, 5.0f, 5.0f));
 	mDomain = d;
 
-	ContactResolver resolver(100);
-	mContactResolver = resolver;
-}
+	// Initialize Grid.
+	Grid g(mDomain, 0.5f);
+	mGrid = g;
 
-Fluid::Fluid(std::vector<Particle> inParticles, std::vector<GridNode> inGridNodes)
-{
-	mParticles = inParticles;
-	mGridNodes = inGridNodes;
+
+//	ContactResolver resolver(100);
+//	mContactResolver = resolver;
 }
 
 void Fluid::StepSimulation(float deltaTime)
 {
+
+	// Transfer particle velocities to grid.
+	InterpolateToGrid();
+
+	// Update grid velocities.
+	mGrid.StepGrid(deltaTime);
+
+	// Interpolate velocities back to particles.
+	InterpolateFromGrid();
+
+	// Advect particles.
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
+		
 		mParticles[p].StepParticle(deltaTime);
-
+	}
+	
+	
+	// Ensure particles stay inside the simulation domain.
+	for (int p = 0; p < GetNumParticles(); p++)
+	{
 		if (!mDomain.IsPointInDomain(mParticles[p].GetPosition()))
 		{
 			ClampParticleToDomain(mParticles[p]);
 		}
 	}
-
-	CheckParticleCollisions();
-	if (mContacts.size() > 0)
-	{
-		mContactResolver.ResolveContacts(mContacts.data(), mContacts.size(), deltaTime);
-		mContacts.clear();
-	}
-	
 }
 
 void Fluid::ClampParticleToDomain(Particle& particle)
@@ -63,54 +72,104 @@ void Fluid::ClampParticleToDomain(Particle& particle)
 	if (particlePos.x < mDomain.GetLeft())
 	{
 		particlePos.x = mDomain.GetLeft();
-		particleVel.x *= -1.0f;
+		particleVel.x = 0.0f;
 	}
 	else if (particlePos.x > mDomain.GetRight())
 	{
 		particlePos.x = mDomain.GetRight();
-		particleVel.x *= -1.0f;
+		particleVel.x = 0.0f;
 	}
 
 	if (particlePos.y < mDomain.GetBottom())
 	{
 		particlePos.y = mDomain.GetBottom();
-		particleVel.y *= -1.0f;
+		particleVel.y = 0.0f;
 	}
 	else if (particlePos.y > mDomain.GetTop())
 	{
 		particlePos.y = mDomain.GetTop();
-		particleVel.y *= -1.0f;
+		particleVel.y = 0.0f;
 	}
 
 	if (particlePos.z < mDomain.GetBack())
 	{
 		particlePos.z = mDomain.GetBack();
-		particleVel.z *= -1.0f;
+		particleVel.z = 0.0f;
 	}
 	else if (particlePos.z > mDomain.GetFront())
 	{
 		particlePos.z = mDomain.GetFront();
-		particleVel.z *= -1.0f;
+		particleVel.z = 0.0f;
 	}
 
 	particle.SetPosition(particlePos);
 	particle.SetVelocity(particleVel);
 }
 
-void Fluid::CheckParticleCollisions()
+void Fluid::InterpolateToGrid()
 {
-	for (int p1 = 0; p1 < GetNumParticles(); p1++)
+	for (int n = 0; n < mGrid.GetNumGridNodes(); n++)
 	{
-		for (int p2 = p1 + 1; p2 < GetNumParticles(); p2++)
-		{
-			glm::vec3 dist = mParticles[p1].GetPosition() - mParticles[p2].GetPosition();
-			
-			if (glm::length(dist) < mParticles[p1].GetRadius() + mParticles[p2].GetRadius())
-			{
-				Contact contact(mParticles[p1], mParticles[p2], 1.0f, mParticles[p1].GetRadius() + mParticles[p2].GetRadius() - glm::length(dist) , glm::normalize(dist));
+		Particle& particle = ClosestParticleToNode(mGrid.GetGridNode(n));
 
-				mContacts.push_back(contact);
-			}
+		mGrid.GetGridNode(n).SetVelocity(particle.GetVelocity());
+	}
+}
+
+void Fluid::InterpolateFromGrid()
+{
+	for (int p = 0; p < GetNumParticles(); p++)
+	{
+		GridNode& node = ClosestNodeToParticle(mParticles[p]);
+
+		mParticles[p].SetVelocity(node.GetVelocity());
+	}
+}
+
+GridNode& Fluid::ClosestNodeToParticle(Particle& particle)
+{
+	glm::vec3 particlePos = particle.GetPosition();
+
+	float shortestDist = 100.0f;
+
+	GridNode& closestNode = mGrid.GetGridNode(0);
+
+	for (int n = 0; n < mGrid.GetNumGridNodes(); n++)
+	{
+		glm::vec3 pToG = mGrid.GetGridNode(n).GetPosition() - particlePos;
+
+		float distSqr = (pToG.x * pToG.x) + (pToG.y * pToG.y) + (pToG.z * pToG.z);
+
+		if (shortestDist < distSqr)
+		{
+			shortestDist = distSqr;
+			closestNode = mGrid.GetGridNode(n);
 		}
 	}
+
+	return closestNode;
+}
+
+Particle& Fluid::ClosestParticleToNode(GridNode& node)
+{
+	glm::vec3 nodePos = node.GetPosition();
+
+	float shortestDist = 100.0f;
+
+	Particle& closestParticle = mParticles[0];
+
+	for (int p = 0; p < GetNumParticles(); p++)
+	{
+		glm::vec3 GToP = mParticles[p].GetPosition() - nodePos;
+
+		float distSqr = (GToP.x * GToP.x) + (GToP.y * GToP.y) + (GToP.z * GToP.z);
+
+		if (shortestDist < distSqr)
+		{
+			shortestDist = distSqr;
+			closestParticle = mParticles[p];
+		}
+	}
+
+	return closestParticle;
 }

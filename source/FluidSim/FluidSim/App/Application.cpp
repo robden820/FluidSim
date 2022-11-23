@@ -2,7 +2,7 @@
 
 void Application::Initialize()
 {
-	Fluid fluid(100, 1);
+	Fluid fluid(100);
 	mFluid = fluid;
 
 	DrawFluid drawFluid(std::make_shared<Fluid>(mFluid));
@@ -17,55 +17,6 @@ void Application::Initialize()
 
 void Application::InitGLObjects()
 {
-	float vertices[] = {
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-
-		-0.5f, -0.5f,  0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f, -0.5f,
-
-		-0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f
-	};
-
-	unsigned int indices[] = {
-		0, 1, 2,   // Triangle one
-		0, 2, 3    // Triangle two
-	};
-
 	// Generate a buffer object with a unique ID.
 	// We also need to assign a vertex array object, and vertex attribute calls can be stored inside the VAO. This saves us having to make lots of calls the set up our vertex attributes.
 	// This is used in conjunction with our VBO.
@@ -85,12 +36,9 @@ void Application::InitGLObjects()
 	// GL_STATIC_DRAW means we are going to set the data once and use it multiple times.
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mSphere.GetVertices().get()->size(), mSphere.GetVertices()->data(), GL_STATIC_DRAW);
 
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
 	// Similarly for our element buffer object and our indices
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mSphere.GetVertices().get()->size(), mSphere.GetIndices()->data(), GL_STATIC_DRAW);
-//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// We can specify any input we want to a vertex shader, so we need to tell openGl how to interpret our vertex data.
 	// - The first parameter specifies which vertex attribute in the shader we want to configure. In the shader we used layout(location=0), so we pass in 0 to match that attribute.

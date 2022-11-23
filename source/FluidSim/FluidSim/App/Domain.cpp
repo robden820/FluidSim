@@ -5,11 +5,9 @@ Domain::Domain(glm::vec3 inCenter, glm::vec3 inExtent)
 	mCenter = inCenter;
 	mExtent = inExtent;
 
-	glm::vec3 halfDimensions = inExtent - inCenter;
-
-	mLength = fabsf(halfDimensions.z * 2.0f);
-	mWidth = fabsf(halfDimensions.x * 2.0f);
-	mHeight = fabsf(halfDimensions.y * 2.0f);
+	mLength = fabsf(mExtent.z * 2.0f);
+	mWidth = fabsf(mExtent.x * 2.0f);
+	mHeight = fabsf(mExtent.y * 2.0f);
 
 	CalculateSides();
 }

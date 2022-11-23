@@ -9,11 +9,11 @@ DrawFluid::DrawFluid(std::shared_ptr<Fluid> inFluid)
 void DrawFluid::FromFluid(std::shared_ptr<Fluid> inFluid)
 {
 	mParticlePoints.clear();
-	mParticlePoints.reserve(inFluid.get()->GetNumParticles());
+	mParticlePoints.reserve(inFluid->GetNumParticles());
 
 	std::vector<Particle>::iterator itr;
 
-	for (itr = inFluid.get()->mParticles.begin(); itr < inFluid.get()->mParticles.end(); itr++)
+	for (itr = inFluid->GetParticles().begin(); itr < inFluid->GetParticles().end(); itr++)
 	{
 		mParticlePoints.push_back(itr->GetPosition());
 	}

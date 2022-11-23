@@ -1,6 +1,6 @@
 #include "Particle.h"
 
-Particle::Particle(glm::vec3 inPosition, glm::vec3 inVelocity, float inMass, float inRadius)
+Particle::Particle(const glm::vec3& inPosition, const glm::vec3& inVelocity, float inMass, float inRadius)
 {
 	mPosition = inPosition;
 	mVelocity = inVelocity;

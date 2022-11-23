@@ -8,7 +8,7 @@
 #include "Particle.h"
 #include "GridNode.h"
 #include "Domain.h"
-#include "ContactResolver.h"
+#include "Grid.h"
 
 class Fluid
 {
@@ -16,25 +16,26 @@ class Fluid
 		Fluid() = default;
 		~Fluid() = default;
 
-		Fluid(float numParticles, float gridResolution);
-		Fluid(std::vector<Particle> inParticles, std::vector<GridNode> inGridNodes);
+		Fluid(float numParticles);
 
 		void StepSimulation(float deltaTime);
 
+		std::vector<Particle>& GetParticles() { return mParticles; }
 		void SetParticles(std::vector<Particle> inParticles) { mParticles = inParticles; }
-		void SetGridNodes(std::vector<GridNode> inGridNodes) { mGridNodes = inGridNodes; }
-
 		int GetNumParticles() { return mParticles.size(); }
 
 		void ClampParticleToDomain(Particle& particle);
-
-		void CheckParticleCollisions();
 	
+	private:
+
+		void InterpolateToGrid();
+		void InterpolateFromGrid();
+		
+		GridNode& ClosestNodeToParticle(Particle& particle);
+		Particle& ClosestParticleToNode(GridNode& node);
+
 		std::vector<Particle> mParticles;
-		std::vector<GridNode> mGridNodes;
-
+		Grid mGrid;
+		
 		Domain mDomain;
-
-		std::vector<Contact> mContacts;
-		ContactResolver mContactResolver;
 };
