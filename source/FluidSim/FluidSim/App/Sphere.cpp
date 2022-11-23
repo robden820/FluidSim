@@ -1,7 +1,5 @@
 #include "Sphere.h"
 
-#define GOLDEN_RATIO 1.61803398875
-
 Sphere::Sphere()
 {
 	mRadius = 1.0f;

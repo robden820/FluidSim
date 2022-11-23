@@ -8,7 +8,7 @@ class GridNode
 		GridNode() = default;
 		~GridNode() = default;
 
-		GridNode(glm::vec3 inPosition);
+		GridNode(const glm::vec3& inPosition);
 
 		const glm::vec3& GetPosition() { return mPosition; }
 

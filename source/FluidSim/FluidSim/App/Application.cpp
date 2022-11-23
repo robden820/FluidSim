@@ -5,7 +5,7 @@ void Application::Initialize()
 	Fluid fluid(100);
 	mFluid = fluid;
 
-	DrawFluid drawFluid(std::make_shared<Fluid>(mFluid));
+	DrawFluid drawFluid(mFluid);
 	mDrawFluid = drawFluid;
 
 	Sphere s;
@@ -34,11 +34,11 @@ void Application::InitGLObjects()
 	// Now any buffer calls we make to GL_ARRAY_BUFFER will be used with the currently bound buffer, which is our VBO.
 	// This function copies our vertex data into the buffer.
 	// GL_STATIC_DRAW means we are going to set the data once and use it multiple times.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mSphere.GetVertices().get()->size(), mSphere.GetVertices()->data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mSphere.GetVertices().size(), mSphere.GetVertices().data(), GL_STATIC_DRAW);
 
 	// Similarly for our element buffer object and our indices
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mSphere.GetVertices().get()->size(), mSphere.GetIndices()->data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mSphere.GetVertices().size(), mSphere.GetIndices().data(), GL_STATIC_DRAW);
 
 	// We can specify any input we want to a vertex shader, so we need to tell openGl how to interpret our vertex data.
 	// - The first parameter specifies which vertex attribute in the shader we want to configure. In the shader we used layout(location=0), so we pass in 0 to match that attribute.
@@ -75,7 +75,7 @@ void Application::Update(float deltaTime)
 {
 	mFluid.StepSimulation(deltaTime);
 
-	mDrawFluid.FromFluid(std::make_shared<Fluid>(mFluid));
+	mDrawFluid.FromFluid(mFluid);
 }
 
 void Application::Render(float inAspectRatio)

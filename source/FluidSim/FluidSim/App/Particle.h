@@ -12,17 +12,17 @@ class Particle
 
 		void StepParticle(float deltaTime);
 
-		const glm::vec3& GetPosition() { return mPosition; }
+		const glm::vec3& GetPosition() const { return mPosition; }
 		void SetPosition(glm::vec3 inPos) { mPosition = inPos; }
 
-		const glm::vec3& GetVelocity() { return mVelocity; }
+		const glm::vec3& GetVelocity() const { return mVelocity; }
 		void SetVelocity(const glm::vec3& inVel) { mVelocity = inVel; }
 
-		const glm::vec3& GetAcceleration() { return mAcceleration; }
+		const glm::vec3& GetAcceleration() const { return mAcceleration; }
 		void SetAcceleration(const glm::vec3& inAcc) { mAcceleration = inAcc; }
 
-		float GetMass() { return mMass; }
-		float GetRadius() { return mRadius; }
+		const float GetMass() const { return mMass; }
+		const float GetRadius() const{ return mRadius; }
 
 		void ApplyForce(const glm::vec3& inForce) { mForceAccumulator += inForce; }
 

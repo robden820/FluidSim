@@ -10,8 +10,8 @@ class Sphere
 		Sphere();
 		~Sphere() = default;
 
-		std::shared_ptr<std::vector<float>> GetVertices() { return std::make_shared<std::vector<float>>(mVertices); }
-		std::shared_ptr<std::vector<unsigned int>> GetIndices() {return std::make_shared<std::vector<unsigned int>>(mIndices); }
+		const std::vector<float>& GetVertices() { return mVertices; }
+		const std::vector<unsigned int>& GetIndices() {return mIndices; }
 
 		void SetRadius(float inRadius);
 

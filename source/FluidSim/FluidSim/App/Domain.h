@@ -6,12 +6,12 @@ class Domain
 {
 	public:
 		Domain() = default;
-		Domain(glm::vec3 inCenter, glm::vec3 inExtent);
-		Domain(glm::vec3 inCenter, float inLength, float inWidth, float inHeight);
+		Domain(const glm::vec3& inCenter, const glm::vec3& inExtent);
+		Domain(const glm::vec3& inCenter, float inLength, float inWidth, float inHeight);
 
 		~Domain() = default;
 
-		bool IsPointInDomain(glm::vec3 point);
+		bool IsPointInDomain(const glm::vec3& point);
 
 		float GetLength() const { return mLength; }
 		float GetWidth() const { return mWidth; }

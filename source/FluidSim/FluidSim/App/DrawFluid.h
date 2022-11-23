@@ -18,9 +18,9 @@ class DrawFluid
 		DrawFluid() = default;
 		~DrawFluid() = default;
 
-		DrawFluid(std::shared_ptr<Fluid> inFluid);
+		DrawFluid(const Fluid& inFluid);
 
-		void FromFluid(std::shared_ptr<Fluid> inFluid);
+		void FromFluid(const Fluid& inFluid);
 
 		void UpdateOpenGLBuffers();
 		
