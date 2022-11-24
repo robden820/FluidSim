@@ -56,6 +56,7 @@ void Grid::StepGrid(float deltaTime)
 			for (int z = 0; z < mLength; z++)
 			{
 				int index = z + y * mLength + x * mHeight;
+
 				int numNeighbours = 0;
 
 				glm::vec3 velocity(0.0f, 0.0f, 0.0f);

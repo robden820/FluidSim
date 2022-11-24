@@ -37,14 +37,8 @@ float lastX = SCREEN_WIDTH / 2;
 float lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 
-Application* gApplication = 0;
-
-
 int main()
 {
-
-	gApplication = new Application();
-
 	// Initialize the glfw library
 	glfwInit();
 
@@ -99,11 +93,10 @@ int main()
 	Shader shader("../FluidSim/App/Shaders/vertex.txt", "../FluidSim/App/Shaders/fragment.txt");
 
 	/* ~~~~~ Set those in the application ~~~~~ */
-	gApplication->SetShader(std::make_shared<Shader>(shader));
-	gApplication->SetCamera(std::make_shared<Camera>(camera));
+	Application gApplication(camera, shader);
 
-	gApplication->SetScreenWidth((float)SCREEN_WIDTH);
-	gApplication->SetScreenHeight((float)SCREEN_HEIGHT);
+	gApplication.SetScreenWidth((float)SCREEN_WIDTH);
+	gApplication.SetScreenHeight((float)SCREEN_HEIGHT);
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -113,7 +106,7 @@ int main()
 	//glEnable(GL_CULL_FACE);
 
 
-	gApplication->Initialize();
+	gApplication.Initialize();
 
 	// Timing 
 	float deltaTime = 0.0f;   // Time between previous and current frame
@@ -133,7 +126,7 @@ int main()
 
 		iteration++;
 
-		//processInput(window);
+		processInput(window);
 		// Any rendering commands go here.
 		// ~~~ RENDERING ~~~ //
 
@@ -145,14 +138,11 @@ int main()
 		
 
 		// Render the application
-		if (gApplication != 0)
-		{
-			gApplication->Update(deltaTime);
-			// Do we need to do this every frame?
-//			glBindVertexArray(VAO);
-			float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-			gApplication->Render(aspect);
-		}
+		gApplication.Update(1.0f / 24.0f);
+		// Do we need to do this every frame?
+//		glBindVertexArray(VAO);
+		float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+		gApplication.Render(aspect);
 
 		// ~~~~~~~~~~~~~~~~~ //
 
@@ -165,17 +155,11 @@ int main()
 	}
 
 	// De-allocate all of our resources.
-	gApplication->Shutdown();
+	gApplication.Shutdown();
 
 	// Properly clean up all of GLFW's allocated resources.
 	glfwTerminate();
 
-	// Clear application resources.
-	if (gApplication != 0)
-	{
-		std::cout << "Expected application to be null on exit\n";
-		delete gApplication;
-	}
 	return 0;
 }
 

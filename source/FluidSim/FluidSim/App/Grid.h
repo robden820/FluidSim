@@ -18,8 +18,8 @@ public:
 	void StepGrid(float deltaTime);
 
 	GridNode& GetGridNode(int index) { return mGridNodes[index]; }
-	std::vector<GridNode>& GetGridNodes() { return mGridNodes; }
-	int GetNumGridNodes() { return mGridNodes.size(); }
+	const std::vector<GridNode>& GetGridNodes() const { return mGridNodes; }
+	int GetNumGridNodes() const { return mGridNodes.size(); }
 
 private:
 
@@ -31,7 +31,6 @@ private:
 
 	float mCellSize;
 
-	// 'Double buffer' grid nodes
 	std::vector<GridNode> mGridNodes;
 	std::vector<GridNode> mGridNodesTemp;
 };

@@ -21,7 +21,11 @@ class Fluid
 		void StepSimulation(float deltaTime);
 
 		const std::vector<Particle>& GetParticles() const { return mParticles; }
+		const Particle& GetParticle(int index) const { return mParticles[index]; }
 		int GetNumParticles() const { return mParticles.size(); }
+
+		const Domain& GetDomain() const { return mDomain; }
+		const Grid& GetGrid() const { return mGrid; }
 
 		void ClampParticleToDomain(Particle& particle);
 	

@@ -1,16 +1,25 @@
 #include "Application.h"
 
+Application::Application(Camera& inCamera, Shader& inShader)
+	: mCamera(inCamera), mShader(inShader)
+{
+	mShader.Use();
+}
+
 void Application::Initialize()
 {
 	Fluid fluid(100);
 	mFluid = fluid;
 
 	DrawFluid drawFluid(mFluid);
-	mDrawFluid = drawFluid;
+	mDrawFluid = drawFluid;	
+
+	VoxelFluid voxelFluid(mFluid, 1.0f);
+	mVoxelFluid = voxelFluid;
 
 	Sphere s;
 	mSphere = s;
-	mSphere.SetRadius(0.1f);
+//	mSphere.SetRadius(0.1f);
 
 	InitGLObjects();
 }
@@ -65,10 +74,10 @@ void Application::InitGLObjects()
 	//glBindVertexArray(VAO);
 }
 
-void Application::SetShader(std::shared_ptr<Shader> inShader)
+void Application::SetShader(Shader& inShader)
 {
 	mShader = inShader;
-	mShader.get()->Use();
+	mShader.Use();
 }
 
 void Application::Update(float deltaTime)
@@ -76,26 +85,47 @@ void Application::Update(float deltaTime)
 	mFluid.StepSimulation(deltaTime);
 
 	mDrawFluid.FromFluid(mFluid);
+
+	mVoxelFluid.UpdateVoxelStates(mFluid);
 }
 
 void Application::Render(float inAspectRatio)
 {
-	glm::mat4 projection = glm::perspective(glm::radians(mCamera.get()->Zoom), mScreenWidth / mScreenHeight, 0.1f, 100.0f);
-	glm::mat4 view = glm::lookAt(mCamera.get()->Position, mCamera.get()->Position + mCamera.get()->Forward, mCamera.get()->Up);
+	glm::mat4 projection = glm::perspective(glm::radians(mCamera.Zoom), mScreenWidth / mScreenHeight, 0.1f, 100.0f);
+	glm::mat4 view = glm::lookAt(mCamera.Position, mCamera.Position + mCamera.Forward, mCamera.Up);
 	glm::mat4 mvp = projection * view; // No model
 
 
-	mShader.get()->SetMatrix("view", view);
-	mShader.get()->SetMatrix("projection", projection);
+	mShader.SetMatrix("view", view);
+	mShader.SetMatrix("projection", projection);
 
+	mShader.SetVector("color", glm::vec3(1.0f, 0.0f, 0.0f));
+	
 	for (int p = 0; p < mDrawFluid.mParticlePoints.size(); p++)
 	{
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, mDrawFluid.mParticlePoints[p]);
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
 
-		mShader->SetMatrix("model", model);
-
+		mShader.SetMatrix("model", model);
+		
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+	
+	mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
+
+	for (int v = 0; v < mVoxelFluid.GetVoxelCenters().size(); v++)
+	{
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, mVoxelFluid.GetVoxelCenter(v));
+
+		mShader.SetMatrix("model", model);
+
+		if (mVoxelFluid.GetVoxelState(v))
+		{
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		
 	}
 }
 

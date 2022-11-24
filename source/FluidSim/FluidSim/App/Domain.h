@@ -13,16 +13,19 @@ class Domain
 
 		bool IsPointInDomain(const glm::vec3& point);
 
+		const glm::vec3& GetCenter() const { return mCenter; }
+		const glm::vec3& GetExtent() const { return mExtent; }
+
 		float GetLength() const { return mLength; }
 		float GetWidth() const { return mWidth; }
 		float GetHeight() const { return mHeight; }
 
-		float GetBottom() { return mBottom; }
-		float GetTop() { return mTop; }
-		float GetLeft() { return mLeft; }
-		float GetRight() { return mRight; }
-		float GetFront() { return mFront; }
-		float GetBack() { return mBack; }
+		float GetBottom() const { return mBottom; }
+		float GetTop() const { return mTop; }
+		float GetLeft() const { return mLeft; }
+		float GetRight() const { return mRight; }
+		float GetFront() const { return mFront; }
+		float GetBack() const { return mBack; }
 
 	private:
 		void CalculateSides();

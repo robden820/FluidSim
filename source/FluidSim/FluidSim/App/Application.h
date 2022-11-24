@@ -5,13 +5,14 @@
 #include "Camera.h"
 #include "Shader.h"
 #include "DrawFluid.h"
+#include "VoxelFluid.h"
 
 #include "Sphere.h"
 
 class Application
 {
 public:
-	Application() = default;
+	Application(Camera& inCamera, Shader& inShader);
 	~Application() = default;
 
 	void Initialize();
@@ -19,8 +20,8 @@ public:
 	void Render(float aspectRatio);
 	void Shutdown();
 
-	void SetCamera(std::shared_ptr<Camera> inCamera) { mCamera = inCamera; }
-	void SetShader(std::shared_ptr<Shader> inShader);
+	void SetCamera(Camera& inCamera) { mCamera = inCamera; }
+	void SetShader(Shader& inShader);
 
 	void SetScreenWidth(float inWidth) { mScreenWidth = inWidth; }
 	void SetScreenHeight(float inHeight) { mScreenHeight = inHeight; }
@@ -29,13 +30,14 @@ private:
 
 	void InitGLObjects();
 
-	std::shared_ptr<Camera> mCamera;
-	std::shared_ptr<Shader> mShader;
+	Camera& mCamera;
+	Shader& mShader;
 
 	float mScreenWidth;
 	float mScreenHeight;
 
 	DrawFluid mDrawFluid;
+	VoxelFluid mVoxelFluid;
 
 	Fluid mFluid;
 

@@ -129,6 +129,11 @@ void Shader::SetFloat(const std::string& name, float value) const
 	glUniform1f(glGetUniformLocation(programID, name.c_str()), value);
 }
 
+void Shader::SetVector(const std::string& name, glm::vec3 value) const
+{
+	glUniform3f(glGetUniformLocation(programID, name.c_str()), value.x, value.y, value.z);
+}
+
 void Shader::SetMatrix(const std::string& name, glm::mat4 value) const
 {
 	glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));   // Specify that we are sending a single matrix and that we aren't using the transpose.

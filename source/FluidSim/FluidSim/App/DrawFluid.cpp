@@ -11,11 +11,11 @@ void DrawFluid::FromFluid(const Fluid& inFluid)
 	mParticlePoints.clear();
 	mParticlePoints.reserve(inFluid.GetNumParticles());
 
-	std::vector<Particle>::const_iterator itr;
+	std::vector<Particle>::const_iterator pItr;
 
-	for (itr = inFluid.GetParticles().begin(); itr < inFluid.GetParticles().end(); ++itr)
+	for (pItr = inFluid.GetParticles().begin(); pItr < inFluid.GetParticles().end(); ++pItr)
 	{
-		mParticlePoints.push_back(itr->GetPosition());
+		mParticlePoints.push_back(pItr->GetPosition());
 	}
 }
 
