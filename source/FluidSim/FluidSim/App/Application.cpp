@@ -111,7 +111,7 @@ void Application::Render(float inAspectRatio)
 		
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
-	
+
 	mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
 
 	for (int v = 0; v < mVoxelFluid.GetVoxelCenters().size(); v++)
@@ -123,9 +123,8 @@ void Application::Render(float inAspectRatio)
 
 		if (mVoxelFluid.GetVoxelState(v))
 		{
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDrawArrays(GL_LINES, 0, 36);
 		}
-		
 	}
 }
 
