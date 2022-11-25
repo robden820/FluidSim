@@ -1,5 +1,7 @@
 #include "VoxelFluid.h"
 
+#include <iostream>
+
 VoxelFluid::VoxelFluid(const Fluid& inFluid, float inVoxelSize)
 {
 	mVoxelSize = inVoxelSize;
@@ -57,7 +59,9 @@ void VoxelFluid::UpdateVoxelStates(const Fluid& inFluid)
 		{
 			for (int z = 0; z < mNumVoxelsLength; z++)
 			{
-				int index = z + y * mNumVoxelsLength + x * mNumVoxelsHeight;
+				int index = z + y * mNumVoxelsLength + x * mNumVoxelsHeight * mNumVoxelsLength;
+
+				//std::cout << index << "\n";
 
 				mFluidVoxel[index] = false;
 
@@ -67,7 +71,7 @@ void VoxelFluid::UpdateVoxelStates(const Fluid& inFluid)
 
 					float dist = vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
 
-					if (dist < mVoxelSize)
+					if (dist < sqrt(3))
 					{
 						mFluidVoxel[index] = true;
 						break;

@@ -55,7 +55,7 @@ void Grid::StepGrid(float deltaTime)
 		{
 			for (int z = 0; z < mLength; z++)
 			{
-				int index = z + y * mLength + x * mHeight;
+				int index = z + y * mLength + x * mHeight * mLength;
 
 				int numNeighbours = 0;
 
@@ -100,8 +100,11 @@ void Grid::StepGrid(float deltaTime)
 					numNeighbours++;
 				}
 
+				// For now all particle velocities are weighted equally.
 				velocity *= 1 / numNeighbours;
-				//velocity += glm::vec3(0.f, -9.8f, 0.f);
+
+				// Add external forces.
+				velocity += glm::vec3(0.0f, -9.8f, 0.0f) * deltaTime;
 
 				mGridNodesTemp[index].SetVelocity(velocity);
 			}
