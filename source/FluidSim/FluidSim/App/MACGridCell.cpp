@@ -4,7 +4,8 @@
 
 MACGridCell::MACGridCell()
 {
-	mNumFaces = 6;
+	// Only need to store velocities on 3 positive axis faces, as neighbours will store velocities of other faces.
+	mNumFaces = 3;
 
 	mPressure = 1.f;
 

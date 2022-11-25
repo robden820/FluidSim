@@ -6,28 +6,26 @@
 
 class MACGridCell
 {
-	enum Face
-	{
-		eLEFT = 0,
-		eRIGHT = 1,
-		eTOP = 2,
-		eBOTTOM = 3,
-		eBACK = 4,
-		eFRONT = 5,
-		eNONE = 0
-	};
+public:
+		enum Face
+		{
+			eRIGHT = 0, // x axis
+			eTOP = 1,   // y axis
+			eFRONT = 2, // z axis
+			eNONE = 3
+		};
 
-	public:
 		MACGridCell();
 		~MACGridCell() = default;
 
-		void SetFaceValidity(Face face, bool isValid) { mFaceValid[face] = isValid; }
+		void SetFaceValidity(int inFace, bool isValid) { mFaceValid[inFace] = isValid; }
 
 		const float GetPressure() const { return mPressure; }
 		void SetPressure(float inPressure) { mPressure = inPressure; }
 
 		const std::vector<glm::vec3>& GetVelocities() const { return mFaceVelocities; }
-		const glm::vec3& GetVelocity(Face face) const { return mFaceVelocities[face]; }
+		const glm::vec3& GetVelocity(Face inFace) const { return mFaceVelocities[inFace]; }
+		void SetVelocity(Face inFace, const glm::vec3& inVelocity) { mFaceVelocities[inFace] = inVelocity; }
 
 		void EnforceZeroDivergence();
 
