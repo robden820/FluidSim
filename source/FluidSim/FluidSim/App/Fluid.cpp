@@ -12,7 +12,7 @@ Fluid::Fluid(float numParticles)
 		{
 			for (int z = 0; z < 10; z++)
 			{
-				glm::vec3 position(x, y, z);
+				glm::vec3 position((x + 2.5) * 0.5f, (y + 5) * 0.5f, (z + 2.5) * 0.5f);
 
 				Particle particle(position);
 
