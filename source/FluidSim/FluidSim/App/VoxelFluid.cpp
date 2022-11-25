@@ -71,7 +71,7 @@ void VoxelFluid::UpdateVoxelStates(const Fluid& inFluid)
 
 					float dist = vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
 
-					if (dist < sqrt(3))
+					if (dist < mVoxelSize)
 					{
 						mFluidVoxel[index] = true;
 						break;
