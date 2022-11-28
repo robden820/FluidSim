@@ -11,7 +11,7 @@ public:
 	{
 		eFLUID = 0,
 		eSOLID = 1,
-		eNONE = 2
+		eEMPTY = 2
 	};
 
 	enum Face

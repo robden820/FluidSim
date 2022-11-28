@@ -1,4 +1,8 @@
-# include "MACGrid.h"
+#include "MACGrid.h"
+
+#include <iostream>
+
+#define TOLERANCE 0.000001
 
 MACGrid::MACGrid(const Fluid& inFluid, float inGridResolution)
 {
@@ -56,7 +60,7 @@ void MACGrid::Update(float deltaTime)
 {
 	UpdateCellVelocity(deltaTime);
 
-	UpdateCellPressure(deltaTime);
+	UpdateCellPressure(deltaTime, 200);
 }
 
 void MACGrid::UpdateCellVelocity(float deltaTime)
@@ -156,7 +160,7 @@ void MACGrid::CalculateCellDivergence(float deltaTime)
 	}
 }
 
-void MACGrid::UpdateCellPressure(float deltaTime)
+void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 {
 	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
 
@@ -171,6 +175,99 @@ void MACGrid::UpdateCellPressure(float deltaTime)
 	Az.assign(numCells, 0.0f);
 
 	InitializeLinearSystem(deltaTime, Adiagonal, Ax, Ay, Az);
+
+	// Preconditioned Conjugate Gradient.
+
+	std::vector<float> newPressure;
+	newPressure.assign(numCells, 0.0f);
+
+	std::vector<float> residuals;
+	residuals.assign(numCells, 0.0f);
+
+	std::vector<float> z;
+	z.assign(numCells, 0.0f);
+
+	ApplyPreconditioner(z, residuals);
+
+	std::vector<float> search = z;
+
+	float theta = 0.0f;
+	for (int i = 0; i < numCells; i++)
+	{
+		theta += z[i] * residuals[i];
+	}
+
+	int iteration;
+	bool converged = false;
+
+	for (iteration = 0; iteration < maxIterations; iteration++)
+	{
+		// z = ApplyMatrix(A, search);
+
+		float phi = 0.0f;
+		for (int i = 0; i < numCells; i++)
+		{
+			phi += z[i] * search[i];
+		}
+
+		float alpha = theta / phi;
+
+		for (int i = 0; i < numCells; i++)
+		{
+			newPressure[i] += alpha * search[i];
+			residuals[i] -= alpha * z[i];
+		}
+
+		float maxResidual = 0.0f;
+
+		for (int index = 0; index < numCells; index++)
+		{
+			if (residuals[index] > maxResidual)
+			{
+				maxResidual = residuals[index];
+			}
+		}
+
+		if (maxResidual < TOLERANCE)
+		{
+			converged = true;
+		}
+
+		ApplyPreconditioner(z, residuals);
+
+		float thetaNew = 0.0f;
+		for (int i = 0; i < numCells; i++)
+		{
+			thetaNew += z[i] * residuals[i];
+		}
+
+		float beta = thetaNew / theta;
+
+		for (int i = 0; i < numCells; i++)
+		{
+			search[i] = z[i] + beta * search[i];
+		}
+
+		theta = thetaNew;
+
+		if (converged)
+		{
+			break;
+		}
+	}
+
+	if (iteration == maxIterations)
+	{
+		std::cout << "WARNING: MAX NUMBER OF ITERATIONS REACHED IN PRESSURE SOLVE" << "\n";
+		std::cout << "Check pressure solver for potential issues, MACGrid.cpp" << "\n";
+	}
+
+	// Set pressure
+
+	for (int i = 0; i < numCells; i++)
+	{
+		mGridCells[i].SetPressure(newPressure[i]);
+	}
 }
 
 void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
@@ -204,7 +301,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 						inDiag[index] += scale;
 						inX[index] -= scale;
 					}
-					else if (mGridCells[neighbourRight].GetCellType() == MACGridCell::eNONE)
+					else if (mGridCells[neighbourRight].GetCellType() == MACGridCell::eEMPTY)
 					{
 						inDiag[index] += scale;
 					}
@@ -229,7 +326,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 						inDiag[index] += scale;
 						inY[index] -= scale;
 					}
-					else if (mGridCells[neighbourTop].GetCellType() == MACGridCell::eNONE)
+					else if (mGridCells[neighbourTop].GetCellType() == MACGridCell::eEMPTY)
 					{
 						inDiag[index] += scale;
 					}
@@ -254,7 +351,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 						inDiag[index] += scale;
 						inZ[index] -= scale;
 					}
-					else if (mGridCells[neighbourFront].GetCellType() == MACGridCell::eNONE)
+					else if (mGridCells[neighbourFront].GetCellType() == MACGridCell::eEMPTY)
 					{
 						inDiag[index] += scale;
 					}
@@ -264,4 +361,9 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 			}
 		}
 	}
+}
+
+void MACGrid::ApplyPreconditioner(std::vector<float>& inAux, std::vector<float>& inRes)
+{
+
 }
