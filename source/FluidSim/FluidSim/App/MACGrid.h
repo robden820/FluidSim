@@ -22,6 +22,7 @@ private:
 
 	void InitializeFromDomain(const Domain& inDomain, float inGridResolution);
 
+	void UpdateCellDivergence(float deltaTime);
 	void UpdateCellPressure(float deltaTime);
 	void UpdateCellVelocity(float deltaTime);
 
@@ -29,6 +30,10 @@ private:
 	float mNumCellLength;
 	float mNumCellHeight;
 
+	float mCellSize;    // deltaX
+	float mInvCellSize; // 1 / deltaX
+
 	std::vector<MACGridCell> mGridCells;
 	std::vector<glm::vec3> mCellCenters;
+	std::vector<glm::vec3> mCellDivergence;
 };
