@@ -111,7 +111,7 @@ void MACGrid::UpdateCellVelocity(float deltaTime)
 
 }
 
-void MACGrid::UpdateCellDivergence(float deltaTime)
+void MACGrid::CalculateCellDivergence(float deltaTime)
 {
 	int index = 0;
 
@@ -158,5 +158,110 @@ void MACGrid::UpdateCellDivergence(float deltaTime)
 
 void MACGrid::UpdateCellPressure(float deltaTime)
 {
+	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
 
+	std::vector<float> Adiagonal;
+	std::vector<float> Ax(numCells);
+	std::vector<float> Ay(numCells);
+	std::vector<float> Az(numCells);
+
+	Adiagonal.assign(numCells, 0.0f);
+	Ax.assign(numCells, 0.0f);
+	Ay.assign(numCells, 0.0f);
+	Az.assign(numCells, 0.0f);
+
+	InitializeLinearSystem(deltaTime, Adiagonal, Ax, Ay, Az);
+}
+
+void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
+{
+	float scale = deltaTime * mInvCellSize * mInvCellSize; // TO DO include fluid density.
+
+	int index = 0;
+
+	for (int x = 0; x < mNumCellWidth; x++)
+	{
+		for (int y = 0; y < mNumCellHeight; y++)
+		{
+			for (int z = 0; z < mNumCellLength; z++)
+			{
+				if (x > 0)
+				{
+					int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
+
+					if (mGridCells[neighbourLeft].GetCellType() == MACGridCell::eFLUID)
+					{
+						inDiag[index] += scale;
+					}
+				}
+
+				if (x < mNumCellWidth - 1)
+				{
+					int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
+
+					if (mGridCells[neighbourRight].GetCellType() == MACGridCell::eFLUID)
+					{
+						inDiag[index] += scale;
+						inX[index] -= scale;
+					}
+					else if (mGridCells[neighbourRight].GetCellType() == MACGridCell::eNONE)
+					{
+						inDiag[index] += scale;
+					}
+				}
+
+				if (y > 0)
+				{
+					int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+					if (mGridCells[neighbourBottom].GetCellType() == MACGridCell::eFLUID)
+					{
+						inDiag[index] += scale;
+					}
+				}
+
+				if (y < mNumCellHeight - 1)
+				{
+					int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+					if (mGridCells[neighbourTop].GetCellType() == MACGridCell::eFLUID)
+					{
+						inDiag[index] += scale;
+						inY[index] -= scale;
+					}
+					else if (mGridCells[neighbourTop].GetCellType() == MACGridCell::eNONE)
+					{
+						inDiag[index] += scale;
+					}
+				}
+
+				if (z > 0)
+				{
+					int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+					if (mGridCells[neighbourBack].GetCellType() == MACGridCell::eFLUID)
+					{
+						inDiag[index] += scale;
+					}
+				}
+
+				if (z < mNumCellWidth - 1)
+				{
+					int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+					if (mGridCells[neighbourFront].GetCellType() == MACGridCell::eFLUID)
+					{
+						inDiag[index] += scale;
+						inZ[index] -= scale;
+					}
+					else if (mGridCells[neighbourFront].GetCellType() == MACGridCell::eNONE)
+					{
+						inDiag[index] += scale;
+					}
+				}
+
+				++index;
+			}
+		}
+	}
 }

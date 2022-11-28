@@ -7,13 +7,20 @@
 class MACGridCell
 {
 public:
-		enum Face
-		{
-			eRIGHT = 0, // x axis
-			eTOP = 1,   // y axis
-			eFRONT = 2, // z axis
-			eNONE = 3
-		};
+	enum CellType
+	{
+		eFLUID = 0,
+		eSOLID = 1,
+		eNONE = 2
+	};
+
+	enum Face
+	{
+		eRIGHT = 0, // x axis
+		eTOP = 1,   // y axis
+		eFRONT = 2, // z axis
+		eNONE = 3
+	};
 
 		MACGridCell();
 		~MACGridCell() = default;
@@ -27,6 +34,9 @@ public:
 		const glm::vec3& GetVelocity(Face inFace) const { return mFaceVelocities[inFace]; }
 		void SetVelocity(Face inFace, const glm::vec3& inVelocity) { mFaceVelocities[inFace] = inVelocity; }
 
+		const CellType& GetCellType() const { return mCellType; }
+		void SetCellType(CellType inCellType) { mCellType = inCellType; }
+
 		void EnforceZeroDivergence();
 
 	private:
@@ -37,4 +47,6 @@ public:
 
 		std::vector<glm::vec3> mFaceVelocities;
 		std::vector<bool> mFaceValid; // A face is invalid if there is no neighboring grid cell in that direction.
+
+		CellType mCellType;
 };

@@ -22,9 +22,11 @@ private:
 
 	void InitializeFromDomain(const Domain& inDomain, float inGridResolution);
 
-	void UpdateCellDivergence(float deltaTime);
+	void CalculateCellDivergence(float deltaTime);
 	void UpdateCellPressure(float deltaTime);
 	void UpdateCellVelocity(float deltaTime);
+
+	void InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ);
 
 	float mNumCellWidth;
 	float mNumCellLength;
