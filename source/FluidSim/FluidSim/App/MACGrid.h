@@ -28,7 +28,8 @@ private:
 
 	void InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ);
 
-	void ApplyPreconditioner(std::vector<float>& inAux, std::vector<float>& inRes);
+	void ApplyA(std::vector<float>& inResult, std::vector<float>& inVec, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ);
+	void ApplyPreconditioner();
 
 	float mNumCellWidth;
 	float mNumCellLength;

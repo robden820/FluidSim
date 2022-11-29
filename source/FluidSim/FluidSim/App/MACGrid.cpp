@@ -202,7 +202,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 
 	for (iteration = 0; iteration < maxIterations; iteration++)
 	{
-		// z = ApplyMatrix(A, search);
+		ApplyA(z, search, Adiagonal, Ax, Ay, Az);
 
 		float phi = 0.0f;
 		for (int i = 0; i < numCells; i++)
@@ -363,7 +363,16 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 	}
 }
 
-void MACGrid::ApplyPreconditioner(std::vector<float>& inAux, std::vector<float>& inRes)
+void MACGrid::ApplyA(std::vector<float>& inResult, std::vector<float>& inVec, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
+{
+	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
+
+	inResult.assign(numCells, 0.f);
+
+
+}
+
+void MACGrid::ApplyPreconditioner()
 {
 
 }
