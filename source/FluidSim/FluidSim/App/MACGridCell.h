@@ -34,6 +34,9 @@ public:
 		const glm::vec3& GetVelocity(Face inFace) const { return mFaceVelocities[inFace]; }
 		void SetVelocity(Face inFace, const glm::vec3& inVelocity) { mFaceVelocities[inFace] = inVelocity; }
 
+		void GetCellVelocity(glm::vec3& outVelocity) const;
+		void SetCellVelocity(const glm::vec3& inVelocity);
+
 		const CellType& GetCellType() const { return mCellType; }
 		void SetCellType(CellType inCellType) { mCellType = inCellType; }
 

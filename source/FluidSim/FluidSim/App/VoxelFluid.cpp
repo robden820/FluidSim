@@ -23,7 +23,7 @@ void VoxelFluid::InitializeFromDomain(const Domain& inDomain)
 
 	mNumVoxelsLength = floor(dLength / mVoxelSize);
 	mNumVoxelsWidth = floor(dWidth / mVoxelSize);
-	mNumVoxelsHeight = float(dHeight / mVoxelSize);
+	mNumVoxelsHeight = floor(dHeight / mVoxelSize);
 
 	int numVoxels = mNumVoxelsLength * mNumVoxelsWidth * mNumVoxelsHeight;
 

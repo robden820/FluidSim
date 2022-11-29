@@ -3,10 +3,15 @@
 #include <iostream>
 
 #define TOLERANCE 0.000001
-
+/*
 MACGrid::MACGrid(const Fluid& inFluid, float inGridResolution)
 {
 	InitializeFromDomain(inFluid.GetDomain(), inGridResolution);
+}
+*/
+MACGrid::MACGrid(const Domain& inDomain, float inGridResolution)
+{
+	InitializeFromDomain(inDomain, inGridResolution);
 }
 
 void MACGrid::InitializeFromDomain(const Domain& inDomain, float inGridResolution)
@@ -187,7 +192,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::vector<float> z;
 	z.assign(numCells, 0.0f);
 
-	ApplyPreconditioner(z, residuals);
+	//ApplyPreconditioner(z, residuals);
 
 	std::vector<float> search = z;
 
@@ -233,7 +238,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 			converged = true;
 		}
 
-		ApplyPreconditioner(z, residuals);
+		//ApplyPreconditioner(z, residuals);
 
 		float thetaNew = 0.0f;
 		for (int i = 0; i < numCells; i++)
@@ -367,9 +372,10 @@ void MACGrid::ApplyA(std::vector<float>& inResult, std::vector<float>& inVec, st
 {
 	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
 
-	inResult.assign(numCells, 0.f);
-
-
+	for (int index = 0; index < numCells; index++)
+	{
+		inResult[index] = inDiag[index] * inVec[index];
+	}
 }
 
 void MACGrid::ApplyPreconditioner()

@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "MACGridCell.h"
-#include "Fluid.h"
+//#include "Fluid.h"
 #include "Domain.h"
 
 #include "glm/vec3.hpp"
@@ -14,9 +14,17 @@ public:
 	MACGrid() = default;
 	~MACGrid() = default;
 
-	MACGrid(const Fluid& inFluid, float inGridResolution);
+//	MACGrid(const Fluid& inFluid, float inGridResolution);
+	MACGrid(const Domain& inDomain, float inGridResolution);
 
 	void Update(float deltaTime);
+
+	int GetNumCells() const { return mNumCellHeight * mNumCellWidth * mNumCellLength; }
+
+	const MACGridCell& GetGridCell(int index) const { return mGridCells[index]; }
+	const glm::vec3& GetCellCenter(int index) const { return mCellCenters[index]; }
+
+	void SetGridCellVelocity(int index, const glm::vec3& inVelocity) { mGridCells[index].SetCellVelocity(inVelocity); }
 
 private:
 
