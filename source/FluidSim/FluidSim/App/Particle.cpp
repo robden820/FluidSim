@@ -8,6 +8,9 @@ Particle::Particle(const glm::vec3& inPosition, const glm::vec3& inVelocity, flo
 	mRadius = inRadius;
 
 	mAcceleration = { 0.0f, -9.8f, 0.0f }; // Acceleration due to gravity
+
+	float g = -9.8f * mMass; // Downwards force due to gravity;
+	mForceAccumulator = { 0.0f, g, 0.0f };
 }
 
 void Particle::StepParticle(float deltaTime)
