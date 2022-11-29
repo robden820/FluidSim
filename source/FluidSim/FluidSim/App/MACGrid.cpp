@@ -276,6 +276,17 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	for (int i = 0; i < numCells; i++)
 	{
 		mGridCells[i].SetPressure(newPressure[i]);
+
+		/*
+		if (mGridCells[i].GetCellType() == MACGridCell::eFLUID)
+		{
+			mGridCells[i].SetPressure(newPressure[i]);
+		}
+		else
+		{
+			mGridCells[i].SetPressure(0.1f);
+		}
+		*/
 	}
 }
 
@@ -375,10 +386,62 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 void MACGrid::ApplyA(std::vector<float>& outResult, std::vector<float>& inVec, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
 {
 	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
+	float scale = 0.002f * mInvCellSize * mInvCellSize; // TO DO;
 
-	for (int index = 0; index < numCells; index++)
+	int index = 0;
+
+	for (int x = 0; x < mNumCellWidth; x++)
 	{
-		outResult[index] = inDiag[index] * inVec[index];
+		for (int y = 0; y < mNumCellHeight; y++)
+		{
+			for (int z = 0; z < mNumCellLength; z++)
+			{
+
+				float value = 0.f;
+
+				if (x > 0)
+				{
+					int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
+					value += inVec[neighbourLeft];
+				}
+
+				if (x < mNumCellWidth - 1)
+				{
+					int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
+					value += inVec[neighbourRight];
+				}
+
+				if (y > 0)
+				{
+					int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+					value += inVec[neighbourBottom];
+				}
+
+				if (y < mNumCellHeight - 1)
+				{
+					int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+					value += inVec[neighbourTop];
+				}
+
+				if (z > 0)
+				{
+					int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+					value += inVec[neighbourBack];
+				}
+
+				if (z < mNumCellLength - 1)
+				{
+					int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+					value += inVec[neighbourFront];
+				}
+
+				value += inDiag[index] * scale * inVec[index];
+
+				outResult[index] = value;
+
+				++index;
+			}
+		}
 	}
 }
 
@@ -564,14 +627,14 @@ void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vect
 						zi = outResult[neighbourRight];
 					}
 
-					if (y < mNumCellHeight)
+					if (y < mNumCellHeight - 1)
 					{
 						int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
 
 						zj = outResult[neighbourTop];
 					}
 
-					if (z < mNumCellLength)
+					if (z < mNumCellLength - 1)
 					{
 						int neighbourFront= (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
 

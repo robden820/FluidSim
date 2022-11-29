@@ -19,11 +19,13 @@ public:
 
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth * mNumCellLength; }
 
-	const MACGridCell& GetGridCell(int index) const { return mGridCells[index]; }
+	MACGridCell& GetGridCell(int index) { return mGridCells[index]; }
 	const glm::vec3& GetCellCenter(int index) const { return mCellCenters[index]; }
 
 	void SetGridCellVelocity(int index, const glm::vec3& inVelocity) { mGridCells[index].SetCellVelocity(inVelocity); }
 	void SetGridCellType(int index, MACGridCell::CellType inType) { mGridCells[index].SetCellType(inType); }
+
+	void SetGridCellPressure(int index, float inPressure) { mGridCells[index].SetPressure(inPressure); }
 
 private:
 
