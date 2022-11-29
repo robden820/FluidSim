@@ -33,7 +33,7 @@ class Fluid
 		void InterpolateToGrid();
 		void InterpolateFromGrid();
 		
-		const MACGridCell& ClosestCellToParticle(const Particle& particle) const;
+		MACGridCell& ClosestCellToParticle(const Particle& particle);
 
 		Particle& ClosestParticleToCell(const glm::vec3& cellCenter);
 

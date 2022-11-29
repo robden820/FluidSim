@@ -16,7 +16,7 @@ Fluid::Fluid(int numParticles)
 
 				Particle particle(position);
 
-mParticles.push_back(particle);
+			mParticles.push_back(particle);
 			}
 		}
 	}
@@ -26,12 +26,8 @@ mParticles.push_back(particle);
 	mDomain = d;
 
 	// Initialize Grid.
-	MACGrid g(mDomain, 10.f);
+	MACGrid g(mDomain, 20.f);
 	mMACGrid = g;
-
-
-	//	ContactResolver resolver(100);
-	//	mContactResolver = resolver;
 }
 
 void Fluid::StepSimulation(float deltaTime)
@@ -108,6 +104,7 @@ void Fluid::ClampParticleToDomain(Particle& particle)
 
 void Fluid::InterpolateToGrid()
 {
+	/*
 	for (int n = 0; n < mMACGrid.GetNumCells(); n++)
 	{
 		Particle& particle = ClosestParticleToCell(mMACGrid.GetCellCenter(n));
@@ -124,6 +121,20 @@ void Fluid::InterpolateToGrid()
 			mMACGrid.SetGridCellType(n, MACGridCell::eEMPTY);
 		}
 	}
+	*/
+
+	for (int n = 0; n < mMACGrid.GetNumCells(); n++)
+	{
+		mMACGrid.SetGridCellType(n, MACGridCell::eEMPTY);
+	}
+
+	for (int p = 0; p < GetNumParticles(); p++)
+	{
+		MACGridCell& cell = ClosestCellToParticle(mParticles[p]);
+
+		cell.SetCellType(MACGridCell::eFLUID);
+		mMACGrid.SetGridCellVelocity(p, mParticles[p].GetVelocity());
+	}
 }
 
 void Fluid::InterpolateFromGrid()
@@ -136,7 +147,7 @@ void Fluid::InterpolateFromGrid()
 	}
 }
 
-const MACGridCell& Fluid::ClosestCellToParticle(const Particle& particle) const
+MACGridCell& Fluid::ClosestCellToParticle(const Particle& particle)
 {
 	glm::vec3 particlePos = particle.GetPosition();
 
@@ -150,7 +161,7 @@ const MACGridCell& Fluid::ClosestCellToParticle(const Particle& particle) const
 
 		float distSqr = (pToG.x * pToG.x) + (pToG.y * pToG.y) + (pToG.z * pToG.z);
 
-		if (shortestDist < distSqr)
+		if (distSqr < shortestDist)
 		{
 			shortestDist = distSqr;
 			closestCell = n;
@@ -172,7 +183,7 @@ Particle& Fluid::ClosestParticleToCell(const glm::vec3& cellCenter)
 
 		float distSqr = (GToP.x * GToP.x) + (GToP.y * GToP.y) + (GToP.z * GToP.z);
 
-		if (shortestDist < distSqr)
+		if (distSqr < shortestDist)
 		{
 			shortestDist = distSqr;
 			closestParticle = mParticles[p];
