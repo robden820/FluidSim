@@ -19,6 +19,8 @@ MACGridCell::MACGridCell()
 		// Initialise all faces as invalid, but must be updated during MAC grid creation.
 		mFaceValid.push_back(false);
 	}
+
+	mCellType = eEMPTY;
 }
 
 void MACGridCell::GetCellVelocity(glm::vec3& outVelocity) const
