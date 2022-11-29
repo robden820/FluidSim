@@ -1,7 +1,7 @@
 #include "Fluid.h"
 #include <iostream>
 
-Fluid::Fluid(float numParticles)
+Fluid::Fluid(int numParticles)
 {
 	// Initialize particles
 	mParticles.reserve(numParticles);
@@ -26,9 +26,6 @@ Fluid::Fluid(float numParticles)
 	mDomain = d;
 
 	// Initialize Grid.
-	//Grid g(mDomain, 0.5f);
-	//mGrid = g;
-
 	MACGrid g(mDomain, 0.5f);
 	mMACGrid = g;
 
@@ -44,7 +41,6 @@ void Fluid::StepSimulation(float deltaTime)
 	InterpolateToGrid();
 
 	// Update grid velocities.
-	//mGrid.StepGrid(deltaTime);
 	mMACGrid.Update(deltaTime);
 
 	// Interpolate velocities back to particles.
@@ -112,15 +108,6 @@ void Fluid::ClampParticleToDomain(Particle& particle)
 
 void Fluid::InterpolateToGrid()
 {
-	/*
-	for (int n = 0; n < mGrid.GetNumGridNodes(); n++)
-	{
-		Particle& particle = ClosestParticleToNode(mGrid.GetGridNode(n));
-
-		mGrid.GetGridNode(n).SetVelocity(particle.GetVelocity());
-	}
-	*/
-
 	for (int n = 0; n < mMACGrid.GetNumCells(); n++)
 	{
 		Particle& particle = ClosestParticleToCell(mMACGrid.GetCellCenter(n));
@@ -131,15 +118,6 @@ void Fluid::InterpolateToGrid()
 
 void Fluid::InterpolateFromGrid()
 {
-	/*
-	for (int p = 0; p < GetNumParticles(); p++)
-	{
-		GridNode& node = ClosestNodeToParticle(mParticles[p]);
-
-		mParticles[p].SetVelocity(node.GetVelocity());
-	}
-	*/
-
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
 		const MACGridCell& cell = ClosestCellToParticle(mParticles[p]);
@@ -149,30 +127,6 @@ void Fluid::InterpolateFromGrid()
 
 		mParticles[p].SetVelocity(pVelocity);
 	}
-}
-
-GridNode& Fluid::ClosestNodeToParticle(Particle& particle)
-{
-	glm::vec3 particlePos = particle.GetPosition();
-
-	float shortestDist = 100.0f;
-
-	GridNode& closestNode = mGrid.GetGridNode(0);
-
-	for (int n = 0; n < mGrid.GetNumGridNodes(); n++)
-	{
-		glm::vec3 pToG = mGrid.GetGridNode(n).GetPosition() - particlePos;
-
-		float distSqr = (pToG.x * pToG.x) + (pToG.y * pToG.y) + (pToG.z * pToG.z);
-
-		if (shortestDist < distSqr)
-		{
-			shortestDist = distSqr;
-			closestNode = mGrid.GetGridNode(n);
-		}
-	}
-
-	return closestNode;
 }
 
 const MACGridCell& Fluid::ClosestCellToParticle(const Particle& particle) const
@@ -197,30 +151,6 @@ const MACGridCell& Fluid::ClosestCellToParticle(const Particle& particle) const
 	}
 
 	return mMACGrid.GetGridCell(closestCell);
-}
-
-Particle& Fluid::ClosestParticleToNode(GridNode& node)
-{
-	glm::vec3 nodePos = node.GetPosition();
-
-	float shortestDist = 100.0f;
-
-	Particle& closestParticle = mParticles[0];
-
-	for (int p = 0; p < GetNumParticles(); p++)
-	{
-		glm::vec3 GToP = mParticles[p].GetPosition() - nodePos;
-
-		float distSqr = (GToP.x * GToP.x) + (GToP.y * GToP.y) + (GToP.z * GToP.z);
-
-		if (shortestDist < distSqr)
-		{
-			shortestDist = distSqr;
-			closestParticle = mParticles[p];
-		}
-	}
-
-	return closestParticle;
 }
 
 Particle& Fluid::ClosestParticleToCell(const glm::vec3& cellCenter)
