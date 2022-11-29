@@ -30,17 +30,14 @@ public:
 		const float GetPressure() const { return mPressure; }
 		void SetPressure(float inPressure) { mPressure = inPressure; }
 
-		const std::vector<glm::vec3>& GetVelocities() const { return mFaceVelocities; }
-		const glm::vec3& GetVelocity(Face inFace) const { return mFaceVelocities[inFace]; }
-		void SetVelocity(Face inFace, const glm::vec3& inVelocity) { mFaceVelocities[inFace] = inVelocity; }
+		float GetFaceVelocity(Face inFace) const { return mFaceVelocities[inFace]; }
+		void SetFaceVelocity(Face inFace, float inVelocity) { mFaceVelocities[inFace] = inVelocity; }
 
-		void GetCellVelocity(glm::vec3& outVelocity) const;
-		void SetCellVelocity(const glm::vec3& inVelocity);
+		const glm::vec3& GetCellVelocity() const { return mFaceVelocities; }
+		void SetCellVelocity(const glm::vec3& inVelocity) { mFaceVelocities = inVelocity; }
 
 		const CellType& GetCellType() const { return mCellType; }
 		void SetCellType(CellType inCellType) { mCellType = inCellType; }
-
-		void EnforceZeroDivergence();
 
 	private:
 		
@@ -48,7 +45,7 @@ public:
 
 		float mPressure;
 
-		std::vector<glm::vec3> mFaceVelocities;
+		glm::vec3 mFaceVelocities;
 		std::vector<bool> mFaceValid; // A face is invalid if there is no neighboring grid cell in that direction.
 
 		CellType mCellType;

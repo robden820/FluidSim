@@ -16,22 +16,22 @@ Fluid::Fluid(int numParticles)
 
 				Particle particle(position);
 
-				mParticles.push_back(particle);
+mParticles.push_back(particle);
 			}
 		}
 	}
-	
+
 	// Initialize simulation Domain.
 	Domain d(glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(5.0f, 5.0f, 5.0f));
 	mDomain = d;
 
 	// Initialize Grid.
-	MACGrid g(mDomain, 0.5f);
+	MACGrid g(mDomain, 10.f);
 	mMACGrid = g;
 
 
-//	ContactResolver resolver(100);
-//	mContactResolver = resolver;
+	//	ContactResolver resolver(100);
+	//	mContactResolver = resolver;
 }
 
 void Fluid::StepSimulation(float deltaTime)
@@ -49,11 +49,11 @@ void Fluid::StepSimulation(float deltaTime)
 	// Advect particles.
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
-		
+
 		mParticles[p].StepParticle(deltaTime);
 	}
-	
-	
+
+
 	// Ensure particles stay inside the simulation domain.
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
@@ -113,6 +113,16 @@ void Fluid::InterpolateToGrid()
 		Particle& particle = ClosestParticleToCell(mMACGrid.GetCellCenter(n));
 
 		mMACGrid.SetGridCellVelocity(n, particle.GetVelocity());
+
+		float len = glm::length(particle.GetPosition() - mMACGrid.GetCellCenter(n));
+		if (len < 1.f)
+		{
+			mMACGrid.SetGridCellType(n, MACGridCell::eFLUID);
+		}
+		else
+		{
+			mMACGrid.SetGridCellType(n, MACGridCell::eEMPTY);
+		}
 	}
 }
 
@@ -122,10 +132,7 @@ void Fluid::InterpolateFromGrid()
 	{
 		const MACGridCell& cell = ClosestCellToParticle(mParticles[p]);
 
-		glm::vec3 pVelocity(0.f, 0.f, 0.f);
-		cell.GetCellVelocity(pVelocity);
-
-		mParticles[p].SetVelocity(pVelocity);
+		mParticles[p].SetVelocity(cell.GetCellVelocity());
 	}
 }
 
