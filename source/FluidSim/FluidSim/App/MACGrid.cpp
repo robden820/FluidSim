@@ -6,9 +6,10 @@
 #define PRECON_TUNER 0.97f
 #define PRECON_SAFETY 0.25f
 
-MACGrid::MACGrid(const Domain& inDomain, int inGridResolution)
+MACGrid::MACGrid(const Domain& inDomain, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution)
 {
 	InitializeFromDomain(inDomain, inGridResolution);
+	InitializeCellsFromParticles(inParticlePositions);
 }
 
 void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
@@ -34,7 +35,6 @@ void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
 
 	float halfCell = mCellSize * 0.5f;
 
-	mGridCells.reserve(numCells);
 	mCellCenters.reserve(numCells);
 
 	for (int x = 0; x < mNumCellWidth; x++)
@@ -49,13 +49,43 @@ void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
 			{
 				float centerZ = dBack + (z * mCellSize) + halfCell;
 
-				MACGridCell gridCell;
-
-				mGridCells.push_back(gridCell);
 				mCellCenters.push_back(glm::vec3(centerX, centerY, centerZ));
 			}
 		}
 	}
+
+	mCellPressures.assign(numCells, 0.f);
+	mCellXVelocities.assign(numCells, 0.f);
+	mCellYVelocities.assign(numCells, 0.f);
+	mCellZVelocities.assign(numCells, 0.f);
+	mCellDivergence.assign(numCells, 0.f);
+	mFluidCell.assign(numCells, false);
+}
+
+void MACGrid::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions)
+{
+	for (int cIndex = 0; cIndex < GetNumCells(); cIndex++)
+	{
+		for (int pIndex = 0; pIndex < inParticlePositions.size(); pIndex++)
+		{
+			glm::vec3 cToP = inParticlePositions[pIndex] - mCellCenters[cIndex];
+
+			if (glm::length(cToP) < 1.0f)
+			{
+				mFluidCell[cIndex] = true;
+				mCellPressures[cIndex] = 1.0f;
+
+				break;
+			}
+		}
+	}
+}
+
+void MACGrid::SetCellVelocity(int index, const glm::vec3& inVelocity)
+{
+	mCellXVelocities[index] = inVelocity.x;
+	mCellYVelocities[index] = inVelocity.y;
+	mCellZVelocities[index] = inVelocity.z;
 }
 
 void MACGrid::Update(float deltaTime)
@@ -81,33 +111,33 @@ void MACGrid::UpdateCellVelocity(float deltaTime)
 				{
 					int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
 					
-					float velocity = mGridCells[index].GetFaceVelocity(MACGridCell::eRIGHT);
+					float velocity = mCellXVelocities[index];
 					
-					velocity -= scale * (mGridCells[neighbourRight].GetPressure() - mGridCells[index].GetPressure());
+					velocity -= scale * (mCellPressures[neighbourRight] - mCellPressures[index]);
 
-					mGridCells[index].SetFaceVelocity(MACGridCell::eRIGHT, velocity);
+					mCellXVelocities[index] = velocity;
 				}
 
 				if (y < mNumCellHeight - 1)
 				{
 					int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
 
-					float velocity = mGridCells[index].GetFaceVelocity(MACGridCell::eTOP);
+					float velocity = mCellYVelocities[index];
 
-					velocity -= scale * (mGridCells[neighbourTop].GetPressure() - mGridCells[index].GetPressure());
+					velocity -= scale * (mCellPressures[neighbourTop] - mCellPressures[index]);
 
-					mGridCells[index].SetFaceVelocity(MACGridCell::eTOP, velocity);
+					mCellYVelocities[index] = velocity;
 				}
 
 				if (z < mNumCellLength - 1)
 				{
 					int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
 
-					float velocity = mGridCells[index].GetFaceVelocity(MACGridCell::eFRONT);
+					float velocity = mCellZVelocities[index];
 
-					velocity -= scale * (mGridCells[neighbourFront].GetPressure() - mGridCells[index].GetPressure());
+					velocity -= scale * (mCellPressures[neighbourFront] - mCellPressures[index]);
 
-					mGridCells[index].SetFaceVelocity(MACGridCell::eFRONT, velocity);
+					mCellZVelocities[index] = velocity;
 				}
 
 				++index;
@@ -137,21 +167,21 @@ void MACGrid::CalculateCellDivergence(float deltaTime)
 				{
 					int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
 
-					divergence += mGridCells[neighbourRight].GetFaceVelocity(MACGridCell::eRIGHT) - mGridCells[index].GetFaceVelocity(MACGridCell::eRIGHT);
+					divergence += mCellXVelocities[neighbourRight] - mCellXVelocities[index];
 				}
 
 				if (y < mNumCellHeight - 1)
 				{
 					int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
 
-					divergence += mGridCells[neighbourTop].GetFaceVelocity(MACGridCell::eTOP) - mGridCells[index].GetFaceVelocity(MACGridCell::eTOP);
+					divergence += mCellYVelocities[neighbourTop] - mCellYVelocities[index];
 				}
 
 				if (z < mNumCellLength - 1)
 				{
 					int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
 
-					divergence += mGridCells[neighbourFront].GetFaceVelocity(MACGridCell::eFRONT) - mGridCells[index].GetFaceVelocity(MACGridCell::eFRONT);
+					divergence += mCellZVelocities[neighbourFront] - mCellZVelocities[index];
 				}
 
 				divergence *= -scale;
@@ -169,9 +199,9 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
 
 	std::vector<float> Adiagonal;
-	std::vector<float> Ax(numCells);
-	std::vector<float> Ay(numCells);
-	std::vector<float> Az(numCells);
+	std::vector<float> Ax;
+	std::vector<float> Ay;
+	std::vector<float> Az;
 
 	Adiagonal.assign(numCells, 0.0f);
 	Ax.assign(numCells, 0.0f);
@@ -208,9 +238,9 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	int iteration;
 	bool converged = false;
 
-	for (iteration = 0; iteration < maxIterations; iteration++)
+	for (iteration = 0; iteration < maxIterations; ++iteration)
 	{
-		ApplyA(z, search, Adiagonal, Ax, Ay, Az);
+		ApplyA(deltaTime, z, search, Adiagonal, Ax, Ay, Az);
 
 		float phi = 0.0f;
 		for (int i = 0; i < numCells; i++)
@@ -238,7 +268,8 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 
 		if (maxResidual < TOLERANCE)
 		{
-			converged = true;
+			// Reached convergence;
+			break;
 		}
 
 		ApplyPreconditioner(z, residuals, precon, Ax, Ay, Az);
@@ -258,10 +289,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 
 		theta = thetaNew;
 
-		if (converged)
-		{
-			break;
-		}
+		
 	}
 
 	if (iteration == maxIterations)
@@ -275,18 +303,15 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 
 	for (int i = 0; i < numCells; i++)
 	{
-		mGridCells[i].SetPressure(newPressure[i]);
-
-		/*
-		if (mGridCells[i].GetCellType() == MACGridCell::eFLUID)
+		//mGridCells[i].SetPressure(newPressure[i]);
+		if (mFluidCell[i])
 		{
-			mGridCells[i].SetPressure(newPressure[i]);
+			mCellPressures[i] = newPressure[i];
 		}
 		else
 		{
-			mGridCells[i].SetPressure(0.1f);
+			mCellPressures[i] = 0.1f;
 		}
-		*/
 	}
 }
 
@@ -302,91 +327,93 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 		{
 			for (int z = 0; z < mNumCellLength; z++)
 			{
-				if (x > 0)
+				if (mFluidCell[index])
 				{
-					int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
-
-					if (mGridCells[neighbourLeft].GetCellType() == MACGridCell::eFLUID)
+					if (x > 0)
 					{
-						inDiag[index] += scale;
+						int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
+
+						if (mFluidCell[neighbourLeft])
+						{
+							inDiag[index] += scale;
+						}
+					}
+
+					if (x < mNumCellWidth - 1)
+					{
+						int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
+
+						if (mFluidCell[neighbourRight])
+						{
+							inDiag[index] += scale;
+							inX[index] -= scale;
+						}
+						else
+						{
+							inDiag[index] += scale;
+						}
+					}
+
+					if (y > 0)
+					{
+						int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+						if (mFluidCell[neighbourBottom])
+						{
+							inDiag[index] += scale;
+						}
+					}
+
+					if (y < mNumCellHeight - 1)
+					{
+						int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+						if (mFluidCell[neighbourTop])
+						{
+							inDiag[index] += scale;
+							inY[index] -= scale;
+						}
+						else
+						{
+							inDiag[index] += scale;
+						}
+					}
+
+					if (z > 0)
+					{
+						int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+						if (mFluidCell[neighbourBack])
+						{
+							inDiag[index] += scale;
+						}
+					}
+
+					if (z < mNumCellWidth - 1)
+					{
+						int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+						if (mFluidCell[neighbourFront])
+						{
+							inDiag[index] += scale;
+							inZ[index] -= scale;
+						}
+						else
+						{
+							inDiag[index] += scale;
+						}
 					}
 				}
-
-				if (x < mNumCellWidth - 1)
-				{
-					int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
-
-					if (mGridCells[neighbourRight].GetCellType() == MACGridCell::eFLUID)
-					{
-						inDiag[index] += scale;
-						inX[index] -= scale;
-					}
-					else if (mGridCells[neighbourRight].GetCellType() == MACGridCell::eEMPTY)
-					{
-						inDiag[index] += scale;
-					}
-				}
-
-				if (y > 0)
-				{
-					int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-					if (mGridCells[neighbourBottom].GetCellType() == MACGridCell::eFLUID)
-					{
-						inDiag[index] += scale;
-					}
-				}
-
-				if (y < mNumCellHeight - 1)
-				{
-					int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-					if (mGridCells[neighbourTop].GetCellType() == MACGridCell::eFLUID)
-					{
-						inDiag[index] += scale;
-						inY[index] -= scale;
-					}
-					else if (mGridCells[neighbourTop].GetCellType() == MACGridCell::eEMPTY)
-					{
-						inDiag[index] += scale;
-					}
-				}
-
-				if (z > 0)
-				{
-					int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-					if (mGridCells[neighbourBack].GetCellType() == MACGridCell::eFLUID)
-					{
-						inDiag[index] += scale;
-					}
-				}
-
-				if (z < mNumCellWidth - 1)
-				{
-					int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-					if (mGridCells[neighbourFront].GetCellType() == MACGridCell::eFLUID)
-					{
-						inDiag[index] += scale;
-						inZ[index] -= scale;
-					}
-					else if (mGridCells[neighbourFront].GetCellType() == MACGridCell::eEMPTY)
-					{
-						inDiag[index] += scale;
-					}
-				}
-
 				++index;
 			}
 		}
 	}
 }
 
-void MACGrid::ApplyA(std::vector<float>& outResult, std::vector<float>& inVec, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
+void MACGrid::ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
 	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
-	float scale = 0.002f * mInvCellSize * mInvCellSize; // TO DO;
+	float scale = deltaTime * mInvCellSize * mInvCellSize; // TO DO;
 
 	int index = 0;
 
@@ -396,7 +423,6 @@ void MACGrid::ApplyA(std::vector<float>& outResult, std::vector<float>& inVec, s
 		{
 			for (int z = 0; z < mNumCellLength; z++)
 			{
-
 				float value = 0.f;
 
 				if (x > 0)
@@ -457,7 +483,7 @@ void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std
 		{
 			for (int z = 0; z < mNumCellLength; z++)
 			{
-				if (mGridCells[index].GetCellType() == MACGridCell::eFLUID)
+				if (mFluidCell[index])
 				{
 					float Axi = 0.0f;
 					float Axj = 0.0f;
@@ -527,7 +553,6 @@ void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std
 						newPrecon = inDiag[index];
 					}
 					
-
 					inOutPrecon[index] = 1 / sqrt(newPrecon);
 				}
 
@@ -537,9 +562,8 @@ void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std
 	}
 }
 
-void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
+void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
-
 	std::vector<float> intermediate;
 	intermediate.assign(mNumCellHeight * mNumCellLength * mNumCellWidth, 0.f);
 
@@ -551,7 +575,7 @@ void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vect
 		{
 			for (int z = 0; z < mNumCellLength; z++)
 			{
-				if (mGridCells[index].GetCellType() == MACGridCell::eFLUID)
+				if (mFluidCell[index])
 				{
 
 					float Axi = 0.0f;
@@ -614,7 +638,7 @@ void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vect
 		{
 			for (int z = 0; z < mNumCellLength; z++)
 			{
-				if (mGridCells[index].GetCellType() == MACGridCell::eFLUID)
+				if (mFluidCell[index])
 				{
 					float zi = 0.0f;
 					float zj = 0.0f;
