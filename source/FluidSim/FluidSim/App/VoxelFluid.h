@@ -26,12 +26,13 @@ class VoxelFluid
 	private:
 
 		void InitializeFromDomain(const Domain& inDomain);
-		
+
 		float mVoxelSize;
 
 		int mNumVoxelsLength;
 		int mNumVoxelsHeight;
 		int mNumVoxelsWidth;
+		int mNumVoxels;
 
 		std::vector<glm::vec3> mVoxelCenters;
 		std::vector<bool> mFluidVoxel;

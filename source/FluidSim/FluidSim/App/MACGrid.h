@@ -19,6 +19,7 @@ public:
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth * mNumCellLength; }
 
 	const glm::vec3& GetCellCenter(int index) const { return mCellCenters[index]; }
+	int GetClosestCell(const glm::vec3& inPosition);
 
 	const float GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
 	const float GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
@@ -42,6 +43,8 @@ private:
 	void InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions);
 
 	void CalculateCellDivergence(float deltaTime);
+
+	void AdvectCellVelocity(float deltaTime);
 	void UpdateCellPressure(float deltaTime, int maxIterations);
 	void UpdateCellVelocity(float deltaTime);
 
@@ -52,9 +55,13 @@ private:
 	void ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
 	void ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
 
+	std::tuple<int, int, int> GetXYZFromIndex(int index);
+	int GetIndexFromXYZ(int X, int Y, int Z);
+
 	int mNumCellWidth;
 	int mNumCellLength;
 	int mNumCellHeight;
+	int mNumCells;
 
 	float mCellSize;    // deltaX
 	float mInvCellSize; // 1 / deltaX
@@ -66,6 +73,10 @@ private:
 	std::vector<float> mCellXVelocities;
 	std::vector<float> mCellYVelocities;
 	std::vector<float> mCellZVelocities;
+
+	std::vector<float> mIntXVelocities;
+	std::vector<float> mIntYVelocities;
+	std::vector<float> mIntZVelocities;
 
 	std::vector<bool> mFluidCell;
 };

@@ -25,12 +25,12 @@ void VoxelFluid::InitializeFromDomain(const Domain& inDomain)
 	mNumVoxelsWidth = floor(dWidth / mVoxelSize);
 	mNumVoxelsHeight = floor(dHeight / mVoxelSize);
 
-	int numVoxels = mNumVoxelsLength * mNumVoxelsWidth * mNumVoxelsHeight;
+	mNumVoxels = mNumVoxelsLength * mNumVoxelsWidth * mNumVoxelsHeight;
 
 	float halfVoxel = mVoxelSize * 0.5f;
 
-	mVoxelCenters.reserve(numVoxels);
-	mFluidVoxel.reserve(numVoxels);
+	mVoxelCenters.reserve(mNumVoxels);
+	mFluidVoxel.reserve(mNumVoxels);
 
 	for (int x = 0; x < mNumVoxelsWidth; x++)
 	{
@@ -53,23 +53,13 @@ void VoxelFluid::InitializeFromDomain(const Domain& inDomain)
 
 void VoxelFluid::UpdateVoxelStates(const Fluid& inFluid)
 {
-	int index = 0;
-
-	for (int x = 0; x < mNumVoxelsWidth; x++)
+	for (int index = 0; index < mNumVoxels; index++)
 	{
-		for (int y = 0; y < mNumVoxelsHeight; y++)
+		mFluidVoxel[index] = false;
+
+		if (inFluid.GetMACGrid().GetCellType(index))
 		{
-			for (int z = 0; z < mNumVoxelsLength; z++)
-			{
-				mFluidVoxel[index] = false;
-
-				if (inFluid.GetMACGrid().GetCellType(index))
-				{
-					mFluidVoxel[index] = true;
-				}
-
-				++index;
-			}
+			mFluidVoxel[index] = true;
 		}
 	}
 }

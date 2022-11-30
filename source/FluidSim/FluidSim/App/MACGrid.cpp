@@ -28,14 +28,14 @@ void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
 	mNumCellWidth = inGridResolution;
 	mNumCellHeight = inGridResolution;
 
-	int numCells = mNumCellLength * mNumCellWidth * mNumCellHeight;
+	mNumCells = mNumCellLength * mNumCellWidth * mNumCellHeight;
 
 	mCellSize = dLength / inGridResolution;
 	mInvCellSize = 1 / mCellSize;
 
 	float halfCell = mCellSize * 0.5f;
 
-	mCellCenters.reserve(numCells);
+	mCellCenters.reserve(mNumCells);
 
 	for (int x = 0; x < mNumCellWidth; x++)
 	{
@@ -54,12 +54,16 @@ void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
 		}
 	}
 
-	mCellPressures.assign(numCells, 0.f);
-	mCellXVelocities.assign(numCells, 0.f);
-	mCellYVelocities.assign(numCells, 0.f);
-	mCellZVelocities.assign(numCells, 0.f);
-	mCellDivergence.assign(numCells, 0.f);
-	mFluidCell.assign(numCells, false);
+	mCellPressures.assign(mNumCells, 0.f);
+	mCellXVelocities.assign(mNumCells, 0.f);
+	mCellYVelocities.assign(mNumCells, 0.f);
+	mCellZVelocities.assign(mNumCells, 0.f);
+	mCellDivergence.assign(mNumCells, 0.f);
+	mFluidCell.assign(mNumCells, false);
+
+	mIntXVelocities.assign(mNumCells, 0.f);
+	mIntYVelocities.assign(mNumCells, 0.f);
+	mIntZVelocities.assign(mNumCells, 0.f);
 }
 
 void MACGrid::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions)
@@ -90,107 +94,173 @@ void MACGrid::SetCellVelocity(int index, const glm::vec3& inVelocity)
 
 void MACGrid::Update(float deltaTime)
 {
-	UpdateCellVelocity(deltaTime);
+	//Advection
+	AdvectCellVelocity(deltaTime);
 
+	// Projection step
 	UpdateCellPressure(deltaTime, 200);
+
+	UpdateCellVelocity(deltaTime);
 }
 
-void MACGrid::UpdateCellVelocity(float deltaTime)
+void MACGrid::AdvectCellVelocity(float deltaTime)
 {
-	int index = 0;
-	
-	float scale = deltaTime * mInvCellSize; // TO DO: water density
-
-	for (int x = 0; x < mNumCellWidth; x++)
+	for (int index = 0; index < mNumCells; index++)
 	{
-		for (int y = 0; y < mNumCellHeight; y++)
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(index);
+
+		float xVelocity = mCellXVelocities[index];
+		float yVelocity = mCellYVelocities[index];
+		float zVelocity = mCellZVelocities[index];
+
+		if (x > 0)
 		{
-			for (int z = 0; z < mNumCellLength; z++)
-			{
-				if (x < mNumCellWidth - 1)
-				{
-					int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
-					
-					float velocity = mCellXVelocities[index];
-					
-					velocity -= scale * (mCellPressures[neighbourRight] - mCellPressures[index]);
+			int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
 
-					mCellXVelocities[index] = velocity;
-				}
-
-				if (y < mNumCellHeight - 1)
-				{
-					int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-					float velocity = mCellYVelocities[index];
-
-					velocity -= scale * (mCellPressures[neighbourTop] - mCellPressures[index]);
-
-					mCellYVelocities[index] = velocity;
-				}
-
-				if (z < mNumCellLength - 1)
-				{
-					int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-					float velocity = mCellZVelocities[index];
-
-					velocity -= scale * (mCellPressures[neighbourFront] - mCellPressures[index]);
-
-					mCellZVelocities[index] = velocity;
-				}
-
-				++index;
-			}
+			xVelocity += mCellXVelocities[neighbourLeft];
+			xVelocity *= 0.5f;
 		}
+
+		if (y > 0)
+		{
+			int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+			yVelocity += mCellYVelocities[neighbourBottom];
+			yVelocity *= 0.5f;
+		}
+
+		if (z > 0)
+		{
+			int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+			zVelocity += mCellZVelocities[neighbourBack];
+			zVelocity *= 0.5f;
+		}
+
+		glm::vec3 avgVelocity(xVelocity, yVelocity, zVelocity);
+
+		// Want to find previous position, so go backwards in time.
+		glm::vec3 prevPosition = mCellCenters[index] - avgVelocity * deltaTime;
+
+		int prevCellIndex = GetClosestCell(prevPosition);
+		mIntXVelocities[index] = mCellXVelocities[prevCellIndex];
+		mIntYVelocities[index] = mCellYVelocities[prevCellIndex];
+		mIntZVelocities[index] = mCellZVelocities[prevCellIndex];
 	}
 
 }
 
+int MACGrid::GetClosestCell(const glm::vec3& inPosition)
+{
+	float closestDistSqr = 10000.0f;
+	int closestIndex = -1;
+
+	for (int index = 0; index < mNumCells; index++)
+	{
+		glm::vec3 cToP = inPosition - mCellCenters[index];
+
+		float dist = (cToP.x * cToP.x) + (cToP.y * cToP.y) + (cToP.z * cToP.z);
+
+		if (dist < closestDistSqr)
+		{
+			closestDistSqr = dist;
+			closestIndex = index;
+		}
+	}
+
+	if (closestIndex == -1)
+	{
+		std::cout << "NO CLOSEST CELL \n";
+	}
+
+	return closestIndex;
+}
+
+void MACGrid::UpdateCellVelocity(float deltaTime)
+{
+	float scale = deltaTime * mInvCellSize; // TO DO: water density
+
+	for (int index = 0; index < mNumCells; index++)
+	{
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(index);
+
+		if (x < mNumCellWidth - 1)
+		{
+			int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
+					
+			float velocity = mCellXVelocities[index];
+					
+			velocity -= scale * (mCellPressures[neighbourRight] - mCellPressures[index]);
+
+			mCellXVelocities[index] = velocity;
+		}
+
+		if (y < mNumCellHeight - 1)
+		{
+			int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+			float velocity = mCellYVelocities[index];
+
+			velocity -= scale * (mCellPressures[neighbourTop] - mCellPressures[index]);
+
+			mCellYVelocities[index] = velocity;
+		}
+
+		if (z < mNumCellLength - 1)
+		{
+			int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+			float velocity = mCellZVelocities[index];
+
+			velocity -= scale * (mCellPressures[neighbourFront] - mCellPressures[index]);
+
+			mCellZVelocities[index] = velocity;
+		}
+	}
+}
+
 void MACGrid::CalculateCellDivergence(float deltaTime)
 {
-	int index = 0;
-
 	float scale = mInvCellSize;
 
-	mCellDivergence.assign(mNumCellWidth * mNumCellHeight * mNumCellLength, 0.f);
+	mCellDivergence.assign(mNumCells, 0.f);
 
-	for (int x = 0; x < mNumCellWidth; x++)
+	for (int index = 0; index < mNumCells; index++)
 	{
-		for (int y = 0; y < mNumCellHeight; y++)
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(index);
+
+		float divergence = 0.f;
+
+		if (x < mNumCellWidth - 1)
 		{
-			for (int z = 0; z < mNumCellLength; z++)
-			{
-				float divergence = 0.f;
+			int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
 
-				if (x < mNumCellWidth - 1)
-				{
-					int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
-
-					divergence += mCellXVelocities[neighbourRight] - mCellXVelocities[index];
-				}
-
-				if (y < mNumCellHeight - 1)
-				{
-					int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-					divergence += mCellYVelocities[neighbourTop] - mCellYVelocities[index];
-				}
-
-				if (z < mNumCellLength - 1)
-				{
-					int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-					divergence += mCellZVelocities[neighbourFront] - mCellZVelocities[index];
-				}
-
-				divergence *= -scale;
-
-				mCellDivergence[index] = divergence;
-
-				++index;
-			}
+			//divergence += mCellXVelocities[neighbourRight] - mCellXVelocities[index];
+			divergence += mIntXVelocities[neighbourRight] - mIntXVelocities[index];
 		}
+
+		if (y < mNumCellHeight - 1)
+		{
+			int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+			//divergence += mCellYVelocities[neighbourTop] - mCellYVelocities[index];
+			divergence += mIntYVelocities[neighbourTop] - mIntYVelocities[index];
+		}
+
+		if (z < mNumCellLength - 1)
+		{
+			int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+			//divergence += mCellZVelocities[neighbourFront] - mCellZVelocities[index];
+			divergence += mIntZVelocities[neighbourFront] - mIntZVelocities[index];
+		}
+
+		divergence *= -scale;
+
+		mCellDivergence[index] = divergence;
 	}
 }
 
@@ -324,92 +394,86 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 {
 	float scale = deltaTime * mInvCellSize * mInvCellSize; // TO DO include fluid density.
 
-	int index = 0;
-
-	for (int x = 0; x < mNumCellWidth; x++)
+	for (int index = 0; index < mNumCells; index++)
 	{
-		for (int y = 0; y < mNumCellHeight; y++)
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(index);
+
+		if (mFluidCell[index])
 		{
-			for (int z = 0; z < mNumCellLength; z++)
+			if (x > 0)
 			{
-				if (mFluidCell[index])
+				int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
+
+				if (mFluidCell[neighbourLeft])
 				{
-					if (x > 0)
-					{
-						int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
-
-						if (mFluidCell[neighbourLeft])
-						{
-							inDiag[index] += scale;
-						}
-					}
-
-					if (x < mNumCellWidth - 1)
-					{
-						int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
-
-						if (mFluidCell[neighbourRight])
-						{
-							inDiag[index] += scale;
-							inX[index] -= scale;
-						}
-						else
-						{
-							inDiag[index] += scale;
-						}
-					}
-
-					if (y > 0)
-					{
-						int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						if (mFluidCell[neighbourBottom])
-						{
-							inDiag[index] += scale;
-						}
-					}
-
-					if (y < mNumCellHeight - 1)
-					{
-						int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						if (mFluidCell[neighbourTop])
-						{
-							inDiag[index] += scale;
-							inY[index] -= scale;
-						}
-						else
-						{
-							inDiag[index] += scale;
-						}
-					}
-
-					if (z > 0)
-					{
-						int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						if (mFluidCell[neighbourBack])
-						{
-							inDiag[index] += scale;
-						}
-					}
-
-					if (z < mNumCellWidth - 1)
-					{
-						int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						if (mFluidCell[neighbourFront])
-						{
-							inDiag[index] += scale;
-							inZ[index] -= scale;
-						}
-						else
-						{
-							inDiag[index] += scale;
-						}
-					}
+					inDiag[index] += scale;
 				}
-				++index;
+			}
+
+			if (x < mNumCellWidth - 1)
+			{
+				int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
+
+				if (mFluidCell[neighbourRight])
+				{
+					inDiag[index] += scale;
+					inX[index] -= scale;
+				}
+				else
+				{
+					inDiag[index] += scale;
+				}
+			}
+
+			if (y > 0)
+			{
+				int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				if (mFluidCell[neighbourBottom])
+				{
+					inDiag[index] += scale;
+				}
+			}
+
+			if (y < mNumCellHeight - 1)
+			{
+				int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				if (mFluidCell[neighbourTop])
+				{
+					inDiag[index] += scale;
+					inY[index] -= scale;
+				}
+				else
+				{
+					inDiag[index] += scale;
+				}
+			}
+
+			if (z > 0)
+			{
+				int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				if (mFluidCell[neighbourBack])
+				{
+					inDiag[index] += scale;
+				}
+			}
+
+			if (z < mNumCellWidth - 1)
+			{
+				int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				if (mFluidCell[neighbourFront])
+				{
+					inDiag[index] += scale;
+					inZ[index] -= scale;
+				}
+				else
+				{
+					inDiag[index] += scale;
+				}
 			}
 		}
 	}
@@ -420,154 +484,140 @@ void MACGrid::ApplyA(float deltaTime, std::vector<float>& outResult, const std::
 	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
 	float scale = deltaTime * mInvCellSize * mInvCellSize; // TO DO;
 
-	int index = 0;
-
-	for (int x = 0; x < mNumCellWidth; x++)
+	for (int index = 0; index < mNumCells; index++)
 	{
-		for (int y = 0; y < mNumCellHeight; y++)
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(index);
+
+		float value = 0.f;
+
+		if (x > 0)
 		{
-			for (int z = 0; z < mNumCellLength; z++)
-			{
-				float value = 0.f;
-
-				if (x > 0)
-				{
-					int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
-					value += inVec[neighbourLeft];
-				}
-
-				if (x < mNumCellWidth - 1)
-				{
-					int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
-					value += inVec[neighbourRight];
-				}
-
-				if (y > 0)
-				{
-					int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-					value += inVec[neighbourBottom];
-				}
-
-				if (y < mNumCellHeight - 1)
-				{
-					int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-					value += inVec[neighbourTop];
-				}
-
-				if (z > 0)
-				{
-					int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-					value += inVec[neighbourBack];
-				}
-
-				if (z < mNumCellLength - 1)
-				{
-					int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-					value += inVec[neighbourFront];
-				}
-
-				value *= -scale;
-				value += inDiag[index] * scale * inVec[index];
-
-				outResult[index] = value;
-
-				++index;
-			}
+			int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
+			value += inVec[neighbourLeft];
 		}
+
+		if (x < mNumCellWidth - 1)
+		{
+			int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
+			value += inVec[neighbourRight];
+		}
+
+		if (y > 0)
+		{
+			int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+			value += inVec[neighbourBottom];
+		}
+
+		if (y < mNumCellHeight - 1)
+		{
+			int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+			value += inVec[neighbourTop];
+		}
+
+		if (z > 0)
+		{
+			int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+			value += inVec[neighbourBack];
+		}
+
+		if (z < mNumCellLength - 1)
+		{
+			int neighbourFront = (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+			value += inVec[neighbourFront];
+		}
+
+		value *= -scale;
+		value += inDiag[index] * scale * inVec[index];
+
+		outResult[index] = value;
 	}
 }
 
 void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
-	inOutPrecon.assign(mNumCellHeight * mNumCellLength * mNumCellWidth, 0.f);
+	inOutPrecon.assign(mNumCells, 0.f);
 
-	int index = 0;
-
-	for (int x = 0; x < mNumCellWidth; x++)
+	for (int index = 0; index < mNumCells; index++)
 	{
-		for (int y = 0; y < mNumCellHeight; y++)
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(index);
+
+		if (mFluidCell[index])
 		{
-			for (int z = 0; z < mNumCellLength; z++)
+			float Axi = 0.0f;
+			float Axj = 0.0f;
+			float Axk = 0.0f;
+
+			float Ayi = 0.0f;
+			float Ayj = 0.0f;
+			float Ayk = 0.0f;
+
+			float Azi = 0.0f;
+			float Azj = 0.0f;
+			float Azk = 0.0f;
+
+			float preconi = 0.0f;
+			float preconj = 0.0f;
+			float preconk = 0.0f;
+
+			if (x > 0)
 			{
-				if (mFluidCell[index])
-				{
-					float Axi = 0.0f;
-					float Axj = 0.0f;
-					float Axk = 0.0f;
+				int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
 
-					float Ayi = 0.0f;
-					float Ayj = 0.0f;
-					float Ayk = 0.0f;
+				Axi = inX[neighbourLeft];
+				Ayi = inY[neighbourLeft];
+				Azi = inZ[neighbourLeft];
 
-					float Azi = 0.0f;
-					float Azj = 0.0f;
-					float Azk = 0.0f;
-
-					float preconi = 0.0f;
-					float preconj = 0.0f;
-					float preconk = 0.0f;
-
-					if (x > 0)
-					{
-						int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
-
-						Axi = inX[neighbourLeft];
-						Ayi = inY[neighbourLeft];
-						Azi = inZ[neighbourLeft];
-
-						preconi = inOutPrecon[neighbourLeft];
-					}
-					
-					if (y > 0)
-					{
-						int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						Axj = inX[neighbourBottom];
-						Ayj = inY[neighbourBottom];
-						Azj = inZ[neighbourBottom];
-
-						preconj = inOutPrecon[neighbourBottom];
-					}
-
-					if (z > 0)
-					{
-						int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						Axk = inX[neighbourBack];
-						Ayk = inY[neighbourBack];
-						Azk = inZ[neighbourBack];
-
-						preconk = inOutPrecon[neighbourBack];
-					}
-
-					float a = Axi * preconi;
-					float b = Ayj * preconj;
-					float c = Azk * preconk;
-
-					float termOne = a * a + b * b + c * c;
-
-					float d = Axi * (Ayi + Azi) * preconi * preconi;
-					float e = Ayj * (Axj + Azj) * preconj * preconj;
-					float f = Azk * (Axk + Ayk) * preconk * preconk;
-
-					float termTwo = d + e + f;
-
-					float newPrecon = inDiag[index] - termOne - PRECON_TUNER * termTwo;
-
-					if (newPrecon < PRECON_SAFETY * inDiag[index])
-					{
-						newPrecon = inDiag[index];
-					}
-					
-					if (newPrecon > TOLERANCE)
-					{
-						inOutPrecon[index] = 1 / sqrt(newPrecon);
-					}
-					
-				}
-
-				++index;
+				preconi = inOutPrecon[neighbourLeft];
 			}
+					
+			if (y > 0)
+			{
+				int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				Axj = inX[neighbourBottom];
+				Ayj = inY[neighbourBottom];
+				Azj = inZ[neighbourBottom];
+
+				preconj = inOutPrecon[neighbourBottom];
+			}
+
+			if (z > 0)
+			{
+				int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				Axk = inX[neighbourBack];
+				Ayk = inY[neighbourBack];
+				Azk = inZ[neighbourBack];
+
+				preconk = inOutPrecon[neighbourBack];
+			}
+
+			float a = Axi * preconi;
+			float b = Ayj * preconj;
+			float c = Azk * preconk;
+
+			float termOne = a * a + b * b + c * c;
+
+			float d = Axi * (Ayi + Azi) * preconi * preconi;
+			float e = Ayj * (Axj + Azj) * preconj * preconj;
+			float f = Azk * (Axk + Ayk) * preconk * preconk;
+
+			float termTwo = d + e + f;
+
+			float newPrecon = inDiag[index] - termOne - PRECON_TUNER * termTwo;
+
+			if (newPrecon < PRECON_SAFETY * inDiag[index])
+			{
+				newPrecon = inDiag[index];
+			}
+					
+			if (newPrecon > TOLERANCE)
+			{
+				inOutPrecon[index] = 1 / sqrt(newPrecon);
+			}
+					
 		}
 	}
 }
@@ -575,115 +625,119 @@ void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std
 void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
 	std::vector<float> intermediate;
-	intermediate.assign(mNumCellHeight * mNumCellLength * mNumCellWidth, 0.f);
+	intermediate.assign(mNumCells, 0.f);
 
-	int index = 0;
-
-	for (int x = 0; x < mNumCellWidth; x++)
+	for (int index = 0; index < mNumCells; index++)
 	{
-		for (int y = 0; y < mNumCellHeight; y++)
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(index);
+
+		if (mFluidCell[index])
 		{
-			for (int z = 0; z < mNumCellLength; z++)
+
+			float Axi = 0.0f;
+			float Ayj = 0.0f;
+			float Azk = 0.0f;
+
+			float preconi = 0.0f;
+			float preconj = 0.0f;
+			float preconk = 0.0f;
+
+			float intermediatei = 0.0f;
+			float intermediatej = 0.0f;
+			float intermediatek = 0.0f;
+
+			if (x > 0)
 			{
-				if (mFluidCell[index])
-				{
+				int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
 
-					float Axi = 0.0f;
-					float Ayj = 0.0f;
-					float Azk = 0.0f;
+				Axi = inX[neighbourLeft];
+				preconi = inPrecon[neighbourLeft];
+				intermediatei = intermediate[neighbourLeft];
 
-					float preconi = 0.0f;
-					float preconj = 0.0f;
-					float preconk = 0.0f;
-
-					float intermediatei = 0.0f;
-					float intermediatej = 0.0f;
-					float intermediatek = 0.0f;
-
-					if (x > 0)
-					{
-						int neighbourLeft = z + y * mNumCellLength + (x - 1) * mNumCellHeight * mNumCellLength;
-
-						Axi = inX[neighbourLeft];
-						preconi = inPrecon[neighbourLeft];
-						intermediatei = intermediate[neighbourLeft];
-
-					}
-
-					if (y > 0)
-					{
-						int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						Ayj = inY[neighbourBottom];
-						preconj = inPrecon[neighbourBottom];
-						intermediatej = intermediate[neighbourBottom];
-					}
-
-					if (z > 0)
-					{
-						int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						Azk = inZ[neighbourBack];
-						preconk = inPrecon[neighbourBack];
-						intermediatek = intermediate[neighbourBack];
-					}
-
-					float t = inResidual[index] - Axi * preconi * intermediatei
-												- Ayj * preconj * intermediatej
-												- Azk * preconk * intermediatek;
-
-					intermediate[index] = t * inPrecon[index];
-				}
-				
-				++index;
 			}
+
+			if (y > 0)
+			{
+				int neighbourBottom = z + (y - 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				Ayj = inY[neighbourBottom];
+				preconj = inPrecon[neighbourBottom];
+				intermediatej = intermediate[neighbourBottom];
+			}
+
+			if (z > 0)
+			{
+				int neighbourBack = (z - 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				Azk = inZ[neighbourBack];
+				preconk = inPrecon[neighbourBack];
+				intermediatek = intermediate[neighbourBack];
+			}
+
+			float t = inResidual[index] - Axi * preconi * intermediatei
+										- Ayj * preconj * intermediatej
+										- Azk * preconk * intermediatek;
+
+			intermediate[index] = t * inPrecon[index];
 		}
 	}
 
-	index = 0;
-
-	for (int x = 0; x < mNumCellWidth; x++)
+	for (int index = 0; index < mNumCells; index++)
 	{
-		for (int y = 0; y < mNumCellHeight; y++)
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(index);
+
+		if (mFluidCell[index])
 		{
-			for (int z = 0; z < mNumCellLength; z++)
+			float zi = 0.0f;
+			float zj = 0.0f;
+			float zk = 0.0f;
+
+			if (x < mNumCellWidth - 1)
 			{
-				if (mFluidCell[index])
-				{
-					float zi = 0.0f;
-					float zj = 0.0f;
-					float zk = 0.0f;
+				int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
 
-					if (x < mNumCellWidth - 1)
-					{
-						int neighbourRight = z + y * mNumCellLength + (x + 1) * mNumCellHeight * mNumCellLength;
-
-						zi = outResult[neighbourRight];
-					}
-
-					if (y < mNumCellHeight - 1)
-					{
-						int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						zj = outResult[neighbourTop];
-					}
-
-					if (z < mNumCellLength - 1)
-					{
-						int neighbourFront= (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
-
-						zk = outResult[neighbourFront];
-					}
-
-					float t = intermediate[index] - inX[index] * inPrecon[index] * zi
-													- inY[index] * inPrecon[index] * zj
-													- inZ[index] * inPrecon[index] * zk;
-
-					outResult[index] = t * inPrecon[index];
-				}
-
-				++index;
+				zi = outResult[neighbourRight];
 			}
+
+			if (y < mNumCellHeight - 1)
+			{
+				int neighbourTop = z + (y + 1) * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				zj = outResult[neighbourTop];
+			}
+
+			if (z < mNumCellLength - 1)
+			{
+				int neighbourFront= (z + 1) + y * mNumCellLength + x * mNumCellHeight * mNumCellLength;
+
+				zk = outResult[neighbourFront];
+			}
+
+			float t = intermediate[index] - inX[index] * inPrecon[index] * zi
+											- inY[index] * inPrecon[index] * zj
+											- inZ[index] * inPrecon[index] * zk;
+
+			outResult[index] = t * inPrecon[index];
 		}
 	}
+}
+
+std::tuple<int, int, int> MACGrid::GetXYZFromIndex(int index)
+{
+	int x = 0;
+	int y = 0;
+	int z = 0;
+
+	z = index % mNumCellLength;
+	y = static_cast<int>(round((index - z) / mNumCellLength)) % mNumCellHeight;
+	x = static_cast<int>(round(index - y * mNumCellHeight - z) / (mNumCellLength * mNumCellHeight)) % mNumCellWidth;
+
+	return std::tuple<int, int, int>(x, y, z);
+}
+
+int MACGrid::GetIndexFromXYZ(int X, int Y, int Z)
+{
+	return  Z + Y * mNumCellLength + X * mNumCellHeight * mNumCellLength;
 }
