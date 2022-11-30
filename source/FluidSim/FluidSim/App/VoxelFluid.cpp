@@ -53,32 +53,22 @@ void VoxelFluid::InitializeFromDomain(const Domain& inDomain)
 
 void VoxelFluid::UpdateVoxelStates(const Fluid& inFluid)
 {
+	int index = 0;
+
 	for (int x = 0; x < mNumVoxelsWidth; x++)
 	{
 		for (int y = 0; y < mNumVoxelsHeight; y++)
 		{
 			for (int z = 0; z < mNumVoxelsLength; z++)
 			{
-				int index = z + y * mNumVoxelsLength + x * mNumVoxelsHeight * mNumVoxelsLength;
-
-				//std::cout << index << "\n";
-
 				mFluidVoxel[index] = false;
 
-				for (int p = 0; p < inFluid.GetNumParticles(); p++)
+				if (inFluid.GetMACGrid().GetCellType(index))
 				{
-					glm::vec3 vec = inFluid.GetParticle(p).GetPosition() - mVoxelCenters[index];
-
-					float dist = vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
-
-					if (dist < mVoxelSize)
-					{
-						mFluidVoxel[index] = true;
-						break;
-					}
-
-					
+					mFluidVoxel[index] = true;
 				}
+
+				++index;
 			}
 		}
 	}
