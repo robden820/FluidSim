@@ -36,6 +36,7 @@ public:
 
 	const bool GetCellType(int index) const { return mFluidCell[index]; }
 	void SetCellType(int index, bool inCellType) { mFluidCell[index] = inCellType; }
+	int GetNumNeighbourOfFluidCells(int index);
 
 private:
 
