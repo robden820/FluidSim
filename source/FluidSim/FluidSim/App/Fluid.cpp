@@ -5,6 +5,7 @@ Fluid::Fluid(int numParticles)
 {
 	// Initialize particles
 	mParticles.reserve(numParticles);
+	mParticlePositions.reserve(numParticles);
 
 	for (int x = 0; x < 10; x++)
 	{
@@ -16,7 +17,8 @@ Fluid::Fluid(int numParticles)
 
 				Particle particle(position);
 
-			mParticles.push_back(particle);
+				mParticles.push_back(particle);
+				mParticlePositions.push_back(position);
 			}
 		}
 	}
@@ -26,7 +28,7 @@ Fluid::Fluid(int numParticles)
 	mDomain = d;
 
 	// Initialize Grid.
-	MACGrid g(mDomain, 20.f);
+	MACGrid g(mDomain, mParticlePositions, 20.f);
 	mMACGrid = g;
 }
 
@@ -45,7 +47,6 @@ void Fluid::StepSimulation(float deltaTime)
 	// Advect particles.
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
-
 		mParticles[p].StepParticle(deltaTime);
 	}
 
@@ -104,36 +105,18 @@ void Fluid::ClampParticleToDomain(Particle& particle)
 
 void Fluid::InterpolateToGrid()
 {
-	/*
 	for (int n = 0; n < mMACGrid.GetNumCells(); n++)
 	{
-		Particle& particle = ClosestParticleToCell(mMACGrid.GetCellCenter(n));
-
-		mMACGrid.SetGridCellVelocity(n, particle.GetVelocity());
-
-		float len = glm::length(particle.GetPosition() - mMACGrid.GetCellCenter(n));
-		if (len < 1.f)
-		{
-			mMACGrid.SetGridCellType(n, MACGridCell::eFLUID);
-		}
-		else
-		{
-			mMACGrid.SetGridCellType(n, MACGridCell::eEMPTY);
-		}
-	}
-	*/
-
-	for (int n = 0; n < mMACGrid.GetNumCells(); n++)
-	{
-		mMACGrid.SetGridCellType(n, MACGridCell::eEMPTY);
+		mMACGrid.SetCellType(n, false);
 	}
 
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
-		MACGridCell& cell = ClosestCellToParticle(mParticles[p]);
+		int cellIndex = ClosestCellToParticle(mParticles[p]);
 
-		cell.SetCellType(MACGridCell::eFLUID);
-		mMACGrid.SetGridCellVelocity(p, mParticles[p].GetVelocity());
+		mMACGrid.SetCellType(cellIndex, true);
+
+		mMACGrid.SetCellVelocity(p, mParticles[p].GetVelocity());
 	}
 }
 
@@ -141,13 +124,15 @@ void Fluid::InterpolateFromGrid()
 {
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
-		const MACGridCell& cell = ClosestCellToParticle(mParticles[p]);
+		int cellIndex = ClosestCellToParticle(mParticles[p]);
 
-		mParticles[p].SetVelocity(cell.GetCellVelocity());
+		glm::vec3 pVelocity(mMACGrid.GetCellXVelocity(cellIndex), mMACGrid.GetCellYVelocity(cellIndex), mMACGrid.GetCellZVelocity(cellIndex));
+
+		mParticles[p].SetVelocity(pVelocity);
 	}
 }
 
-MACGridCell& Fluid::ClosestCellToParticle(const Particle& particle)
+int Fluid::ClosestCellToParticle(const Particle& particle)
 {
 	glm::vec3 particlePos = particle.GetPosition();
 
@@ -168,7 +153,7 @@ MACGridCell& Fluid::ClosestCellToParticle(const Particle& particle)
 		}
 	}
 
-	return mMACGrid.GetGridCell(closestCell);
+	return closestCell;
 }
 
 Particle& Fluid::ClosestParticleToCell(const glm::vec3& cellCenter)

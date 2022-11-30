@@ -33,11 +33,12 @@ class Fluid
 		void InterpolateToGrid();
 		void InterpolateFromGrid();
 		
-		MACGridCell& ClosestCellToParticle(const Particle& particle);
+		int ClosestCellToParticle(const Particle& particle);
 
 		Particle& ClosestParticleToCell(const glm::vec3& cellCenter);
 
 		std::vector<Particle> mParticles;
+		std::vector<glm::vec3> mParticlePositions;
 
 		MACGrid mMACGrid;
 		
