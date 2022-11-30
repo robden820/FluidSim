@@ -248,6 +248,11 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 			phi += z[i] * search[i];
 		}
 
+		if (phi < TOLERANCE)
+		{
+			phi = TOLERANCE;
+		}
+
 		float alpha = theta / phi;
 
 		for (int i = 0; i < numCells; i++)
@@ -256,11 +261,11 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 			residuals[i] -= alpha * z[i];
 		}
 
-		float maxResidual = 0.0f;
+		float maxResidual = -1.0f;
 
 		for (int index = 0; index < numCells; index++)
 		{
-			if (residuals[index] > maxResidual)
+			if (abs(residuals[index]) > maxResidual)
 			{
 				maxResidual = residuals[index];
 			}
@@ -461,6 +466,7 @@ void MACGrid::ApplyA(float deltaTime, std::vector<float>& outResult, const std::
 					value += inVec[neighbourFront];
 				}
 
+				value *= -scale;
 				value += inDiag[index] * scale * inVec[index];
 
 				outResult[index] = value;
@@ -553,7 +559,11 @@ void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std
 						newPrecon = inDiag[index];
 					}
 					
-					inOutPrecon[index] = 1 / sqrt(newPrecon);
+					if (newPrecon > TOLERANCE)
+					{
+						inOutPrecon[index] = 1 / sqrt(newPrecon);
+					}
+					
 				}
 
 				++index;
