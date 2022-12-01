@@ -54,7 +54,7 @@ void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
 	mCellYVelocities.assign(mNumCells, 0.f);
 	mCellZVelocities.assign(mNumCells, 0.f);
 	mCellDivergence.assign(mNumCells, 0.f);
-	mCellType.assign(mNumCells, CellType::eAIR);
+	mCellType.assign(mNumCells, CellType::eNONE);
 
 	mIntXVelocities.assign(mNumCells, 0.f);
 	mIntYVelocities.assign(mNumCells, 0.f);
@@ -409,17 +409,15 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::cout << "NUM PRESSURE SOLVE ITERATIONS: " << iteration << "\n";
 
 	// Set pressure
-
 	for (int i = 0; i < numCells; i++)
 	{
-		//mGridCells[i].SetPressure(newPressure[i]);
 		if (mCellType[i] == CellType::eFLUID)
 		{
 			mCellPressures[i] = newPressure[i];
 		}
 		else
 		{
-			mCellPressures[i] = 0.1f;
+			mCellPressures[i] = 0.f;
 		}
 	}
 }
