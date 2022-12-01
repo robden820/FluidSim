@@ -105,16 +105,19 @@ void Fluid::ClampParticleToDomain(Particle& particle)
 
 void Fluid::InterpolateToGrid()
 {
-	for (int n = 0; n < mMACGrid.GetNumCells(); n++)
+	for (int c = 0; c < mMACGrid.GetNumCells(); c++)
 	{
-		mMACGrid.SetCellType(n, false);
+		if (mMACGrid.GetCellType(c) != MACGrid::CellType::eSOLID)
+		{
+			mMACGrid.SetCellType(c, MACGrid::CellType::eAIR);
+		}
 	}
 
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
 		int cellIndex = ClosestCellToParticle(mParticles[p]);
 
-		mMACGrid.SetCellType(cellIndex, true);
+		mMACGrid.SetCellType(cellIndex, MACGrid::CellType::eFLUID);
 
 		mMACGrid.SetCellVelocity(p, mParticles[p].GetVelocity());
 	}
@@ -126,9 +129,18 @@ void Fluid::InterpolateFromGrid()
 	{
 		int cellIndex = ClosestCellToParticle(mParticles[p]);
 
-		glm::vec3 pVelocity(mMACGrid.GetCellXVelocity(cellIndex), mMACGrid.GetCellYVelocity(cellIndex), mMACGrid.GetCellZVelocity(cellIndex));
+		int x, y, z;
+		std::tie(x, y, z) = mMACGrid.GetXYZFromIndex(cellIndex);
 
-		mParticles[p].SetVelocity(pVelocity);
+		int neighbourLeft = mMACGrid.GetIndexFromXYZ(x - 1, y, z);
+		int neighbourBottom = mMACGrid.GetIndexFromXYZ(x, y - 1, z);
+		int neighbourBack = mMACGrid.GetIndexFromXYZ(x, y, z - 1);
+
+		float velocityX = (mMACGrid.GetCellXVelocity(cellIndex) + mMACGrid.GetCellXVelocity(neighbourLeft)) * 0.5f;
+		float velocityY = (mMACGrid.GetCellYVelocity(cellIndex) + mMACGrid.GetCellYVelocity(neighbourBottom)) * 0.5f;
+		float velocityZ = (mMACGrid.GetCellZVelocity(cellIndex) + mMACGrid.GetCellZVelocity(neighbourBack)) * 0.5f;
+
+		mParticles[p].SetVelocity(glm::vec3(velocityX, velocityY, velocityZ));
 	}
 }
 
