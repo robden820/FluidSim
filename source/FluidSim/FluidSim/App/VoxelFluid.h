@@ -9,6 +9,13 @@
 class VoxelFluid
 {
 	public:
+		enum VoxelState
+		{
+			eFLUID = 0,
+			eSOLID = 1,
+			eNONE = 2
+		};
+
 		VoxelFluid() = default;
 		~VoxelFluid() = default;
 
@@ -19,9 +26,9 @@ class VoxelFluid
 		const std::vector<glm::vec3>& GetVoxelCenters() const { return mVoxelCenters; }
 		const glm::vec3& GetVoxelCenter(int index) const { return mVoxelCenters[index]; }
 		
-		const std::vector<bool>& GetVoxelStates() const { return mFluidVoxel; }
-		const bool GetVoxelState(int index) const { return mFluidVoxel[index]; }
-		void SetVoxelState(int index, bool inState) { mFluidVoxel[index] = inState; }
+		const std::vector<VoxelState>& GetVoxelStates() const { return mVoxelStates; }
+		const VoxelState GetVoxelState(int index) const { return mVoxelStates[index]; }
+		void SetVoxelState(int index, VoxelState inState) { mVoxelStates[index] = inState; }
 
 	private:
 
@@ -35,6 +42,6 @@ class VoxelFluid
 		int mNumVoxels;
 
 		std::vector<glm::vec3> mVoxelCenters;
-		std::vector<bool> mFluidVoxel;
+		std::vector<VoxelState> mVoxelStates;
 
 };

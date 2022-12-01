@@ -30,7 +30,7 @@ void VoxelFluid::InitializeFromDomain(const Domain& inDomain)
 	float halfVoxel = mVoxelSize * 0.5f;
 
 	mVoxelCenters.reserve(mNumVoxels);
-	mFluidVoxel.reserve(mNumVoxels);
+	mVoxelStates.reserve(mNumVoxels);
 
 	for (int x = 0; x < mNumVoxelsWidth; x++)
 	{
@@ -45,7 +45,7 @@ void VoxelFluid::InitializeFromDomain(const Domain& inDomain)
 				float centerZ = dBack + (z * mVoxelSize) + halfVoxel;
 
 				mVoxelCenters.push_back(glm::vec3(centerX, centerY, centerZ));
-				mFluidVoxel.push_back(false);
+				mVoxelStates.push_back(VoxelState::eNONE);
 			}
 		}
 	}
@@ -55,11 +55,15 @@ void VoxelFluid::UpdateVoxelStates(const Fluid& inFluid)
 {
 	for (int index = 0; index < mNumVoxels; index++)
 	{
-		mFluidVoxel[index] = false;
+		mVoxelStates[index] = VoxelState::eNONE;
 
-		if (inFluid.GetMACGrid().GetCellType(index))
+		if (inFluid.GetMACGrid().GetCellType(index) == MACGrid::CellType::eFLUID)
 		{
-			mFluidVoxel[index] = true;
+			mVoxelStates[index] = VoxelState::eFLUID;
+		}
+		else if (inFluid.GetMACGrid().GetCellType(index) == MACGrid::CellType::eSOLID)
+		{
+			mVoxelStates[index] = VoxelState::eSOLID;
 		}
 	}
 }

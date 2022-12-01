@@ -54,7 +54,7 @@ void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
 	mCellYVelocities.assign(mNumCells, 0.f);
 	mCellZVelocities.assign(mNumCells, 0.f);
 	mCellDivergence.assign(mNumCells, 0.f);
-	mFluidCell.assign(mNumCells, false);
+	mCellType.assign(mNumCells, CellType::eAIR);
 
 	mIntXVelocities.assign(mNumCells, 0.f);
 	mIntYVelocities.assign(mNumCells, 0.f);
@@ -65,16 +65,27 @@ void MACGrid::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParti
 {
 	for (int cIndex = 0; cIndex < GetNumCells(); cIndex++)
 	{
-		for (int pIndex = 0; pIndex < inParticlePositions.size(); pIndex++)
+		int x, y, z;
+		std::tie(x, y, z) = GetXYZFromIndex(cIndex);
+
+		if (x == 0 || x == mNumCellWidth - 1 || y == 0 || y == mNumCellHeight - 1 || z == 0 || z == mNumCellLength - 1)
 		{
-			glm::vec3 cToP = inParticlePositions[pIndex] - mCellCenters[cIndex];
+			mCellType[cIndex] = CellType::eSOLID;
 
-			if (glm::length(cToP) < 1.0f)
+		}
+		else
+		{
+			for (int pIndex = 0; pIndex < inParticlePositions.size(); pIndex++)
 			{
-				mFluidCell[cIndex] = true;
-				mCellPressures[cIndex] = 1.0f;
+				glm::vec3 cToP = inParticlePositions[pIndex] - mCellCenters[cIndex];
 
-				break;
+				if (glm::length(cToP) < 1.0f)
+				{
+					mCellType[cIndex] = CellType::eFLUID;
+					mCellPressures[cIndex] = 1.0f;
+
+					break;
+				}
 			}
 		}
 	}
@@ -113,24 +124,33 @@ void MACGrid::AdvectCellVelocity(float deltaTime)
 		{
 			int neighbourLeft = GetIndexFromXYZ(x - 1, y, z);
 
-			xVelocity += mCellXVelocities[neighbourLeft];
-			xVelocity *= 0.5f;
+			if (mCellType[neighbourLeft] == CellType::eFLUID)
+			{
+				xVelocity += mCellXVelocities[neighbourLeft];
+				xVelocity *= 0.5f;
+			}
 		}
 
 		if (y > 0)
 		{
 			int neighbourBottom = GetIndexFromXYZ(x, y - 1, z);
 
-			yVelocity += mCellYVelocities[neighbourBottom];
-			yVelocity *= 0.5f;
+			if (mCellType[neighbourBottom] == CellType::eFLUID)
+			{
+				yVelocity += mCellYVelocities[neighbourBottom];
+				yVelocity *= 0.5f;
+			}
 		}
 
 		if (z > 0)
 		{
 			int neighbourBack = GetIndexFromXYZ(x, y, z - 1);
 
-			zVelocity += mCellZVelocities[neighbourBack];
-			zVelocity *= 0.5f;
+			if (mCellType[neighbourBack] == CellType::eFLUID)
+			{
+				zVelocity += mCellZVelocities[neighbourBack];
+				zVelocity *= 0.5f;
+			}
 		}
 
 		glm::vec3 avgVelocity(xVelocity, yVelocity, zVelocity);
@@ -143,7 +163,6 @@ void MACGrid::AdvectCellVelocity(float deltaTime)
 		mIntYVelocities[index] = mCellYVelocities[prevCellIndex];
 		mIntZVelocities[index] = mCellZVelocities[prevCellIndex];
 	}
-
 }
 
 int MACGrid::GetClosestCell(const glm::vec3& inPosition)
@@ -176,37 +195,59 @@ void MACGrid::UpdateCellVelocity(float deltaTime)
 		int x, y, z;
 		std::tie(x, y, z) = GetXYZFromIndex(index);
 
-		if (x < mNumCellWidth - 1)
+		if (mCellType[index] == CellType::eFLUID)
 		{
-			int neighbourRight = GetIndexFromXYZ(x + 1, y, z);
-					
-			float velocity = mCellXVelocities[index];
-					
-			velocity -= scale * (mCellPressures[neighbourRight] - mCellPressures[index]);
+			if (x < mNumCellWidth - 1)
+			{
+				int neighbourRight = GetIndexFromXYZ(x + 1, y, z);
 
-			mCellXVelocities[index] = velocity;
+				float velocity = mCellXVelocities[index];
+				velocity -= scale * (mCellPressures[neighbourRight] - mCellPressures[index]);
+
+				if (mCellType[neighbourRight] == CellType::eSOLID)
+				{
+					velocity = 0.f;
+				}
+
+				mCellXVelocities[index] = velocity;
+			}
+
+			if (y < mNumCellHeight - 1)
+			{
+				int neighbourTop = GetIndexFromXYZ(x, y + 1, z);
+
+				float velocity = mCellYVelocities[index];
+				velocity -= scale * (mCellPressures[neighbourTop] - mCellPressures[index]);
+
+				if (mCellType[neighbourTop] == CellType::eSOLID)
+				{
+					velocity = 0.f;
+				}
+
+				mCellYVelocities[index] = velocity;
+			}
+
+			if (z < mNumCellLength - 1)
+			{
+				int neighbourFront = GetIndexFromXYZ(x, y, z + 1);
+
+				float velocity = mCellZVelocities[index];
+				velocity -= scale * (mCellPressures[neighbourFront] - mCellPressures[index]);
+
+				if (mCellType[neighbourFront] == CellType::eSOLID)
+				{
+					velocity = 0.f;
+				}
+
+				mCellZVelocities[index] = velocity;
+			}
 		}
 
-		if (y < mNumCellHeight - 1)
+		if (mCellType[index] == CellType::eSOLID)
 		{
-			int neighbourTop = GetIndexFromXYZ(x, y + 1, z);
-
-			float velocity = mCellYVelocities[index];
-
-			velocity -= scale * (mCellPressures[neighbourTop] - mCellPressures[index]);
-
-			mCellYVelocities[index] = velocity;
-		}
-
-		if (z < mNumCellLength - 1)
-		{
-			int neighbourFront = GetIndexFromXYZ(x, y, z + 1);
-
-			float velocity = mCellZVelocities[index];
-
-			velocity -= scale * (mCellPressures[neighbourFront] - mCellPressures[index]);
-
-			mCellZVelocities[index] = velocity;
+			mCellXVelocities[index] = 0.f;
+			mCellYVelocities[index] = 0.f;
+			mCellZVelocities[index] = 0.f;
 		}
 	}
 }
@@ -219,38 +260,41 @@ void MACGrid::CalculateCellDivergence(float deltaTime)
 
 	for (int index = 0; index < mNumCells; index++)
 	{
-		int x, y, z;
-		std::tie(x, y, z) = GetXYZFromIndex(index);
-
-		float divergence = 0.f;
-
-		if (x < mNumCellWidth - 1)
+		if (mCellType[index] == CellType::eFLUID)
 		{
-			int neighbourRight = GetIndexFromXYZ(x + 1, y, z);
+			int x, y, z;
+			std::tie(x, y, z) = GetXYZFromIndex(index);
 
-			//divergence += mCellXVelocities[neighbourRight] - mCellXVelocities[index];
-			divergence += mIntXVelocities[neighbourRight] - mIntXVelocities[index];
+			float divergence = 0.f;
+
+			if (x < mNumCellWidth - 1)
+			{
+				int neighbourRight = GetIndexFromXYZ(x + 1, y, z);
+
+				//divergence += mCellXVelocities[neighbourRight] - mCellXVelocities[index];
+				divergence += mIntXVelocities[neighbourRight] - mIntXVelocities[index];
+			}
+
+			if (y < mNumCellHeight - 1)
+			{
+				int neighbourTop = GetIndexFromXYZ(x, y + 1, z);
+
+				//divergence += mCellYVelocities[neighbourTop] - mCellYVelocities[index];
+				divergence += mIntYVelocities[neighbourTop] - mIntYVelocities[index];
+			}
+
+			if (z < mNumCellLength - 1)
+			{
+				int neighbourFront = GetIndexFromXYZ(x, y, z + 1);
+
+				//divergence += mCellZVelocities[neighbourFront] - mCellZVelocities[index];
+				divergence += mIntZVelocities[neighbourFront] - mIntZVelocities[index];
+			}
+
+			divergence *= -scale;
+
+			mCellDivergence[index] = divergence;
 		}
-
-		if (y < mNumCellHeight - 1)
-		{
-			int neighbourTop = GetIndexFromXYZ(x, y + 1, z);
-
-			//divergence += mCellYVelocities[neighbourTop] - mCellYVelocities[index];
-			divergence += mIntYVelocities[neighbourTop] - mIntYVelocities[index];
-		}
-
-		if (z < mNumCellLength - 1)
-		{
-			int neighbourFront = GetIndexFromXYZ(x, y, z + 1);
-
-			//divergence += mCellZVelocities[neighbourFront] - mCellZVelocities[index];
-			divergence += mIntZVelocities[neighbourFront] - mIntZVelocities[index];
-		}
-
-		divergence *= -scale;
-
-		mCellDivergence[index] = divergence;
 	}
 }
 
@@ -369,7 +413,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	for (int i = 0; i < numCells; i++)
 	{
 		//mGridCells[i].SetPressure(newPressure[i]);
-		if (mFluidCell[i])
+		if (mCellType[i] == CellType::eFLUID)
 		{
 			mCellPressures[i] = newPressure[i];
 		}
@@ -389,13 +433,13 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 		int x, y, z;
 		std::tie(x, y, z) = GetXYZFromIndex(index);
 
-		if (mFluidCell[index])
+		if (mCellType[index] == CellType::eFLUID)
 		{
 			if (x > 0)
 			{
 				int neighbourLeft = GetIndexFromXYZ(x - 1, y, z);
 
-				if (mFluidCell[neighbourLeft])
+				if (mCellType[neighbourLeft] == CellType::eFLUID)
 				{
 					inDiag[index] += scale;
 				}
@@ -405,7 +449,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 			{
 				int neighbourRight = GetIndexFromXYZ(x + 1, y, z);
 
-				if (mFluidCell[neighbourRight])
+				if (mCellType[neighbourRight] == CellType::eFLUID)
 				{
 					inDiag[index] += scale;
 					inX[index] -= scale;
@@ -420,7 +464,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 			{
 				int neighbourBottom = GetIndexFromXYZ(x, y - 1, z);
 
-				if (mFluidCell[neighbourBottom])
+				if (mCellType[neighbourBottom] == CellType::eFLUID)
 				{
 					inDiag[index] += scale;
 				}
@@ -430,7 +474,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 			{
 				int neighbourTop = GetIndexFromXYZ(x, y + 1, z);
 
-				if (mFluidCell[neighbourTop])
+				if (mCellType[neighbourTop] == CellType::eFLUID)
 				{
 					inDiag[index] += scale;
 					inY[index] -= scale;
@@ -445,7 +489,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 			{
 				int neighbourBack = GetIndexFromXYZ(x, y, z - 1);
 
-				if (mFluidCell[neighbourBack])
+				if (mCellType[neighbourBack] == CellType::eFLUID)
 				{
 					inDiag[index] += scale;
 				}
@@ -455,7 +499,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 			{
 				int neighbourFront = GetIndexFromXYZ(x, y, z + 1);
 
-				if (mFluidCell[neighbourFront])
+				if (mCellType[neighbourFront] == CellType::eFLUID)
 				{
 					inDiag[index] += scale;
 					inZ[index] -= scale;
@@ -533,7 +577,7 @@ void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std
 		int x, y, z;
 		std::tie(x, y, z) = GetXYZFromIndex(index);
 
-		if (mFluidCell[index])
+		if (mCellType[index] == CellType::eFLUID)
 		{
 			float Axi = 0.0f;
 			float Axj = 0.0f;
@@ -622,7 +666,7 @@ void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vect
 		int x, y, z;
 		std::tie(x, y, z) = GetXYZFromIndex(index);
 
-		if (mFluidCell[index])
+		if (mCellType[index] == CellType::eFLUID)
 		{
 
 			float Axi = 0.0f;
@@ -677,7 +721,7 @@ void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vect
 		int x, y, z;
 		std::tie(x, y, z) = GetXYZFromIndex(index);
 
-		if (mFluidCell[index])
+		if (mCellType[index] == CellType::eFLUID)
 		{
 			float zi = 0.0f;
 			float zj = 0.0f;
@@ -729,76 +773,4 @@ std::tuple<int, int, int> MACGrid::GetXYZFromIndex(int index)
 int MACGrid::GetIndexFromXYZ(int X, int Y, int Z)
 {
 	return  Z + Y * mNumCellLength + X * mNumCellHeight * mNumCellLength;
-}
-
-int MACGrid::GetNumNeighbourOfFluidCells(int index)
-{
-	int x, y, z;
-	std::tie(x, y, z) = GetXYZFromIndex(index);
-
-	int back = z > 0 ? GetIndexFromXYZ(x, y, z - 1) : -1;
-	int front = z < mNumCellLength - 1 ? GetIndexFromXYZ(x, y, z + 1) : -1;
-
-	int numFluidNeighbours = 0;
-
-	if (x > 0)
-	{
-		int left = GetIndexFromXYZ(x - 1, y, z);
-
-		if (mFluidCell[left])
-		{
-			++numFluidNeighbours;
-		}
-		
-	}
-	if (x < mNumCellWidth - 1)
-	{
-		int right = GetIndexFromXYZ(x + 1, y, z);
-
-		if (mFluidCell[right])
-		{
-			++numFluidNeighbours;
-		}
-	}
-
-	if (y > 0)
-	{
-		int bottom = GetIndexFromXYZ(x, y - 1, z);
-
-		if (mFluidCell[bottom])
-		{
-			++numFluidNeighbours;
-		}
-	}
-	if (y < mNumCellHeight - 1)
-	{
-		int top = GetIndexFromXYZ(x, y + 1, z);
-
-		if (mFluidCell[top])
-		{
-			++numFluidNeighbours;
-		}
-	}
-	
-	if (z > 0)
-	{
-		int back = GetIndexFromXYZ(x, y, z - 1);
-
-		if (mFluidCell[back])
-		{
-			++numFluidNeighbours;
-		}
-	}
-	if (z < mNumCellLength - 1)
-	{
-		int front = GetIndexFromXYZ(x, y, z + 1);
-
-		if (mFluidCell[front])
-		{
-			++numFluidNeighbours;
-		}
-	}
-
-	return numFluidNeighbours;
-
 }

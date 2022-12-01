@@ -9,6 +9,15 @@
 class MACGrid
 {
 public:
+
+	enum CellType
+	{
+		eFLUID = 0,
+		eSOLID = 1,
+		eAIR = 2,
+		eNONE = 3
+	};
+
 	MACGrid() = default;
 	~MACGrid() = default;
 
@@ -34,9 +43,11 @@ public:
 	const float GetCellPressure(int index) const { return mCellPressures[index]; }
 	void SetCellPressure(int index, float inPressure) { mCellPressures[index]= inPressure; }
 
-	const bool GetCellType(int index) const { return mFluidCell[index]; }
-	void SetCellType(int index, bool inCellType) { mFluidCell[index] = inCellType; }
-	int GetNumNeighbourOfFluidCells(int index);
+	const CellType GetCellType(int index) const { return mCellType[index]; }
+	void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
+
+	std::tuple<int, int, int> GetXYZFromIndex(int index);
+	int GetIndexFromXYZ(int X, int Y, int Z);
 
 private:
 
@@ -55,9 +66,6 @@ private:
 
 	void ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
 	void ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
-
-	std::tuple<int, int, int> GetXYZFromIndex(int index);
-	int GetIndexFromXYZ(int X, int Y, int Z);
 
 	int mNumCellWidth;
 	int mNumCellLength;
@@ -79,5 +87,5 @@ private:
 	std::vector<float> mIntYVelocities;
 	std::vector<float> mIntZVelocities;
 
-	std::vector<bool> mFluidCell;
+	std::vector<CellType> mCellType;
 };

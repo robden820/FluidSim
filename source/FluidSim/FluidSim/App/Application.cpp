@@ -8,18 +8,17 @@ Application::Application(Camera& inCamera, Shader& inShader)
 
 void Application::Initialize()
 {
-	Fluid fluid(100);
+	Fluid fluid(1000);
 	mFluid = fluid;
 
 	DrawFluid drawFluid(mFluid);
 	mDrawFluid = drawFluid;	
 
-	VoxelFluid voxelFluid(mFluid, 1.0f);
+	VoxelFluid voxelFluid(mFluid, 0.5f);
 	mVoxelFluid = voxelFluid;
 
 	Sphere s;
 	mSphere = s;
-//	mSphere.SetRadius(0.1f);
 
 	InitGLObjects();
 }
@@ -100,6 +99,7 @@ void Application::Render(float inAspectRatio)
 	mShader.SetMatrix("projection", projection);
 
 	mShader.SetVector("color", glm::vec3(1.0f, 0.0f, 0.0f));
+	mShader.SetFloat("alpha", 1.0f);
 	
 	for (int p = 0; p < mDrawFluid.mParticlePoints.size(); p++)
 	{
@@ -112,17 +112,24 @@ void Application::Render(float inAspectRatio)
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 
-	mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
-
 	for (int v = 0; v < mVoxelFluid.GetVoxelCenters().size(); v++)
 	{
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, mVoxelFluid.GetVoxelCenter(v));
+		model = glm::scale(model, glm::vec3(0.5f));
 
 		mShader.SetMatrix("model", model);
 
-		if (mVoxelFluid.GetVoxelState(v))
+		if (mVoxelFluid.GetVoxelState(v) == VoxelFluid::VoxelState::eFLUID)
 		{
+			mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
+			mShader.SetFloat("alpha", 1.0f);
+			glDrawArrays(GL_LINES, 0, 36);
+		}
+		else if (mVoxelFluid.GetVoxelState(v) == VoxelFluid::VoxelState::eSOLID)
+		{
+			mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
+			mShader.SetFloat("alpha", 0.1f);
 			glDrawArrays(GL_LINES, 0, 36);
 		}
 	}
