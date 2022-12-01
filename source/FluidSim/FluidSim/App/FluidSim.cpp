@@ -86,11 +86,12 @@ int main()
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Here we can set up our camera ~~~~~ */
-	Camera cam(glm::vec3(0.0f, 0.0f, 40.0f));
+	Camera cam(glm::vec3(5.0f, 10.0f, 40.0f));
 	camera = cam;
 
 	/* ~~~~~ Set up our shaders ~~~~~ */
-	Shader shader("../FluidSim/App/Shaders/vertex.txt", "../FluidSim/App/Shaders/fragment.txt");
+	//Shader shader("../FluidSim/App/Shaders/vertex.txt", "../FluidSim/App/Shaders/fragment.txt");
+	Shader shader("C:/Users/Robert Dennison/Documents/GitHub/FluidSim/source/FluidSim/FluidSim/App/Shaders/vertex.txt", "C:/Users/Robert Dennison/Documents/GitHub/FluidSim/source/FluidSim/FluidSim/App/Shaders//fragment.txt");
 
 	/* ~~~~~ Set those in the application ~~~~~ */
 	Application gApplication(camera, shader);
@@ -102,6 +103,9 @@ int main()
 
 	// We want to enable depth testing using the z-buffer.
 	glEnable(GL_DEPTH_TEST);
+	// Enable transparent colours.
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	// Enable face culling. Do we want this? TO_DO
 	//glEnable(GL_CULL_FACE);
 
@@ -131,14 +135,14 @@ int main()
 		// ~~~ RENDERING ~~~ //
 
 		// Specify our clear color.
-		glClearColor(0.2f, 0.3, 0.3f, 1.0f);
+		glClearColor(0.f, 0.f, 0.f, 1.0f);
 		// Clears the specified buffer with the color we just set. We also want to clear our depth buffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		
 
 		// Render the application
-		gApplication.Update(1.0f / 24.0f);
+		gApplication.Update(0.2f);
 		// Do we need to do this every frame?
 //		glBindVertexArray(VAO);
 		float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
@@ -209,7 +213,7 @@ void mouse_callback(GLFWwindow* window, double xPosIn, double yPosIn)
 	lastX = xpos;
 	lastY = ypos;
 
-	camera.ProcessMouseMovement(xoffset, yoffset);
+//	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)

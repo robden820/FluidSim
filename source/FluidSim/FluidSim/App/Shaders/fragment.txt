@@ -2,11 +2,12 @@
 
 in vec4 outPos;
 in vec3 outColor;
+in float outAlpha;
 
 out vec4 FragColor;
 
 
 void main()
 {
-	FragColor = vec4(outColor, 1.0f);
+	FragColor = vec4(outColor, outAlpha);
 }
