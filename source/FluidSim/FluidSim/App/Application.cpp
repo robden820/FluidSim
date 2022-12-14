@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include "GLFW/glfw3.h"
+
 Application::Application(Camera& inCamera, Shader& inShader)
 	: mCamera(inCamera), mShader(inShader)
 {
@@ -8,19 +10,36 @@ Application::Application(Camera& inCamera, Shader& inShader)
 
 void Application::Initialize()
 {
+	float start = glfwGetTime();
+
 	Fluid fluid(1000);
 	mFluid = fluid;
+
+	std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
+	start = glfwGetTime();
 
 	DrawFluid drawFluid(mFluid);
 	mDrawFluid = drawFluid;	
 
-	VoxelFluid voxelFluid(mFluid, 0.5f);
+	std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
+	start = glfwGetTime();
+
+	// Needs to be set to 10/MACGrid resolution
+	// TO DO: fix all initialization values.
+	VoxelFluid voxelFluid(mFluid);
 	mVoxelFluid = voxelFluid;
+
+	std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
+	
 
 	Sphere s;
 	mSphere = s;
 
+	start = glfwGetTime();
+
 	InitGLObjects();
+
+	std::cout << "Initializing GL objects: " << glfwGetTime() - start << "\n";
 }
 
 void Application::InitGLObjects()
