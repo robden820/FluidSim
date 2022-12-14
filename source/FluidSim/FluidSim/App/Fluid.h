@@ -26,6 +26,8 @@ class Fluid
 		const Domain& GetDomain() const { return mDomain; }
 		const MACGrid& GetMACGrid() const { return mMACGrid; }
 
+		int GetMACGridResolution() const { return mMACGridResolution; }
+
 		void ClampParticleToDomain(Particle& particle);
 	
 	private:
@@ -35,12 +37,11 @@ class Fluid
 		
 		int ClosestCellToParticle(const Particle& particle);
 
-		Particle& ClosestParticleToCell(const glm::vec3& cellCenter);
-
 		std::vector<Particle> mParticles;
 		std::vector<glm::vec3> mParticlePositions;
 
 		MACGrid mMACGrid;
+		int mMACGridResolution;
 		
 		Domain mDomain;
 };
