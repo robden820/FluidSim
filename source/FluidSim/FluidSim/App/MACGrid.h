@@ -5,6 +5,7 @@
 #include "Domain.h"
 
 #include "glm/glm.hpp"
+#include "oneapi/tbb.h"
 
 class MACGrid
 {
@@ -38,12 +39,11 @@ public:
 	void SetCellYVelocity(int index, float inVelocity) { mCellYVelocities[index] = inVelocity; }
 	void SetCellZVelocity(int index, float inVelocity) { mCellZVelocities[index] = inVelocity; }
 
-	void SetCellVelocity(int index, const glm::vec3& inVelocity);
-
 	const float GetCellPressure(int index) const { return mCellPressures[index]; }
 	void SetCellPressure(int index, float inPressure) { mCellPressures[index]= inPressure; }
 
 	const CellType GetCellType(int index) const { return mCellType[index]; }
+	const CellType GetCellTypeFromPosition(const glm::vec3& inPosition);
 	void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
 
 	std::tuple<int, int, int> GetXYZFromIndex(int index);
@@ -70,6 +70,11 @@ private:
 	int mNumCellWidth;
 	int mNumCellLength;
 	int mNumCellHeight;
+
+	float dLeft;
+	float dBottom;
+	float dBack;
+
 	int mNumCells;
 
 	float mCellSize;    // deltaX
@@ -83,6 +88,7 @@ private:
 	std::vector<float> mCellYVelocities;
 	std::vector<float> mCellZVelocities;
 
+	// Intermediate cell velocities
 	std::vector<float> mIntXVelocities;
 	std::vector<float> mIntYVelocities;
 	std::vector<float> mIntZVelocities;
