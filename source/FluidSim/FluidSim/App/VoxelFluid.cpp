@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-VoxelFluid::VoxelFluid(const Fluid& inFluid, float inVoxelSize)
+VoxelFluid::VoxelFluid(const Fluid& inFluid)
 {
-	mVoxelSize = inVoxelSize;
+	mVoxelSize = inFluid.GetDomain().GetLength() / inFluid.GetMACGridResolution();
 
 	InitializeFromDomain(inFluid.GetDomain());
 }

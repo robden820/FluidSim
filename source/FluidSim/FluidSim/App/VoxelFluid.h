@@ -19,7 +19,7 @@ class VoxelFluid
 		VoxelFluid() = default;
 		~VoxelFluid() = default;
 
-		VoxelFluid(const Fluid& inFluid, float inVoxelSize);
+		VoxelFluid(const Fluid& inFluid);
 
 		void UpdateVoxelStates(const Fluid& inFluid);
 
