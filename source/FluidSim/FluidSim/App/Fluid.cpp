@@ -131,27 +131,52 @@ void Fluid::InterpolateToGrid()
 		}
 	}
 
-	std::vector<int> numParticlesToCell;
+	std::vector<float> contributedXWeights;
+	std::vector<float> contributedYWeights;
+	std::vector<float> contributedZWeights;
+
 	std::vector<float> interpXVelocities;
 	std::vector<float> interpYVelocities;
 	std::vector<float> interpZVelocities;
-	numParticlesToCell.assign(mMACGrid.GetNumCells(), 0);
+
 	interpXVelocities.assign(mMACGrid.GetNumCells(), 0.f);
 	interpYVelocities.assign(mMACGrid.GetNumCells(), 0.f);
 	interpZVelocities.assign(mMACGrid.GetNumCells(), 0.f);
+
+	contributedXWeights.assign(mMACGrid.GetNumCells(), 0.f);
+	contributedYWeights.assign(mMACGrid.GetNumCells(), 0.f);
+	contributedZWeights.assign(mMACGrid.GetNumCells(), 0.f);
 
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
 		int cellIndex = ClosestCellToParticle(mParticles[p]);
 
+		glm::vec3 particlePos = mParticles[p].GetPosition();
+		glm::vec3 cellPos = mMACGrid.GetCellCenter(cellIndex);
+
+		float xDiff = particlePos.x - cellPos.x;
+		float yDiff = particlePos.y - cellPos.y;
+		float zDiff = particlePos.z - cellPos.z;
+
+		float xWeight = (xDiff / mMACGrid.GetCellSize()) + 0.5f;
+		float yWeight = (yDiff / mMACGrid.GetCellSize()) + 0.5f;
+		float zWeight = (zDiff / mMACGrid.GetCellSize()) + 0.5f;
+
+		float velocityX = mMACGrid.GetCellXVelocity(cellIndex) * xWeight;
+		float velocityY = mMACGrid.GetCellYVelocity(cellIndex) * yWeight;
+		float velocityZ = mMACGrid.GetCellZVelocity(cellIndex) * zWeight;
+
 		if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
 		{
 			mMACGrid.SetCellType(cellIndex, MACGrid::CellType::eFLUID);
 
-			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x;
-			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y;
-			interpZVelocities[cellIndex] += mParticles[p].GetVelocity().z;
-			++numParticlesToCell[cellIndex];
+			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x * xWeight;
+			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y * yWeight;
+			interpZVelocities[cellIndex] += mParticles[p].GetVelocity().z * zWeight;
+			
+			contributedXWeights[cellIndex] += xWeight;
+			contributedYWeights[cellIndex] += yWeight;
+			contributedZWeights[cellIndex] += zWeight;
 
 			int x, y, z;
 			std::tie(x, y, z) = mMACGrid.GetXYZFromIndex(cellIndex);
@@ -162,10 +187,13 @@ void Fluid::InterpolateToGrid()
 
 				if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
 				{
-					interpXVelocities[neighbourLeft] += mParticles[p].GetVelocity().x;
-					interpYVelocities[neighbourLeft] += mParticles[p].GetVelocity().y;
-					interpZVelocities[neighbourLeft] += mParticles[p].GetVelocity().z;
-					++numParticlesToCell[neighbourLeft];
+					interpXVelocities[neighbourLeft] += mParticles[p].GetVelocity().x * (1 - xWeight);
+					interpYVelocities[neighbourLeft] += mParticles[p].GetVelocity().y * (1 - yWeight);
+					interpZVelocities[neighbourLeft] += mParticles[p].GetVelocity().z * (1 - zWeight);
+					
+					contributedXWeights[neighbourLeft] += (1 - xWeight);
+					contributedYWeights[neighbourLeft] += (1 - yWeight);
+					contributedZWeights[neighbourLeft] += (1 - zWeight);
 				}
 			}
 			if (y < 0)
@@ -174,10 +202,13 @@ void Fluid::InterpolateToGrid()
 
 				if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
 				{
-					interpXVelocities[neighbourBottom] += mParticles[p].GetVelocity().x;
-					interpYVelocities[neighbourBottom] += mParticles[p].GetVelocity().y;
-					interpZVelocities[neighbourBottom] += mParticles[p].GetVelocity().z;
-					++numParticlesToCell[neighbourBottom];
+					interpXVelocities[neighbourBottom] += mParticles[p].GetVelocity().x * (1 - xWeight);
+					interpYVelocities[neighbourBottom] += mParticles[p].GetVelocity().y * (1 - yWeight);
+					interpZVelocities[neighbourBottom] += mParticles[p].GetVelocity().z * (1 - zWeight);
+					
+					contributedXWeights[neighbourBottom] += (1 - xWeight);
+					contributedYWeights[neighbourBottom] += (1 - yWeight);
+					contributedZWeights[neighbourBottom] += (1 - zWeight);
 				}
 			}
 			if (z < 0)
@@ -186,10 +217,13 @@ void Fluid::InterpolateToGrid()
 
 				if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
 				{
-					interpXVelocities[neighbourBack] += mParticles[p].GetVelocity().x;
-					interpYVelocities[neighbourBack] += mParticles[p].GetVelocity().y;
-					interpZVelocities[neighbourBack] += mParticles[p].GetVelocity().z;
-					++numParticlesToCell[neighbourBack];
+					interpXVelocities[neighbourBack] += mParticles[p].GetVelocity().x * (1 - xWeight);
+					interpYVelocities[neighbourBack] += mParticles[p].GetVelocity().y * (1 - yWeight);
+					interpZVelocities[neighbourBack] += mParticles[p].GetVelocity().z * (1 - zWeight);
+					
+					contributedXWeights[neighbourBack] += (1 - xWeight);
+					contributedYWeights[neighbourBack] += (1 - yWeight);
+					contributedZWeights[neighbourBack] += (1 - zWeight);
 				}
 			}
 		}
@@ -197,11 +231,17 @@ void Fluid::InterpolateToGrid()
 
 	for (int c = 0; c < mMACGrid.GetNumCells(); c++)
 	{
-		if (numParticlesToCell[c] != 0.f)
+		if (contributedXWeights[c] != 0.f)
 		{
-			interpXVelocities[c] *= 1.0f / numParticlesToCell[c];
-			interpYVelocities[c] *= 1.0f / numParticlesToCell[c];
-			interpZVelocities[c] *= 1.0f / numParticlesToCell[c];
+			interpXVelocities[c] *= 1.0f / contributedXWeights[c];
+		}
+		if (contributedYWeights[c] != 0.f)
+		{
+			interpYVelocities[c] *= 1.0f / contributedYWeights[c];
+		}
+		if (contributedZWeights[c] != 0.f)
+		{
+			interpZVelocities[c] *= 1.0f / contributedZWeights[c];
 		}
 		
 		if (mMACGrid.GetCellType(c) != MACGrid::CellType::eSOLID)
@@ -224,30 +264,41 @@ void Fluid::InterpolateFromGrid()
 			int x, y, z;
 			std::tie(x, y, z) = mMACGrid.GetXYZFromIndex(cellIndex);
 
-			float velocityX = mMACGrid.GetCellXVelocity(cellIndex);
-			float velocityY = mMACGrid.GetCellYVelocity(cellIndex);
-			float velocityZ = mMACGrid.GetCellZVelocity(cellIndex);
+			glm::vec3 particlePos = mParticles[p].GetPosition();
+			glm::vec3 cellPos = mMACGrid.GetCellCenter(cellIndex);
+
+			float xDiff = particlePos.x - cellPos.x;
+			float yDiff = particlePos.y - cellPos.y;
+			float zDiff = particlePos.z - cellPos.z;
+
+			float xWeight = (xDiff / mMACGrid.GetCellSize()) + 0.5f;
+			float yWeight = (yDiff / mMACGrid.GetCellSize()) + 0.5f;
+			float zWeight = (zDiff / mMACGrid.GetCellSize()) + 0.5f;
+
+			float velocityX = mMACGrid.GetCellXVelocity(cellIndex) * xWeight;
+			float velocityY = mMACGrid.GetCellYVelocity(cellIndex) * yWeight;
+			float velocityZ = mMACGrid.GetCellZVelocity(cellIndex) * zWeight;
 
 			if (x > 0)
 			{
 				int neighbourLeft = mMACGrid.GetIndexFromXYZ(x - 1, y, z);
 
 				velocityX += mMACGrid.GetCellXVelocity(neighbourLeft);
-				velocityX *= 0.5f;
+				velocityX *= (1 - xWeight);
 			}
 			if (y > 0)
 			{
 				int neighbourBottom = mMACGrid.GetIndexFromXYZ(x, y - 1, z);
 
 				velocityY += mMACGrid.GetCellYVelocity(neighbourBottom);
-				velocityY *= 0.5f;
+				velocityY *= (1 - yWeight);
 			}
 			if (z > 0)
 			{
 				int neighbourBack = mMACGrid.GetIndexFromXYZ(x, y, z - 1);
 				
-				velocityZ += mMACGrid.GetCellXVelocity(neighbourBack);
-				velocityZ *= 0.5f;
+				velocityZ += mMACGrid.GetCellZVelocity(neighbourBack);
+				velocityZ *= (1 - xWeight);
 			}
 
 			mParticles[p].SetVelocity(glm::vec3(velocityX, velocityY, velocityZ));
