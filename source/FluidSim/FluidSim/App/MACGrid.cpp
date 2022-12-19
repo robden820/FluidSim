@@ -90,28 +90,22 @@ void MACGrid::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParti
 
 void MACGrid::Update(float deltaTime)
 {
-	float start = glfwGetTime();
 	//Advection
+	float start = glfwGetTime();
 	AdvectCellVelocity(deltaTime);
 
 	std::cout << "MAC: advect: " << glfwGetTime() - start << "\n";
 
-	start = glfwGetTime();
 	// Projection step
+	start = glfwGetTime();
+	
 	UpdateCellPressure(deltaTime, 100);
 
 	std::cout << "MAC: Pressure: " << glfwGetTime() - start << "\n";
 
+	// Velocity update
 	start = glfwGetTime();
 	UpdateCellVelocity(deltaTime);
-
-	for (int index = 0; index < mNumCells; index++)
-	{
-		if (isnan(mCellXVelocities[index]) || isnan(mCellYVelocities[index]) || isnan(mCellZVelocities[index]))
-		{
-			std::cout << "ERROR: NAN VELOCITIES \n";
-		}
-	}
 
 	std::cout << "MAC: cell update: " << glfwGetTime() - start << "\n";
 }
@@ -448,17 +442,15 @@ void MACGrid::CalculateCellDivergence(float deltaTime)
 
 void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 {
-	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
-
 	std::vector<float> Adiagonal;
 	std::vector<float> Ax;
 	std::vector<float> Ay;
 	std::vector<float> Az;
 
-	Adiagonal.assign(numCells, 0.0f);
-	Ax.assign(numCells, 0.0f);
-	Ay.assign(numCells, 0.0f);
-	Az.assign(numCells, 0.0f);
+	Adiagonal.assign(mNumCells, 0.0f);
+	Ax.assign(mNumCells, 0.0f);
+	Ay.assign(mNumCells, 0.0f);
+	Az.assign(mNumCells, 0.0f);
 
 	std::cout << "--------------------------------\n";
 	float start = glfwGetTime();
@@ -469,9 +461,8 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::cout << glfwGetTime() - start << "\n";
 
 	// Preconditioned Conjugate Gradient.
-
 	std::vector<float> newPressure;
-	newPressure.assign(numCells, 0.0f);
+	newPressure.assign(mNumCells, 0.0f);
 
 	start = glfwGetTime();
 	std::cout << "Calculate cell divergence: ";
@@ -483,8 +474,25 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::vector<float> residuals;
 	residuals = mCellDivergence;
 
+	float maxResidual = -1.0f;
+
+	for (int index = 0; index < mNumCells; index++)
+	{
+		if (abs(residuals[index]) > maxResidual)
+		{
+			maxResidual = residuals[index];
+		}
+	}
+
+	if (maxResidual < TOLERANCE)
+	{
+		// Reached convergence;
+		return;
+	}
+
+
 	std::vector<float> z;
-	z.assign(numCells, 0.0f);
+	z.assign(mNumCells, 0.0f);
 
 	start = glfwGetTime();
 	std::cout << "Calculate preconditioner: ";
@@ -503,19 +511,19 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::vector<float> search = z;
 
 	float theta = 0.0f;
-	for (int i = 0; i < numCells; i++)
+	for (int i = 0; i < mNumCells; i++)
 	{
 		theta += z[i] * residuals[i];
 	}
 
 	int iteration;
 
-	for (iteration = 0; iteration < maxIterations; ++iteration)
+	for (iteration = 1; iteration <= maxIterations; ++iteration)
 	{
 		ApplyA(deltaTime, z, search, Adiagonal, Ax, Ay, Az);
 
 		float phi = 0.0f;
-		for (int i = 0; i < numCells; i++)
+		for (int i = 0; i < mNumCells; i++)
 		{
 			phi += z[i] * search[i];
 		}
@@ -527,7 +535,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 
 		float alpha = theta / phi;
 
-		for (int i = 0; i < numCells; i++)
+		for (int i = 0; i < mNumCells; i++)
 		{
 			newPressure[i] += alpha * search[i];
 			residuals[i] -= alpha * z[i];
@@ -535,7 +543,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 
 		float maxResidual = -1.0f;
 
-		for (int index = 0; index < numCells; index++)
+		for (int index = 0; index < mNumCells; index++)
 		{
 			if (abs(residuals[index]) > maxResidual)
 			{
@@ -552,14 +560,14 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 		ApplyPreconditioner(z, residuals, precon, Ax, Ay, Az);
 
 		float thetaNew = 0.0f;
-		for (int i = 0; i < numCells; i++)
+		for (int i = 0; i < mNumCells; i++)
 		{
 			thetaNew += z[i] * residuals[i];
 		}
 
 		float beta = thetaNew / theta;
 
-		for (int i = 0; i < numCells; i++)
+		for (int i = 0; i < mNumCells; i++)
 		{
 			search[i] = z[i] + beta * search[i];
 		}
@@ -576,7 +584,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::cout << "------------------------------\n";
 
 	// Set pressure
-	for (int i = 0; i < numCells; i++)
+	for (int i = 0; i < mNumCells; i++)
 	{
 		mCellPressures[i] = newPressure[i];
 	}
@@ -673,7 +681,6 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 
 void MACGrid::ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
-	int numCells = mNumCellHeight * mNumCellWidth * mNumCellLength;
 	float scale = 1.0f;// deltaTime* mInvCellSize* mInvCellSize; // TO DO;
 
 	for (int index = 0; index < mNumCells; index++)
@@ -839,32 +846,23 @@ void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vect
 			float intermediatej = 0.0f; // qminusj
 			float intermediatek = 0.0f; // qminusk
 
-			if (x > 0)
-			{
-				int neighbourLeft = GetIndexFromXYZ(x - 1, y, z);
+			int neighbourLeft = GetIndexFromXYZ(x - 1, y, z);
 
-				Axi = inX[neighbourLeft];
-				preconi = inPrecon[neighbourLeft];
-				intermediatei = intermediate[neighbourLeft];
-			}
+			Axi = inX[neighbourLeft];
+			preconi = inPrecon[neighbourLeft];
+			intermediatei = intermediate[neighbourLeft];
 
-			if (y > 0)
-			{
-				int neighbourBottom = GetIndexFromXYZ(x, y - 1, z);
+			int neighbourBottom = GetIndexFromXYZ(x, y - 1, z);
 
-				Ayj = inY[neighbourBottom];
-				preconj = inPrecon[neighbourBottom];
-				intermediatej = intermediate[neighbourBottom];
-			}
+			Ayj = inY[neighbourBottom];
+			preconj = inPrecon[neighbourBottom];
+			intermediatej = intermediate[neighbourBottom];
 
-			if (z > 0)
-			{
-				int neighbourBack = GetIndexFromXYZ(x, y, z - 1);
+			int neighbourBack = GetIndexFromXYZ(x, y, z - 1);
 
-				Azk = inZ[neighbourBack];
-				preconk = inPrecon[neighbourBack];
-				intermediatek = intermediate[neighbourBack];
-			}
+			Azk = inZ[neighbourBack];
+			preconk = inPrecon[neighbourBack];
+			intermediatek = intermediate[neighbourBack];
 
 			float t = inResidual[index] - Axi * preconi * intermediatei
 										- Ayj * preconj * intermediatej
@@ -885,26 +883,17 @@ void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vect
 			float zj = 0.0f;
 			float zk = 0.0f;
 
-			if (x < mNumCellWidth - 1)
-			{
-				int neighbourRight = GetIndexFromXYZ(x + 1, y, z);
+			int neighbourRight = GetIndexFromXYZ(x + 1, y, z);
 
-				zi = outResult[neighbourRight];
-			}
+			zi = outResult[neighbourRight];
 
-			if (y < mNumCellHeight - 1)
-			{
-				int neighbourTop = GetIndexFromXYZ(x, y + 1, z);
+			int neighbourTop = GetIndexFromXYZ(x, y + 1, z);
 
-				zj = outResult[neighbourTop];
-			}
+			zj = outResult[neighbourTop];
 
-			if (z < mNumCellLength - 1)
-			{
-				int neighbourFront= GetIndexFromXYZ(x, y, z + 1);
+			int neighbourFront= GetIndexFromXYZ(x, y, z + 1);
 
-				zk = outResult[neighbourFront];
-			}
+			zk = outResult[neighbourFront];
 
 			float t = intermediate[index] - inX[index] * inPrecon[index] * zi
 										  - inY[index] * inPrecon[index] * zj
