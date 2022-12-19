@@ -60,6 +60,8 @@ void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
 	mIntXVelocities.assign(mNumCells, 0.f);
 	mIntYVelocities.assign(mNumCells, 0.f);
 	mIntZVelocities.assign(mNumCells, 0.f);
+
+	mDensity = 1000.0f;
 }
 
 void MACGrid::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions)
@@ -287,7 +289,7 @@ int MACGrid::GetClosestCell(const glm::vec3& inPosition)
 
 void MACGrid::UpdateCellVelocity(float deltaTime)
 {
-	float scale = deltaTime * mInvCellSize * (1 / 1000.0f); // TO DO: water density
+	float scale = deltaTime * mInvCellSize * (1.0f / mDensity);
 
 	float solidXVel = 0.0f;
 	float solidYVel = 0.0f;
@@ -528,7 +530,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 			phi += z[i] * search[i];
 		}
 
-		if (phi < TOLERANCE)
+		if (abs(phi) < TOLERANCE)
 		{
 			phi = TOLERANCE;
 		}
@@ -541,7 +543,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 			residuals[i] -= alpha * z[i];
 		}
 
-		float maxResidual = -1.0f;
+		maxResidual = -1.0f;
 
 		for (int index = 0; index < mNumCells; index++)
 		{
@@ -565,6 +567,10 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 			thetaNew += z[i] * residuals[i];
 		}
 
+		if (abs(theta) < TOLERANCE)
+		{
+			theta = TOLERANCE;
+		}
 		float beta = thetaNew / theta;
 
 		for (int i = 0; i < mNumCells; i++)
@@ -592,7 +598,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 
 void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
 {
-	float scale = deltaTime * mInvCellSize * mInvCellSize * (1 / 1000.0f); // TO DO include fluid density.
+	float scale = -deltaTime * mInvCellSize * mInvCellSize * (1.0f / mDensity);
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -681,8 +687,6 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 
 void MACGrid::ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
-	float scale = 1.0f;// deltaTime* mInvCellSize* mInvCellSize; // TO DO;
-
 	for (int index = 0; index < mNumCells; index++)
 	{
 		int x, y, z;
@@ -726,10 +730,7 @@ void MACGrid::ApplyA(float deltaTime, std::vector<float>& outResult, const std::
 			value += inVec[neighbourFront];
 		}
 
-		//value *= -scale;
-		//value += inDiag[index] * scale * inVec[index];
 		value += inDiag[index] * inVec[index];
-
 		outResult[index] = value;
 	}
 }
@@ -815,7 +816,7 @@ void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std
 					
 			if (newPrecon > TOLERANCE)
 			{
-				inOutPrecon[index] = 1 / sqrt(newPrecon);
+				inOutPrecon[index] = 1.0f / sqrt(newPrecon);
 			}	
 		}
 	}

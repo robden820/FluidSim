@@ -82,6 +82,8 @@ private:
 	float mCellSize;    // deltaX
 	float mInvCellSize; // 1 / deltaX
 
+	float mDensity;
+
 	std::vector<glm::vec3> mCellCenters;
 	std::vector<float> mCellDivergence;
 
