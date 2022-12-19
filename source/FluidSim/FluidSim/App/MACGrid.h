@@ -49,6 +49,8 @@ public:
 	std::tuple<int, int, int> GetXYZFromIndex(int index);
 	int GetIndexFromXYZ(int X, int Y, int Z);
 
+	float GetCellSize() { return mCellSize; }
+
 private:
 
 	void InitializeFromDomain(const Domain& inDomain, int inGridResolution);
