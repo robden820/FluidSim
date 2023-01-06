@@ -19,7 +19,7 @@ class MACGrid
 			eNONE = 3
 		};
 
-		virtual ~MACGrid() = 0;
+		virtual ~MACGrid() = default;
 
 		virtual void Update(float deltaTime) = 0;
 
