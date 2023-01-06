@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "Fluid.h"
+#include "Fluid2D.h"
 #include "Shader.h"
 
 #include "glm/vec3.hpp"
