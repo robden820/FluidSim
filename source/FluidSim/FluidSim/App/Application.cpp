@@ -13,12 +13,12 @@ void Application::Initialize()
 	float start = glfwGetTime();
 
 	Fluid3D fluid(1000);
-	mFluid = fluid;
+	mFluid = std::make_unique<Fluid3D>(fluid);
 
 	std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
-	DrawFluid3D drawFluid(mFluid);
+	DrawFluid3D drawFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
 	mDrawFluid = drawFluid;	
 
 	std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
@@ -26,7 +26,7 @@ void Application::Initialize()
 
 	// Needs to be set to 10/MACGrid resolution
 	// TO DO: fix all initialization values.
-	VoxelFluid voxelFluid(static_cast<Fluid3D>(mFluid));
+	VoxelFluid voxelFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
 	mVoxelFluid = voxelFluid;
 
 	std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
@@ -100,11 +100,11 @@ void Application::SetShader(Shader& inShader)
 
 void Application::Update(float deltaTime)
 {
-	mFluid.StepSimulation(deltaTime);
+	mFluid->StepSimulation(deltaTime);
 
-	mDrawFluid.FromFluid(mFluid);
+	mDrawFluid.FromFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
 
-	mVoxelFluid.UpdateVoxelStates(mFluid);
+	mVoxelFluid.UpdateVoxelStates(dynamic_cast<Fluid3D&>(*mFluid.get()));
 }
 
 void Application::Render(float inAspectRatio)

@@ -39,7 +39,7 @@ private:
 	DrawFluid3D mDrawFluid;
 	VoxelFluid mVoxelFluid;
 
-	Fluid mFluid;
+	std::unique_ptr<Fluid> mFluid;
 
 	Sphere mSphere; // Contains vertex & index information to draw particles.
 
