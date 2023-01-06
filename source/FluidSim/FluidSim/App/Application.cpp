@@ -12,13 +12,13 @@ void Application::Initialize()
 {
 	float start = glfwGetTime();
 
-	Fluid fluid(1000);
+	Fluid3D fluid(1000);
 	mFluid = fluid;
 
 	std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
-	DrawFluid drawFluid(mFluid);
+	DrawFluid3D drawFluid(mFluid);
 	mDrawFluid = drawFluid;	
 
 	std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
@@ -26,7 +26,7 @@ void Application::Initialize()
 
 	// Needs to be set to 10/MACGrid resolution
 	// TO DO: fix all initialization values.
-	VoxelFluid voxelFluid(mFluid);
+	VoxelFluid voxelFluid(static_cast<Fluid3D>(mFluid));
 	mVoxelFluid = voxelFluid;
 
 	std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";

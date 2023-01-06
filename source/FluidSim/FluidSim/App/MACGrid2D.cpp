@@ -9,7 +9,7 @@
 
 //using namespace oneapi;
 
-MACGrid2D::MACGrid2D(const Domain2D& inDomain, const std::vector<std::tuple<float, float>>& inParticlePositions, int inGridResolution)
+MACGrid2D::MACGrid2D(const Domain2D& inDomain, const std::vector<glm::vec2>& inParticlePositions, int inGridResolution)
 {
 	InitializeFromDomain(inDomain, inGridResolution);
 	InitializeCellsFromParticles(inParticlePositions);
@@ -43,7 +43,7 @@ void MACGrid2D::InitializeFromDomain(const Domain2D& inDomain, int inGridResolut
 		float centerX = dLeft + (x * mCellSize) + halfCell;
 		float centerY = dBottom + (y * mCellSize) + halfCell;
 
-		mCellCenters.push_back(std::tuple<float, float>(centerX, centerY));
+		mCellCenters.push_back(glm::vec2(centerX, centerY));
 	}
 
 	mCellPressures.assign(mNumCells, 0.f);
@@ -58,12 +58,10 @@ void MACGrid2D::InitializeFromDomain(const Domain2D& inDomain, int inGridResolut
 	mDensity = 1000.0f;
 }
 
-void MACGrid2D::InitializeCellsFromParticles(const std::vector<std::tuple<float, float>>& inParticlePositions)
+void MACGrid2D::InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions)
 {
 	// Set edge cells to be solid.
-	//tbb::parallel_for(0, mNumCells, 1, [&](int cIndex)
-	//{
-	for (int cIndex = 0; cIndex < mNumCells; cIndex++)
+	tbb::parallel_for(0, mNumCells, 1, [&](int cIndex)
 	{
 		int x, y;
 		std::tie(x, y) = GetXYFromIndex(cIndex);
@@ -72,23 +70,16 @@ void MACGrid2D::InitializeCellsFromParticles(const std::vector<std::tuple<float,
 		{
 			mCellType[cIndex] = CellType::eSOLID;
 		}
-	}
-	//});
+	});
 
 	// For each particle, find the closest cell and mark it as a fluid.
-//	tbb::parallel_for(0, (int)inParticlePositions.size(), 1, [&](int pIndex)
-//	{
-	for (int pIndex = 0; pIndex < inParticlePositions.size(); pIndex++)
+	tbb::parallel_for(0, (int)inParticlePositions.size(), 1, [&](int pIndex)
 	{
-		float xPos, yPos;
-		std::tie(xPos, yPos) = inParticlePositions[pIndex];
-		int cellIndex = GetClosestCell(xPos, yPos);
+		int cellIndex = GetClosestCell(inParticlePositions[pIndex]);
 
 		mCellType[cellIndex] = CellType::eFLUID;
 		mCellPressures[cellIndex] = 1.0f;
-	}
-
-	//	});
+	});
 }
 
 void MACGrid2D::Update(float deltaTime)
@@ -141,14 +132,12 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 			yVelocity *= 0.5f;
 		}
 
+		glm::vec2 avgVelocity = { xVelocity, yVelocity };
+
 		// Want to find previous position, so go backwards in time.
-		float xPos, yPos;
-		std::tie(xPos, yPos) = mCellCenters[index];
+		glm::vec2 prevPosition = mCellCenters[index] - avgVelocity * deltaTime;
 
-		float prevXPosition = xPos - xVelocity * deltaTime;
-		float prevYPosition = yPos - yVelocity * deltaTime;
-
-		int prevCellIndex = GetClosestCell(prevXPosition, prevYPosition);
+		int prevCellIndex = GetClosestCell(prevPosition);
 
 		mIntXVelocities[index] = mCellXVelocities[prevCellIndex];
 		mIntYVelocities[index] = mCellYVelocities[prevCellIndex];
@@ -171,10 +160,10 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 	}
 }
 
-int MACGrid2D::GetClosestCell(const float inXPos, const float inYPos)
+int MACGrid2D::GetClosestCell(const glm::vec2& inPos)
 {
-	int x = floor((inXPos - dLeft - (mCellSize * 0.5f)) * mInvCellSize);
-	int y = floor((inYPos - dBottom - (mCellSize * 0.5f)) * mInvCellSize);
+	int x = floor((inPos.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize);
+	int y = floor((inPos.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize);
 
 	int approxIndex = GetIndexFromXY(x, y);
 
@@ -687,9 +676,9 @@ void MACGrid2D::ApplyPreconditioner(std::vector<float>& outResult, const std::ve
 	}
 }
 
-const MACGrid2D::CellType MACGrid2D::GetCellTypeFromPosition(const float inXPos, const float inYPos)
+const MACGrid2D::CellType MACGrid2D::GetCellTypeFromPosition(const glm::vec2& inPos)
 {
-	int index = GetClosestCell(inXPos, inYPos);
+	int index = GetClosestCell(inPos);
 
 	return GetCellType(index);
 }

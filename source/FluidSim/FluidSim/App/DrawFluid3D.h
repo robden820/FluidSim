@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "Fluid.h"
+#include "Fluid3D.h"
 #include "Shader.h"
 
 #include "glm/vec3.hpp"
@@ -12,15 +12,15 @@ enum class DrawMode {
 	Lines, Loop, Strip, Points
 };
 
-class DrawFluid
+class DrawFluid3D
 {
 	public:
-		DrawFluid() = default;
-		~DrawFluid() = default;
+		DrawFluid3D() = default;
+		~DrawFluid3D() = default;
 
-		DrawFluid(const Fluid& inFluid);
+		DrawFluid3D(const Fluid3D& inFluid);
 
-		void FromFluid(const Fluid& inFluid);
+		void FromFluid(const Fluid3D& inFluid);
 
 		void UpdateOpenGLBuffers();
 		

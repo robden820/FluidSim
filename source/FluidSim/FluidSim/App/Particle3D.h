@@ -11,7 +11,7 @@ public:
 
 	Particle3D(const glm::vec3& inPosition, const glm::vec3& inVelocity = glm::vec3(0.0f, 0.0f, 0.0f), float inMass = 1.0f, float inRadius = 0.1f);
 
-	void StepParticle3D(float deltaTime);
+	void StepParticle(float deltaTime) override;
 
 	const glm::vec3& GetPosition() const { return mPosition; }
 	void SetPosition(glm::vec3 inPos) { mPosition = inPos; }
@@ -22,9 +22,6 @@ public:
 	const glm::vec3& GetAcceleration() const { return mAcceleration; }
 	void SetAcceleration(const glm::vec3& inAcc) { mAcceleration = inAcc; }
 
-	const float GetMass() const { return mMass; }
-	const float GetRadius() const { return mRadius; }
-
 	void ApplyForce(const glm::vec3& inForce) { mForceAccumulator += inForce; }
 
 private:
@@ -33,8 +30,5 @@ private:
 	glm::vec3 mAcceleration;
 
 	glm::vec3 mForceAccumulator;
-
-	float mMass;
-	float mRadius;
 };
 

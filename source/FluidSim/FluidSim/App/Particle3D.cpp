@@ -1,6 +1,6 @@
-#include "Particle.h"
+#include "Particle3D.h"
 
-Particle::Particle(const glm::vec3& inPosition, const glm::vec3& inVelocity, float inMass, float inRadius)
+Particle3D::Particle3D(const glm::vec3& inPosition, const glm::vec3& inVelocity, float inMass, float inRadius)
 {
 	mPosition = inPosition;
 	mVelocity = inVelocity;
@@ -13,7 +13,7 @@ Particle::Particle(const glm::vec3& inPosition, const glm::vec3& inVelocity, flo
 	mForceAccumulator = { 0.0f, g, 0.0f };
 }
 
-void Particle::StepParticle(float deltaTime)
+void Particle3D::StepParticle(float deltaTime)
 {
 
 	mPosition += mVelocity * deltaTime + mAcceleration * deltaTime * deltaTime;

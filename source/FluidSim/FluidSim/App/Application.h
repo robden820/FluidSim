@@ -4,7 +4,7 @@
 
 #include "Camera.h"
 #include "Shader.h"
-#include "DrawFluid.h"
+#include "DrawFluid3D.h"
 #include "VoxelFluid.h"
 
 #include "Sphere.h"
@@ -36,7 +36,7 @@ private:
 	float mScreenWidth;
 	float mScreenHeight;
 
-	DrawFluid mDrawFluid;
+	DrawFluid3D mDrawFluid;
 	VoxelFluid mVoxelFluid;
 
 	Fluid mFluid;

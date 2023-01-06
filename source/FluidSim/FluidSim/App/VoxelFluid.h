@@ -3,8 +3,8 @@
 #include <glm/vec3.hpp>
 #include <vector>
 
-#include "Fluid.h"
-#include "Domain.h"
+#include "Fluid3D.h"
+#include "Domain3D.h"
 
 class VoxelFluid
 {
@@ -19,9 +19,9 @@ class VoxelFluid
 		VoxelFluid() = default;
 		~VoxelFluid() = default;
 
-		VoxelFluid(const Fluid& inFluid);
+		VoxelFluid(const Fluid3D& inFluid);
 
-		void UpdateVoxelStates(const Fluid& inFluid);
+		void UpdateVoxelStates(const Fluid3D& inFluid);
 
 		const std::vector<glm::vec3>& GetVoxelCenters() const { return mVoxelCenters; }
 		const glm::vec3& GetVoxelCenter(int index) const { return mVoxelCenters[index]; }
@@ -32,7 +32,7 @@ class VoxelFluid
 
 	private:
 
-		void InitializeFromDomain(const Domain& inDomain);
+		void InitializeFromDomain(const Domain3D& inDomain);
 
 		float mVoxelSize;
 

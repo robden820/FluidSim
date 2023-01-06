@@ -9,10 +9,10 @@ class Particle
 
 		virtual void StepParticle(float deltaTime) = 0;
 
-		virtual float GetMass() const { return mMass; }
-		virtual float GetRadius() const{ return mRadius; }
+		float GetMass() const { return mMass; };
+		float GetRadius() const { return mRadius; };
 
-	private:
+	protected:
 
 		float mMass;
 		float mRadius;

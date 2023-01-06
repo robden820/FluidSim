@@ -5,43 +5,8 @@
 class Domain
 {
 	public:
-		Domain() = default;
-		Domain(const glm::vec3& inCenter, const glm::vec3& inExtent);
-		Domain(const glm::vec3& inCenter, float inLength, float inWidth, float inHeight);
+		virtual ~Domain() = default;
 
-		~Domain() = default;
-
-		bool IsPointInDomain(const glm::vec3& point);
-
-		const glm::vec3& GetCenter() const { return mCenter; }
-		const glm::vec3& GetExtent() const { return mExtent; }
-
-		float GetLength() const { return mLength; }
-		float GetWidth() const { return mWidth; }
-		float GetHeight() const { return mHeight; }
-
-		float GetBottom() const { return mBottom; }
-		float GetTop() const { return mTop; }
-		float GetLeft() const { return mLeft; }
-		float GetRight() const { return mRight; }
-		float GetFront() const { return mFront; }
-		float GetBack() const { return mBack; }
-
-	private:
-		void CalculateSides();
-
-		glm::vec3 mCenter; // Position of domain center
-
-		glm::vec3 mExtent; // Position of domain corner.
-
-		float mLength; // z axis
-		float mWidth;  // x axis
-		float mHeight; // y axis
-
-		float mBottom;
-		float mTop;
-		float mLeft;
-		float mRight;
-		float mFront; // Side closest to camera.
-		float mBack;  // Side furthest from camera.
+	protected:
+		virtual void CalculateSides() = 0;
 };

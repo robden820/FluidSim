@@ -2,34 +2,26 @@
 
 #include <vector>
 
+#include "MACGrid.h"
 #include "Domain2D.h"
 
 #include "glm/glm.hpp"
-//#include "oneapi/tbb.h"
+#include "oneapi/tbb.h"
 
-class MACGrid2D
+class MACGrid2D : public MACGrid
 {
 public:
-
-	enum CellType
-	{
-		eFLUID = 0,
-		eSOLID = 1,
-		eAIR = 2,
-		eNONE = 3
-	};
-
 	MACGrid2D() = default;
 	~MACGrid2D() = default;
 
-	MACGrid2D(const Domain2D& inDomain, const std::vector<std::tuple<float, float>>& inParticlePositions, int inGridResolution);
+	MACGrid2D(const Domain2D& inDomain, const std::vector<glm::vec2>& inParticlePositions, int inGridResolution);
 
 	void Update(float deltaTime);
 
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth; }
 
-	const std::tuple<float, float> GetCellCenter(int index) const { return mCellCenters[index]; }
-	int GetClosestCell(const float inXPos, const float inYPos);
+	const glm::vec2& GetCellCenter(int index) const { return mCellCenters[index]; }
+	int GetClosestCell(const glm::vec2& inPos);
 
 	const float GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
 	const float GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
@@ -41,7 +33,7 @@ public:
 	void SetCellPressure(int index, float inPressure) { mCellPressures[index] = inPressure; }
 
 	const CellType GetCellType(int index) const { return mCellType[index]; }
-	const CellType GetCellTypeFromPosition(const float inXPos, const float inYPos);
+	const CellType GetCellTypeFromPosition(const glm::vec2& inPos);
 	void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
 
 	std::tuple<int, int> GetXYFromIndex(int index);
@@ -52,7 +44,7 @@ public:
 private:
 
 	void InitializeFromDomain(const Domain2D& inDomain, int inGridResolution);
-	void InitializeCellsFromParticles(const std::vector<std::tuple<float, float>>& inParticlePositions);
+	void InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions);
 
 	void CalculateCellDivergence(float deltaTime);
 
@@ -80,7 +72,7 @@ private:
 
 	float mDensity;
 
-	std::vector<std::tuple<float, float>> mCellCenters;
+	std::vector<glm::vec2> mCellCenters;
 	std::vector<float> mCellDivergence;
 
 	std::vector<float> mCellPressures;
