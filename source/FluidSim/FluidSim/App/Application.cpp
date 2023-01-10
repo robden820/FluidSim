@@ -48,7 +48,7 @@ void Application::Initialize()
 	{
 		float start = glfwGetTime();
 
-		Fluid2D fluid(1000);
+		Fluid2D fluid(100);
 		mFluid = std::make_unique<Fluid2D>(fluid);
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
