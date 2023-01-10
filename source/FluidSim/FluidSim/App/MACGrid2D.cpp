@@ -335,6 +335,7 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 	if (maxResidual < TOLERANCE)
 	{
 		// Reached convergence;
+		std::cout << "Zero cell divergence. Skipping pressure update. \n";
 		return;
 	}
 
@@ -448,7 +449,7 @@ void MACGrid2D::InitializeLinearSystem(float deltaTime, std::vector<float>& inDi
 
 	for (int index = 0; index < mNumCells; index++)
 	{
-		int x, y;
+		int x, y; 
 		std::tie(x, y) = GetXYFromIndex(index);
 
 		if (mCellType[index] == CellType::eFLUID)
@@ -518,28 +519,28 @@ void MACGrid2D::ApplyA(float deltaTime, std::vector<float>& outResult, const std
 		if (x > 0)
 		{
 			int neighbourLeft = GetIndexFromXY(x - 1, y);
-			value += inVec[neighbourLeft];
+			value += inVec[neighbourLeft] * inX[neighbourLeft];
 		}
 
 		if (x < mNumCellWidth - 1)
 		{
-			int neighbourRight = GetIndexFromXY(x + 1, y);
-			value += inVec[neighbourRight];
+			int neighbourRight = GetIndexFromXY(x + 1, y);  
+			value += inVec[neighbourRight] * inX[index];
 		}
 
 		if (y > 0)
 		{
 			int neighbourBottom = GetIndexFromXY(x, y - 1);
-			value += inVec[neighbourBottom];
+			value += inVec[neighbourBottom] * inY[neighbourBottom];
 		}
 
 		if (y < mNumCellHeight - 1)
 		{
 			int neighbourTop = GetIndexFromXY(x, y + 1);
-			value += inVec[neighbourTop];
+			value += inVec[neighbourTop] * inY[index];
 		}
 
-		value += inDiag[index] * inVec[index];
+  		value += inDiag[index] * inVec[index];
 		outResult[index] = value;
 	}
 }
@@ -594,14 +595,14 @@ void MACGrid2D::CalculatePreconditioner(std::vector<float>& inOutPrecon, const s
 
 			float termTwo = d + e;
 
-			float newPrecon = inDiag[index] - termOne - PRECON_TUNER * termTwo;
+			float newPrecon = - inDiag[index] - termOne - PRECON_TUNER * termTwo;
 
 			if (newPrecon < PRECON_SAFETY * inDiag[index])
 			{
-				newPrecon = inDiag[index];
+				newPrecon = - inDiag[index];
 			}
 
-			if (newPrecon > TOLERANCE)
+			if (abs(newPrecon) > TOLERANCE)
 			{
 				inOutPrecon[index] = 1.0f / sqrt(newPrecon);
 			}
