@@ -7,3 +7,8 @@ To do:
  - - oneTBB
  - - CUDA: to do.
  - Faster linear algebra -> Eigen?
+
+Long term:
+ - Application refactoring
+ - - Increase modularity
+ - Use templates alongside inheritance for 2D and 3D class variants.
