@@ -13,7 +13,7 @@ public:
 
 	~Domain2D() = default;
 
-	bool IsPointInDomain2D(const glm::vec2& inPoint);
+	bool IsPointInDomain(const glm::vec2& inPoint);
 
 	const glm::vec2& GetCenter() const { return mCenter; }
 	const glm::vec2& GetExtent() const { return mExtent; }

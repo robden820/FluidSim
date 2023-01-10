@@ -34,7 +34,7 @@ void Domain2D::CalculateSides()
 	mTop = mBottom + mHeight;
 }
 
-bool Domain2D::IsPointInDomain2D(const glm::vec2& inPoint)
+bool Domain2D::IsPointInDomain(const glm::vec2& inPoint)
 {
 	bool inside = true;
 

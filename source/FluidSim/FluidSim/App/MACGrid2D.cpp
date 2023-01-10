@@ -427,7 +427,7 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 		theta = thetaNew;
 	}
 
-	if (iteration == maxIterations)
+	if (iteration >= maxIterations)
 	{
 		std::cout << "WARNING: MAX NUMBER OF ITERATIONS REACHED IN PRESSURE SOLVE" << "\n";
 		std::cout << "Check pressure solver for potential issues, MACGrid2D.cpp" << "\n";

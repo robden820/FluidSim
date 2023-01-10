@@ -2,17 +2,15 @@
 
 #include <memory>
 
+#include "DrawFluid.h"
+
 #include "Fluid2D.h"
 #include "Shader.h"
 
-#include "glm/vec3.hpp"
+#include "glm/vec2.hpp"
 #include "glm/matrix.hpp"
 
-enum class DrawMode {
-	Lines, Loop, Strip, Points
-};
-
-class DrawFluid2D
+class DrawFluid2D : public DrawFluid
 {
 public:
 	DrawFluid2D() = default;
@@ -22,7 +20,7 @@ public:
 
 	void FromFluid(const Fluid2D& inFluid);
 
-	void UpdateOpenGLBuffers();
+	void UpdateOpenGLBuffers() override;
 
 	std::vector<glm::vec2> mParticlePoints;
 };

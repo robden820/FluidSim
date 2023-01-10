@@ -13,7 +13,7 @@ public:
 
 	void StepParticle(float deltaTime);
 
-	const glm::vec2& GetXPosition() const { return mPosition; }
+	const glm::vec2& GetPosition() const { return mPosition; }
 	void SetPosition(const glm::vec2& inPos) { mPosition = inPos; }
 
 	const glm::vec2& GetVelocity() const { return mVelocity; }

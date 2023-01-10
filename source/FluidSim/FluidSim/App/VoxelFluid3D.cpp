@@ -1,15 +1,15 @@
-#include "VoxelFluid.h"
+#include "VoxelFluid3D.h"
 
 #include <iostream>
 
-VoxelFluid::VoxelFluid(const Fluid3D& inFluid)
+VoxelFluid3D::VoxelFluid3D(const Fluid3D& inFluid)
 {
 	mVoxelSize = inFluid.GetDomain().GetLength() / inFluid.GetMACGridResolution();
 
 	InitializeFromDomain(inFluid.GetDomain());
 }
 
-void VoxelFluid::InitializeFromDomain(const Domain3D& inDomain)
+void VoxelFluid3D::InitializeFromDomain(const Domain3D& inDomain)
 {
 	glm::vec3 dCenter = inDomain.GetCenter();
 
@@ -51,7 +51,7 @@ void VoxelFluid::InitializeFromDomain(const Domain3D& inDomain)
 	}
 }
 
-void VoxelFluid::UpdateVoxelStates(const Fluid3D& inFluid)
+void VoxelFluid3D::UpdateVoxelStates(const Fluid3D& inFluid)
 {
 	for (int index = 0; index < mNumVoxels; index++)
 	{

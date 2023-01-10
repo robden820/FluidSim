@@ -2,17 +2,15 @@
 
 #include <memory>
 
+#include "DrawFluid.h"
+
 #include "Fluid3D.h"
 #include "Shader.h"
 
 #include "glm/vec3.hpp"
 #include "glm/matrix.hpp"
 
-enum class DrawMode {
-	Lines, Loop, Strip, Points
-};
-
-class DrawFluid3D
+class DrawFluid3D : public DrawFluid
 {
 	public:
 		DrawFluid3D() = default;
@@ -22,7 +20,7 @@ class DrawFluid3D
 
 		void FromFluid(const Fluid3D& inFluid);
 
-		void UpdateOpenGLBuffers();
+		void UpdateOpenGLBuffers() override;
 		
 		std::vector<glm::vec3> mParticlePoints;
 };
