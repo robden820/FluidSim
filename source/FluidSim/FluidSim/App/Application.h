@@ -5,7 +5,9 @@
 #include "Camera.h"
 #include "Shader.h"
 #include "DrawFluid3D.h"
-#include "VoxelFluid.h"
+#include "DrawFluid2D.h"
+#include "VoxelFluid3D.h"
+#include "VoxelFluid2D.h"
 
 #include "Sphere.h"
 
@@ -36,8 +38,13 @@ private:
 	float mScreenWidth;
 	float mScreenHeight;
 
-	DrawFluid3D mDrawFluid;
-	VoxelFluid mVoxelFluid;
+	bool m3Dsimulation;
+
+	DrawFluid3D mDrawFluid3D;
+	VoxelFluid3D mVoxelFluid3D;
+
+	DrawFluid2D mDrawFluid2D;
+	VoxelFluid2D mVoxelFluid2D;
 
 	std::unique_ptr<Fluid> mFluid;
 

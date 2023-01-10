@@ -6,40 +6,77 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	: mCamera(inCamera), mShader(inShader)
 {
 	mShader.Use();
+
+	m3Dsimulation = false;
 }
 
 void Application::Initialize()
 {
-	float start = glfwGetTime();
+	if (m3Dsimulation)
+	{
+		float start = glfwGetTime();
 
-	Fluid3D fluid(1000);
-	mFluid = std::make_unique<Fluid3D>(fluid);
+		Fluid3D fluid(1000);
+		mFluid = std::make_unique<Fluid3D>(fluid);
 
-	std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
-	start = glfwGetTime();
+		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
+		start = glfwGetTime();
 
-	DrawFluid3D drawFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
-	mDrawFluid = drawFluid;	
+		DrawFluid3D drawFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
+		mDrawFluid3D = drawFluid;
 
-	std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
-	start = glfwGetTime();
+		std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
+		start = glfwGetTime();
 
-	// Needs to be set to 10/MACGrid resolution
-	// TO DO: fix all initialization values.
-	VoxelFluid voxelFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
-	mVoxelFluid = voxelFluid;
+		// Needs to be set to 10/MACGrid resolution
+		// TO DO: fix all initialization values.
+		VoxelFluid3D voxelFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
+		mVoxelFluid3D = voxelFluid;
 
-	std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
-	
+		std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
 
-	Sphere s;
-	mSphere = s;
+		Sphere s;
+		mSphere = s;
 
-	start = glfwGetTime();
+		start = glfwGetTime();
 
-	InitGLObjects();
+		InitGLObjects();
 
-	std::cout << "Initializing GL objects: " << glfwGetTime() - start << "\n";
+		std::cout << "Initializing GL objects: " << glfwGetTime() - start << "\n";
+	}
+	else
+	{
+		float start = glfwGetTime();
+
+		Fluid2D fluid(1000);
+		mFluid = std::make_unique<Fluid2D>(fluid);
+
+		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
+		start = glfwGetTime();
+
+		DrawFluid2D drawFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
+		mDrawFluid2D = drawFluid;
+
+		std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
+		start = glfwGetTime();
+
+		// Needs to be set to 10/MACGrid resolution
+		// TO DO: fix all initialization values.
+		VoxelFluid2D voxelFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
+		mVoxelFluid2D = voxelFluid;
+
+		std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
+
+
+		Sphere s;
+		mSphere = s;
+
+		start = glfwGetTime();
+
+		InitGLObjects();
+
+		std::cout << "Initializing GL objects: " << glfwGetTime() - start << "\n";
+	}
 }
 
 void Application::InitGLObjects()
@@ -102,9 +139,16 @@ void Application::Update(float deltaTime)
 {
 	mFluid->StepSimulation(deltaTime);
 
-	mDrawFluid.FromFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
-
-	mVoxelFluid.UpdateVoxelStates(dynamic_cast<Fluid3D&>(*mFluid.get()));
+	if (m3Dsimulation)
+	{
+		mDrawFluid3D.FromFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
+		mVoxelFluid3D.UpdateVoxelStates(dynamic_cast<Fluid3D&>(*mFluid.get()));
+	}
+	else
+	{
+		mDrawFluid2D.FromFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
+		mVoxelFluid2D.UpdateVoxelStates(dynamic_cast<Fluid2D&>(*mFluid.get()));
+	}
 }
 
 void Application::Render(float inAspectRatio)
@@ -120,36 +164,80 @@ void Application::Render(float inAspectRatio)
 	mShader.SetVector("color", glm::vec3(1.0f, 0.0f, 0.0f));
 	mShader.SetFloat("alpha", 1.0f);
 	
-	for (int p = 0; p < mDrawFluid.mParticlePoints.size(); p++)
+	if (m3Dsimulation)
 	{
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, mDrawFluid.mParticlePoints[p]);
-		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-
-		mShader.SetMatrix("model", model);
-		
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-	}
-
-	for (int v = 0; v < mVoxelFluid.GetVoxelCenters().size(); v++)
-	{
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, mVoxelFluid.GetVoxelCenter(v));
-		model = glm::scale(model, glm::vec3(0.5f));
-
-		mShader.SetMatrix("model", model);
-
-		if (mVoxelFluid.GetVoxelState(v) == VoxelFluid::VoxelState::eFLUID)
+		for (int p = 0; p < mDrawFluid3D.mParticlePoints.size(); p++)
 		{
-			mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
-			mShader.SetFloat("alpha", 1.0f);
-			glDrawArrays(GL_LINES, 0, 36);
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, mDrawFluid3D.mParticlePoints[p]);
+			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+
+			mShader.SetMatrix("model", model);
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-		else if (mVoxelFluid.GetVoxelState(v) == VoxelFluid::VoxelState::eSOLID)
+
+		for (int v = 0; v < mVoxelFluid3D.GetVoxelCenters().size(); v++)
 		{
-			mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
-			mShader.SetFloat("alpha", 0.1f);
-			glDrawArrays(GL_LINES, 0, 36);
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, mVoxelFluid3D.GetVoxelCenter(v));
+			model = glm::scale(model, glm::vec3(0.5f));
+
+			mShader.SetMatrix("model", model);
+
+			if (mVoxelFluid3D.GetVoxelState(v) == VoxelFluid::VoxelState::eFLUID)
+			{
+				mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
+				mShader.SetFloat("alpha", 1.0f);
+				glDrawArrays(GL_LINES, 0, 36);
+			}
+			else if (mVoxelFluid3D.GetVoxelState(v) == VoxelFluid::VoxelState::eSOLID)
+			{
+				mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
+				mShader.SetFloat("alpha", 0.1f);
+				glDrawArrays(GL_LINES, 0, 36);
+			}
+		}
+	}
+	else
+	{
+		for (int p = 0; p < mDrawFluid2D.mParticlePoints.size(); p++)
+		{
+			glm::mat4 model = glm::mat4(1.0f);
+
+			glm::vec3 vec = { mDrawFluid2D.mParticlePoints[p].x, mDrawFluid2D.mParticlePoints[p].y, 0.0f };
+
+			model = glm::translate(model, vec);
+			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+
+			mShader.SetMatrix("model", model);
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		for (int v = 0; v < mVoxelFluid2D.GetVoxelCenters().size(); v++)
+		{
+			glm::mat4 model = glm::mat4(1.0f);
+			
+			glm::vec3 vec = { mVoxelFluid2D.GetVoxelCenter(v).x, mVoxelFluid2D.GetVoxelCenter(v).y, 0.0f };
+
+			model = glm::translate(model, vec);
+			model = glm::scale(model, glm::vec3(0.5f));
+
+			mShader.SetMatrix("model", model);
+
+			if (mVoxelFluid2D.GetVoxelState(v) == VoxelFluid::VoxelState::eFLUID)
+			{
+				mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
+				mShader.SetFloat("alpha", 1.0f);
+				glDrawArrays(GL_LINES, 0, 36);
+			}
+			else if (mVoxelFluid2D.GetVoxelState(v) == VoxelFluid::VoxelState::eSOLID)
+			{
+				mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
+				mShader.SetFloat("alpha", 0.1f);
+				glDrawArrays(GL_LINES, 0, 36);
+			}
 		}
 	}
 }
