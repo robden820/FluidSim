@@ -5,97 +5,52 @@
 #include "Domain.h"
 
 #include "glm/glm.hpp"
-#include "oneapi/tbb.h"
+#include "onetbb/oneapi/tbb.h"
 
 class MACGrid
 {
-public:
+	public:
 
-	enum CellType
-	{
-		eFLUID = 0,
-		eSOLID = 1,
-		eAIR = 2,
-		eNONE = 3
-	};
+		enum CellType
+		{
+			eFLUID = 0,
+			eSOLID = 1,
+			eAIR = 2,
+			eNONE = 3
+		};
 
-	MACGrid() = default;
-	~MACGrid() = default;
+		virtual ~MACGrid() = default;
 
-	MACGrid(const Domain& inDomain, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution);
+		virtual void Update(float deltaTime) = 0;
 
-	void Update(float deltaTime);
+		virtual int GetNumCells() const = 0;
 
-	int GetNumCells() const { return mNumCellHeight * mNumCellWidth * mNumCellLength; }
+		float GetCellPressure(int index) const { return mCellPressures[index]; }
+		void SetCellPressure(int index, float inPressure) { mCellPressures[index]= inPressure; }
 
-	const glm::vec3& GetCellCenter(int index) const { return mCellCenters[index]; }
-	int GetClosestCell(const glm::vec3& inPosition);
+		const CellType GetCellType(int index) const { return mCellType[index]; }
+		void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
 
-	const float GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
-	const float GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
-	const float GetCellZVelocity(int index) const { return mCellZVelocities[index]; }
+		float GetCellSize() { return mCellSize; }
 
-	void SetCellXVelocity(int index, float inVelocity) { mCellXVelocities[index] = inVelocity; }
-	void SetCellYVelocity(int index, float inVelocity) { mCellYVelocities[index] = inVelocity; }
-	void SetCellZVelocity(int index, float inVelocity) { mCellZVelocities[index] = inVelocity; }
+	protected:
 
-	const float GetCellPressure(int index) const { return mCellPressures[index]; }
-	void SetCellPressure(int index, float inPressure) { mCellPressures[index]= inPressure; }
+		virtual void CalculateCellDivergence(float deltaTime) = 0;
 
-	const CellType GetCellType(int index) const { return mCellType[index]; }
-	const CellType GetCellTypeFromPosition(const glm::vec3& inPosition);
-	void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
+		virtual void AdvectCellVelocity(float deltaTime) = 0;
+		virtual void UpdateCellPressure(float deltaTime, int maxIterations) = 0;
+		virtual void UpdateCellVelocity(float deltaTime) = 0;
 
-	std::tuple<int, int, int> GetXYZFromIndex(int index);
-	int GetIndexFromXYZ(int X, int Y, int Z);
+		int mNumCells;
 
-	float GetCellSize() { return mCellSize; }
+		float mCellSize;    // deltaX
+		float mInvCellSize; // 1 / deltaX
 
-private:
+		float mDensity;
 
-	void InitializeFromDomain(const Domain& inDomain, int inGridResolution);
-	void InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions);
+		std::vector<float> mCellDivergence;
 
-	void CalculateCellDivergence(float deltaTime);
+		std::vector<float> mCellPressures;
 
-	void AdvectCellVelocity(float deltaTime);
-	void UpdateCellPressure(float deltaTime, int maxIterations);
-	void UpdateCellVelocity(float deltaTime);
-
-	void InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ);
-
-	void CalculatePreconditioner(std::vector<float>& inOutPrecon, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
-
-	void ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
-	void ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
-
-	int mNumCellWidth;
-	int mNumCellLength;
-	int mNumCellHeight;
-
-	float dLeft;
-	float dBottom;
-	float dBack;
-
-	int mNumCells;
-
-	float mCellSize;    // deltaX
-	float mInvCellSize; // 1 / deltaX
-
-	float mDensity;
-
-	std::vector<glm::vec3> mCellCenters;
-	std::vector<float> mCellDivergence;
-
-	std::vector<float> mCellPressures;
-	std::vector<float> mCellXVelocities;
-	std::vector<float> mCellYVelocities;
-	std::vector<float> mCellZVelocities;
-
-	// Intermediate cell velocities
-	std::vector<float> mIntXVelocities;
-	std::vector<float> mIntYVelocities;
-	std::vector<float> mIntZVelocities;
-
-	std::vector<CellType> mCellType;
+		std::vector<CellType> mCellType;
 };

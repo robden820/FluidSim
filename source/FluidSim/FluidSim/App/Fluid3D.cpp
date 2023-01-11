@@ -1,10 +1,10 @@
-#include "Fluid.h"
+#include "Fluid3D.h"
 #include <iostream>
 
 #include "oneapi/tbb.h"
 #include "GLFW/glfw3.h"
 
-Fluid::Fluid(int numParticles)
+Fluid3D::Fluid3D(int numParticles)
 {
 	float start = glfwGetTime();
 	std::cout << "Initializing particles: ";
@@ -20,7 +20,7 @@ Fluid::Fluid(int numParticles)
 			{
 				glm::vec3 position((x + 10) * 0.5f, (y + 10) * 0.5f, (z + 10) * 0.5f);
 
-				Particle particle(position);
+				Particle3D particle(position);
 
 				mParticles.push_back(particle);
 				mParticlePositions.push_back(position);
@@ -34,7 +34,7 @@ Fluid::Fluid(int numParticles)
 	std::cout << "Initializing domain: ";
 
 	// Initialize simulation Domain.
-	Domain d(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(10.0f, 10.0f, 10.0f));
+	Domain3D d(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(10.0f, 10.0f, 10.0f));
 	mDomain = d;
 
 	std::cout << glfwGetTime() - start << "\n";
@@ -45,14 +45,14 @@ Fluid::Fluid(int numParticles)
 
 	// Initialize Grid.
 	mMACGridResolution = 50;
-	MACGrid g(mDomain, mParticlePositions, mMACGridResolution);
+	MACGrid3D g(mDomain, mParticlePositions, mMACGridResolution);
 	mMACGrid = g;
 
 	std::cout <<"Total : " << glfwGetTime() - start << "\n";
 	std::cout << "------------------------ \n";
 }
 
-void Fluid::StepSimulation(float deltaTime)
+void Fluid3D::StepSimulation(float deltaTime)
 {
 	// Transfer particle velocities to grid.
 	InterpolateToGrid();
@@ -79,7 +79,7 @@ void Fluid::StepSimulation(float deltaTime)
 	}
 }
 
-void Fluid::ClampParticleToDomain(Particle& particle)
+void Fluid3D::ClampParticleToDomain(Particle3D& particle)
 {
 	glm::vec3 particlePos = particle.GetPosition();
 	glm::vec3 particleVel = particle.GetVelocity();
@@ -121,7 +121,7 @@ void Fluid::ClampParticleToDomain(Particle& particle)
 	particle.SetVelocity(particleVel);
 }
 
-void Fluid::InterpolateToGrid()
+void Fluid3D::InterpolateToGrid()
 {
 	for (int c = 0; c < mMACGrid.GetNumCells(); c++)
 	{
@@ -253,7 +253,7 @@ void Fluid::InterpolateToGrid()
 	}
 }
 
-void Fluid::InterpolateFromGrid()
+void Fluid3D::InterpolateFromGrid()
 {
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
@@ -306,12 +306,12 @@ void Fluid::InterpolateFromGrid()
 		else
 		{
 			std::cout << "WARNING - particle may have penetrated solid boundary. \n";
-			std::cout << "Fluid.pp - InterpolateFromGrid function. \n";
+			std::cout << "Fluid3D.pp - InterpolateFromGrid function. \n";
 		}
 	}
 }
 
-int Fluid::ClosestCellToParticle(const Particle& particle)
+int Fluid3D::ClosestCellToParticle(const Particle3D& particle)
 {
 	glm::vec3 particlePos = particle.GetPosition();
 

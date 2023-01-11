@@ -4,8 +4,10 @@
 
 #include "Camera.h"
 #include "Shader.h"
-#include "DrawFluid.h"
-#include "VoxelFluid.h"
+#include "DrawFluid3D.h"
+#include "DrawFluid2D.h"
+#include "VoxelFluid3D.h"
+#include "VoxelFluid2D.h"
 
 #include "Sphere.h"
 
@@ -36,10 +38,15 @@ private:
 	float mScreenWidth;
 	float mScreenHeight;
 
-	DrawFluid mDrawFluid;
-	VoxelFluid mVoxelFluid;
+	bool m3Dsimulation;
 
-	Fluid mFluid;
+	DrawFluid3D mDrawFluid3D;
+	VoxelFluid3D mVoxelFluid3D;
+
+	DrawFluid2D mDrawFluid2D;
+	VoxelFluid2D mVoxelFluid2D;
+
+	std::unique_ptr<Fluid> mFluid;
 
 	Sphere mSphere; // Contains vertex & index information to draw particles.
 

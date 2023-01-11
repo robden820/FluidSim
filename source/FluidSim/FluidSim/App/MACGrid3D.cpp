@@ -1,4 +1,4 @@
-#include "MACGrid.h"
+#include "MACGrid3D.h"
 
 #include <iostream>
 #include "GLFW/glfw3.h"
@@ -9,13 +9,13 @@
 
 using namespace oneapi;
 
-MACGrid::MACGrid(const Domain& inDomain, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution)
+MACGrid3D::MACGrid3D(const Domain3D& inDomain, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution)
 {
 	InitializeFromDomain(inDomain, inGridResolution);
 	InitializeCellsFromParticles(inParticlePositions);
 }
 
-void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
+void MACGrid3D::InitializeFromDomain(const Domain3D& inDomain, int inGridResolution)
 {
 	/*float*/ dLeft = inDomain.GetLeft();
 	/*float*/ dBack = inDomain.GetBack();
@@ -64,7 +64,7 @@ void MACGrid::InitializeFromDomain(const Domain& inDomain, int inGridResolution)
 	mDensity = 1000.0f;
 }
 
-void MACGrid::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions)
+void MACGrid3D::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions)
 {
 	// Set edge cells to be solid.
 	tbb::parallel_for(0, mNumCells, 1, [&](int cIndex)
@@ -90,7 +90,7 @@ void MACGrid::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParti
 	});
 }
 
-void MACGrid::Update(float deltaTime)
+void MACGrid3D::Update(float deltaTime)
 {
 	//Advection
 	float start = glfwGetTime();
@@ -101,7 +101,7 @@ void MACGrid::Update(float deltaTime)
 	// Projection step
 	start = glfwGetTime();
 	
-	UpdateCellPressure(deltaTime, 100);
+	UpdateCellPressure(deltaTime, 50);
 
 	std::cout << "MAC: Pressure: " << glfwGetTime() - start << "\n";
 
@@ -112,7 +112,7 @@ void MACGrid::Update(float deltaTime)
 	std::cout << "MAC: cell update: " << glfwGetTime() - start << "\n";
 }
 
-void MACGrid::AdvectCellVelocity(float deltaTime)
+void MACGrid3D::AdvectCellVelocity(float deltaTime)
 {
 	tbb::parallel_for(0, mNumCells, 1, [&](int index)
 	{
@@ -182,7 +182,7 @@ void MACGrid::AdvectCellVelocity(float deltaTime)
 	});
 }
 
-int MACGrid::GetClosestCell(const glm::vec3& inPosition)
+int MACGrid3D::GetClosestCell(const glm::vec3& inPosition)
 {
 	int x = floor((inPosition.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize);
 	int y = floor((inPosition.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize);
@@ -287,7 +287,7 @@ int MACGrid::GetClosestCell(const glm::vec3& inPosition)
 	return closestIndex;
 }
 
-void MACGrid::UpdateCellVelocity(float deltaTime)
+void MACGrid3D::UpdateCellVelocity(float deltaTime)
 {
 	float scale = deltaTime * mInvCellSize * (1.0f / mDensity);
 
@@ -354,7 +354,7 @@ void MACGrid::UpdateCellVelocity(float deltaTime)
 	}
 }
 
-void MACGrid::CalculateCellDivergence(float deltaTime)
+void MACGrid3D::CalculateCellDivergence(float deltaTime)
 {
 	float scale = mInvCellSize;
 
@@ -442,7 +442,7 @@ void MACGrid::CalculateCellDivergence(float deltaTime)
 	}
 }
 
-void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
+void MACGrid3D::UpdateCellPressure(float deltaTime, int maxIterations)
 {
 	std::vector<float> Adiagonal;
 	std::vector<float> Ax;
@@ -540,7 +540,8 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 		for (int i = 0; i < mNumCells; i++)
 		{
 			newPressure[i] += alpha * search[i];
-			residuals[i] -= alpha * z[i];
+			float diff = alpha * z[i];
+			residuals[i] -= diff;
 		}
 
 		maxResidual = -1.0f;
@@ -549,7 +550,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 		{
 			if (abs(residuals[index]) > maxResidual)
 			{
-				maxResidual = residuals[index];
+				maxResidual = abs(residuals[index]);
 			}
 		}
 
@@ -565,6 +566,10 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 		for (int i = 0; i < mNumCells; i++)
 		{
 			thetaNew += z[i] * residuals[i];
+			if (thetaNew > 0.f)
+			{
+				std::cout << "|" << thetaNew;
+			}
 		}
 
 		if (abs(theta) < TOLERANCE)
@@ -579,12 +584,13 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 		}
 
 		theta = thetaNew;
+		std::cout << ".";
 	}
-
-	if (iteration == maxIterations)
+	std::cout << "\n";
+	if (iteration >= maxIterations)
 	{
 		std::cout << "WARNING: MAX NUMBER OF ITERATIONS REACHED IN PRESSURE SOLVE" << "\n";
-		std::cout << "Check pressure solver for potential issues, MACGrid.cpp" << "\n";
+		std::cout << "Check pressure solver for potential issues, MACGrid3D.cpp" << "\n";
 	}
 	std::cout << "NUM PRESSURE SOLVE ITERATIONS: " << iteration << "\n";
 	std::cout << "------------------------------\n";
@@ -596,7 +602,7 @@ void MACGrid::UpdateCellPressure(float deltaTime, int maxIterations)
 	}
 }
 
-void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
+void MACGrid3D::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ)
 {
 	float scale = -deltaTime * mInvCellSize * mInvCellSize * (1.0f / mDensity);
 
@@ -685,7 +691,7 @@ void MACGrid::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag
 	}
 }
 
-void MACGrid::ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
+void MACGrid3D::ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -735,7 +741,7 @@ void MACGrid::ApplyA(float deltaTime, std::vector<float>& outResult, const std::
 	}
 }
 
-void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
+void MACGrid3D::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
 	inOutPrecon.assign(mNumCells, 0.f);
 
@@ -822,7 +828,7 @@ void MACGrid::CalculatePreconditioner(std::vector<float>& inOutPrecon, const std
 	}
 }
 
-void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
+void MACGrid3D::ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
 	std::vector<float> intermediate;  // q
 	intermediate.assign(mNumCells, 0.f);
@@ -905,14 +911,14 @@ void MACGrid::ApplyPreconditioner(std::vector<float>& outResult, const std::vect
 	}
 }
 
-const MACGrid::CellType MACGrid::GetCellTypeFromPosition(const glm::vec3& inPosition)
+const MACGrid3D::CellType MACGrid3D::GetCellTypeFromPosition(const glm::vec3& inPosition)
 {
 	int index = GetClosestCell(inPosition);
 
 	return GetCellType(index);
 }
 
-std::tuple<int, int, int> MACGrid::GetXYZFromIndex(int index)
+std::tuple<int, int, int> MACGrid3D::GetXYZFromIndex(int index)
 {
 	int x = 0;
 	int y = 0;
@@ -925,7 +931,7 @@ std::tuple<int, int, int> MACGrid::GetXYZFromIndex(int index)
 	return std::tuple<int, int, int>(x, y, z);
 }
 
-int MACGrid::GetIndexFromXYZ(int X, int Y, int Z)
+int MACGrid3D::GetIndexFromXYZ(int X, int Y, int Z)
 {
 	return  Z + Y * mNumCellLength + X * mNumCellHeight * mNumCellLength;
 }

@@ -1,6 +1,6 @@
-#include "Domain.h"
+#include "Domain3D.h"
 
-Domain::Domain(const glm::vec3& inCenter, const glm::vec3& inExtent)
+Domain3D::Domain3D(const glm::vec3& inCenter, const glm::vec3& inExtent)
 {
 	mCenter = inCenter;
 	mExtent = inExtent;
@@ -12,7 +12,7 @@ Domain::Domain(const glm::vec3& inCenter, const glm::vec3& inExtent)
 	CalculateSides();
 }
 
-Domain::Domain(const glm::vec3& inCenter, float inLength, float inWidth, float inHeight)
+Domain3D::Domain3D(const glm::vec3& inCenter, float inLength, float inWidth, float inHeight)
 {
 	mCenter = inCenter;
 	mLength = inLength;
@@ -24,7 +24,7 @@ Domain::Domain(const glm::vec3& inCenter, float inLength, float inWidth, float i
 	mExtent = { mRight, mTop, mFront };
 }
 
-void Domain::CalculateSides()
+void Domain3D::CalculateSides()
 {
 	// X axis
 	mLeft = mCenter.x - mWidth * 0.5f;
@@ -37,7 +37,7 @@ void Domain::CalculateSides()
 	mFront = mCenter.z + mLength * 0.5f;
 }
 
-bool Domain::IsPointInDomain(const glm::vec3& point)
+bool Domain3D::IsPointInDomain(const glm::vec3& point)
 {
 	bool inside = true;
 

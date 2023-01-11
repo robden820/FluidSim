@@ -51,7 +51,7 @@ int main()
 
 	// Create our window object.
 
-	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Fluid Simulation", NULL, NULL);
 	// If we failed to create the window, bail.
 	if (window == NULL)
 	{
@@ -86,12 +86,11 @@ int main()
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Here we can set up our camera ~~~~~ */
-	Camera cam(glm::vec3(5.0f, 10.0f, 40.0f));
+	Camera cam(glm::vec3(10.0f, 10.0f, 50.0f));
 	camera = cam;
 
 	/* ~~~~~ Set up our shaders ~~~~~ */
-	//Shader shader("../FluidSim/App/Shaders/vertex.txt", "../FluidSim/App/Shaders/fragment.txt");
-	Shader shader("C:/Users/Robert Dennison/Documents/GitHub/FluidSim/source/FluidSim/FluidSim/App/Shaders/vertex.txt", "C:/Users/Robert Dennison/Documents/GitHub/FluidSim/source/FluidSim/FluidSim/App/Shaders//fragment.txt");
+	Shader shader("../FluidSim/App/Shaders/vertex.txt", "../FluidSim/App/Shaders/fragment.txt");
 
 	/* ~~~~~ Set those in the application ~~~~~ */
 	Application gApplication(camera, shader);
@@ -126,6 +125,7 @@ int main()
 		lastFrame = currentFrame;
 		float frameRate = 1 / deltaTime;
 
+		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n";
 		std::cout << "Iteration: " << iteration << " || Current FPS: " << frameRate << "\n";
 
 		iteration++;
@@ -142,9 +142,9 @@ int main()
 		
 
 		// Render the application
-		gApplication.Update(0.2f);
+		gApplication.Update(0.1f);
 		// Do we need to do this every frame?
-//		glBindVertexArray(VAO);
+		//glBindVertexArray(VAO);
 		float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
 		gApplication.Render(aspect);
 
