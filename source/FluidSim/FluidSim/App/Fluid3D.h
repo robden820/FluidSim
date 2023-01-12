@@ -19,7 +19,7 @@ public:
 
 	Fluid3D(int numParticles);
 
-	void StepSimulation(float deltaTime) override;
+	void Update(ApplicationData& inOutData) override;
 
 	const std::vector<Particle3D>& GetParticles() const { return mParticles; }
 	const Particle3D& GetParticle(int index) const { return mParticles[index]; }

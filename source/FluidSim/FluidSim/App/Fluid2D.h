@@ -19,7 +19,7 @@ public:
 
 	Fluid2D(int numParticles);
 
-	void StepSimulation(float deltaTime) override;
+	void Update(ApplicationData& inOutData) override;
 
 	const std::vector<Particle2D>& GetParticles() const { return mParticles; }
 	const Particle2D& GetParticle(int index) const { return mParticles[index]; }

@@ -8,6 +8,13 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mShader.Use();
 
 	m3Dsimulation = false;
+
+	ApplicationData newData;
+	mApplicationData = newData;
+
+	mApplicationData.SetDeltaTime(0.1f);
+	mApplicationData.SetNumParticles(100); // Set the number of fluid particles in the simulation.
+
 }
 
 void Application::Initialize()
@@ -21,9 +28,6 @@ void Application::Initialize()
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
-
-		DrawFluid3D drawFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
-		mDrawFluid3D = drawFluid;
 
 		std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
@@ -48,14 +52,11 @@ void Application::Initialize()
 	{
 		float start = glfwGetTime();
 
-		Fluid2D fluid(100);
+		Fluid2D fluid(mApplicationData.GetNumParticles());
 		mFluid = std::make_unique<Fluid2D>(fluid);
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
-
-		DrawFluid2D drawFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
-		mDrawFluid2D = drawFluid;
 
 		std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
@@ -137,16 +138,14 @@ void Application::SetShader(Shader& inShader)
 
 void Application::Update(float deltaTime)
 {
-	mFluid->StepSimulation(deltaTime);
+	mFluid->Update(mApplicationData);
 
 	if (m3Dsimulation)
 	{
-		mDrawFluid3D.FromFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
 		mVoxelFluid3D.UpdateVoxelStates(dynamic_cast<Fluid3D&>(*mFluid.get()));
 	}
 	else
 	{
-		mDrawFluid2D.FromFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
 		mVoxelFluid2D.UpdateVoxelStates(dynamic_cast<Fluid2D&>(*mFluid.get()));
 	}
 }
@@ -166,10 +165,12 @@ void Application::Render(float inAspectRatio)
 	
 	if (m3Dsimulation)
 	{
-		for (int p = 0; p < mDrawFluid3D.mParticlePoints.size(); p++)
+		for (int p = 0; p < mApplicationData.GetNumParticles(); p++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, mDrawFluid3D.mParticlePoints[p]);
+			glm::vec3 particlePosition = mApplicationData.Get3DParticlePosition(p);
+
+			model = glm::translate(model, particlePosition);
 			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
 
 			mShader.SetMatrix("model", model);
@@ -201,13 +202,14 @@ void Application::Render(float inAspectRatio)
 	}
 	else
 	{
-		for (int p = 0; p < mDrawFluid2D.mParticlePoints.size(); p++)
+		for (int p = 0; p < mApplicationData.GetNumParticles(); p++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 
-			glm::vec3 vec = { mDrawFluid2D.mParticlePoints[p].x, mDrawFluid2D.mParticlePoints[p].y, 0.0f };
+			glm::vec2 vec = mApplicationData.Get2DParticlePosition(p);
+			glm::vec3 particlePosition = { vec.x, vec.y, 0.f };
 
-			model = glm::translate(model, vec);
+			model = glm::translate(model, particlePosition);
 			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
 
 			mShader.SetMatrix("model", model);

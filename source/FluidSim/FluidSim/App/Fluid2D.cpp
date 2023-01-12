@@ -49,8 +49,9 @@ Fluid2D::Fluid2D(int numParticles)
 	std::cout << "------------------------ \n";
 }
 
-void Fluid2D::StepSimulation(float deltaTime)
+void Fluid2D::Update(ApplicationData& inOutData)
 {
+	float deltaTime = inOutData.GetDeltaTime();
 	// Transfer particle velocities to grid.
 	InterpolateToGrid();
 
@@ -64,6 +65,7 @@ void Fluid2D::StepSimulation(float deltaTime)
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
 		mParticles[p].StepParticle(deltaTime);
+		mParticlePositions[p] = mParticles[p].GetPosition();
 	}
 
 	// Ensure particles stay inside the simulation domain.
@@ -74,6 +76,8 @@ void Fluid2D::StepSimulation(float deltaTime)
 			ClampParticleToDomain(mParticles[p]);
 		}
 	}
+
+	inOutData.Set2DParticlePositions(mParticlePositions);
 }
 
 void Fluid2D::ClampParticleToDomain(Particle2D& particle)

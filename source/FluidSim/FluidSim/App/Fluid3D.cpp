@@ -52,8 +52,10 @@ Fluid3D::Fluid3D(int numParticles)
 	std::cout << "------------------------ \n";
 }
 
-void Fluid3D::StepSimulation(float deltaTime)
+void Fluid3D::Update(ApplicationData& inOutData)
 {
+	float deltaTime = inOutData.GetDeltaTime();
+
 	// Transfer particle velocities to grid.
 	InterpolateToGrid();
 
@@ -77,6 +79,8 @@ void Fluid3D::StepSimulation(float deltaTime)
 			ClampParticleToDomain(mParticles[p]);
 		}
 	}
+
+	inOutData.Set3DParticlePositions(mParticlePositions);
 }
 
 void Fluid3D::ClampParticleToDomain(Particle3D& particle)
