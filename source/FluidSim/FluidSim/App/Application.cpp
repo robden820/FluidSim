@@ -12,9 +12,18 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	ApplicationData newData;
 	mApplicationData = newData;
 
+	// Initialise simulation data.
 	mApplicationData.SetDeltaTime(0.1f);
-	mApplicationData.SetNumParticles(100); // Set the number of fluid particles in the simulation.
+	mApplicationData.SetNumParticles(100);
 
+	// Set MACGrid data
+	mApplicationData.SetGridLeft(-5.0f);
+	mApplicationData.SetGridBottom(-5.0f);
+
+	mApplicationData.SetNumGridCellsWidth(10);
+	mApplicationData.SetNumGridCellsHeight(10);
+
+	mApplicationData.SetGridCellSize(0.1f);
 }
 
 void Application::Initialize()
@@ -23,7 +32,7 @@ void Application::Initialize()
 	{
 		float start = glfwGetTime();
 
-		Fluid3D fluid(1000);
+		Fluid3D fluid(mApplicationData);
 		mFluid = std::make_unique<Fluid3D>(fluid);
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
@@ -34,7 +43,7 @@ void Application::Initialize()
 
 		// Needs to be set to 10/MACGrid resolution
 		// TO DO: fix all initialization values.
-		VoxelFluid3D voxelFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
+		VoxelFluid3D voxelFluid(mApplicationData);
 		mVoxelFluid3D = voxelFluid;
 
 		std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
@@ -52,7 +61,7 @@ void Application::Initialize()
 	{
 		float start = glfwGetTime();
 
-		Fluid2D fluid(mApplicationData.GetNumParticles());
+		Fluid2D fluid(mApplicationData);
 		mFluid = std::make_unique<Fluid2D>(fluid);
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
@@ -63,7 +72,7 @@ void Application::Initialize()
 
 		// Needs to be set to 10/MACGrid resolution
 		// TO DO: fix all initialization values.
-		VoxelFluid2D voxelFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
+		VoxelFluid2D voxelFluid(mApplicationData);
 		mVoxelFluid2D = voxelFluid;
 
 		std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
@@ -139,15 +148,6 @@ void Application::SetShader(Shader& inShader)
 void Application::Update(float deltaTime)
 {
 	mFluid->Update(mApplicationData);
-
-	if (m3Dsimulation)
-	{
-		mVoxelFluid3D.UpdateVoxelStates(dynamic_cast<Fluid3D&>(*mFluid.get()));
-	}
-	else
-	{
-		mVoxelFluid2D.UpdateVoxelStates(dynamic_cast<Fluid2D&>(*mFluid.get()));
-	}
 }
 
 void Application::Render(float inAspectRatio)

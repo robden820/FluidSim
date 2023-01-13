@@ -7,6 +7,9 @@
 #include "VoxelFluid3D.h"
 #include "VoxelFluid2D.h"
 
+#include "Fluid3D.h"
+#include "Fluid2D.h"
+
 #include "ApplicationData.h"
 
 #include "Sphere.h"
