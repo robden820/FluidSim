@@ -2,11 +2,19 @@
 
 #include <iostream>
 
+void ApplicationData::SetNumParticles(int inNumParticles)
+{
+	mNumParticles = inNumParticles;
+
+	mParticlePositions2D.reserve(mNumParticles);
+	mParticlePositions3D.reserve(mNumParticles);
+}
+
 const glm::vec2& ApplicationData::Get2DParticlePosition(int index) const
 {
 	if (index < 0 || index > mParticlePositions2D.size() - 1)
 	{
-		LogError("Attempting to access invalid 2D particle position.");
+		LogError("Attempting to access invalid 2D particle position index.");
 		return glm::vec2{ 0.f, 0.f };
 	}
 
@@ -25,7 +33,7 @@ const glm::vec3& ApplicationData::Get3DParticlePosition(int index) const
 {
 	if (index < 0 || index > mParticlePositions3D.size() - 1)
 	{
-		LogError("Attempting to access invalid 3D particle position.");
+		LogError("Attempting to access invalid 3D particle position index.");
 		return glm::vec3{ 0.f, 0.f, 0.f};
 	}
 
@@ -38,6 +46,25 @@ void ApplicationData::Set3DParticlePositions(const std::vector<glm::vec3>& inPos
 	mParticlePositions3D.reserve(inPositions.size());
 
 	mParticlePositions3D = inPositions;
+}
+
+CellType ApplicationData::GetCellType(int index) const
+{
+	if (index < 0 || index > mCellTypes.size() - 1)
+	{
+		LogError("Attempting to access invalid cell type index.");
+		return eNONE;
+	}
+
+	return mCellTypes[index];
+}
+
+void ApplicationData::SetCellTypes(const std::vector<CellType>& inCellTypes)
+{
+	mCellTypes.clear();
+	mCellTypes.reserve(inCellTypes.size());
+
+	mCellTypes = inCellTypes;
 }
 
 void ApplicationData::LogError(const std::string& inErrorMsg) const
