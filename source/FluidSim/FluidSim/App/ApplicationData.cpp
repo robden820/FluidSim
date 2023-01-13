@@ -48,6 +48,18 @@ void ApplicationData::Set3DParticlePositions(const std::vector<glm::vec3>& inPos
 	mParticlePositions3D = inPositions;
 }
 
+void ApplicationData::UpdateNumGridCells()
+{
+//	mNumGridCellsWidth = mNumGridCellsWidth <= 0 ? 1 : mNumGridCellsWidth;
+//	mNumGridCellsHeight = mNumGridCellsHeight <= 0 ? 1 : mNumGridCellsHeight;
+//	mNumGridCellsLength = mNumGridCellsLength <= 0 ? 1 : mNumGridCellsLength;
+
+	mNumGridCells = mNumGridCellsWidth * mNumGridCellsHeight * mNumGridCellsLength;
+
+	mCellTypes.clear();
+	mCellTypes.reserve(mNumGridCells);
+}
+
 CellType ApplicationData::GetCellType(int index) const
 {
 	if (index < 0 || index > mCellTypes.size() - 1)

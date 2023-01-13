@@ -22,6 +22,7 @@ Application::Application(Camera& inCamera, Shader& inShader)
 
 	mApplicationData.SetNumGridCellsWidth(10);
 	mApplicationData.SetNumGridCellsHeight(10);
+	mApplicationData.UpdateNumGridCells();
 
 	mApplicationData.SetGridCellSize(0.1f);
 }

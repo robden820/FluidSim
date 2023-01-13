@@ -53,7 +53,7 @@ class ApplicationData
 	// -------------------------------------------------- //
 	// Grid Data
 	public:
-		int GetNumGridCells() const { return mNumGridCellsWidth * mNumGridCellsHeight * mNumGridCellsLength; }
+		int GetNumGridCells() const { return mNumGridCells; }
 		int GetNumGridCellsWidth() const { return mNumGridCellsWidth; }
 		int GetNumGridCellsHeight() const { return mNumGridCellsHeight; }
 		int GetNumGridCellsLength() const { return mNumGridCellsLength; }
@@ -61,6 +61,7 @@ class ApplicationData
 		void SetNumGridCellsWidth(int inNumCellsWidth) { mNumGridCellsWidth = inNumCellsWidth; }
 		void SetNumGridCellsHeight(int inNumCellsHeight) { mNumGridCellsHeight = inNumCellsHeight; }
 		void SetNumGridCellsLength(int inNumCellsLength) { mNumGridCellsLength = inNumCellsLength; }
+		void UpdateNumGridCells(); // Call after setting number of grid cells in each dimension to reserve vector memory.
 
 		float GetGridLeft() const { return mGridLeft; }
 		float GetGridBottom() const { return mGridBottom; }
@@ -82,9 +83,11 @@ class ApplicationData
 		void SetCellTypes(const std::vector<CellType>& inCellTypes);
 
 	private:
-		int mNumGridCellsWidth;
-		int mNumGridCellsHeight;
-		int mNumGridCellsLength;
+		int mNumGridCellsWidth = 1;
+		int mNumGridCellsHeight = 1;
+		int mNumGridCellsLength = 1;
+
+		int mNumGridCells;
 
 		float mGridLeft;
 		float mGridBottom;
