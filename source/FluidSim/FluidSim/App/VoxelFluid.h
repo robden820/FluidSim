@@ -1,10 +1,8 @@
 #pragma once
 
-#include <glm/vec3.hpp>
 #include <vector>
 
-#include "Fluid3D.h"
-#include "Domain3D.h"
+#include "ApplicationData.h"
 
 class VoxelFluid
 {
@@ -19,6 +17,7 @@ class VoxelFluid
 		virtual ~VoxelFluid() = default;
 
 	protected:
+		virtual void Initialize(const ApplicationData& inData) = 0;
 
 		float mVoxelSize;
 		int mNumVoxels;

@@ -9,21 +9,21 @@
 
 using namespace oneapi;
 
-MACGrid3D::MACGrid3D(const Domain3D& inDomain, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution)
+MACGrid3D::MACGrid3D(float inLeft, float inBottom, float inBack, float inWidth, float inHeight, float inLength, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution)
 {
-	InitializeFromDomain(inDomain, inGridResolution);
+	InitializeFromDimensions(inLeft, inBottom, inBack, inWidth, inHeight, inLength, inGridResolution);
 	InitializeCellsFromParticles(inParticlePositions);
 }
 
-void MACGrid3D::InitializeFromDomain(const Domain3D& inDomain, int inGridResolution)
+void MACGrid3D::InitializeFromDimensions(float inLeft, float inBottom, float inBack, float inWidth, float inHeight, float inLength, int inGridResolution)
 {
-	/*float*/ dLeft = inDomain.GetLeft();
-	/*float*/ dBack = inDomain.GetBack();
-	/*float*/ dBottom = inDomain.GetBottom();
+	dLeft = inLeft;
+	dBack = inBack;
+	dBottom = inBottom;
 
-	float dLength = inDomain.GetLength();
-	float dWidth = inDomain.GetWidth();
-	float dHeight = inDomain.GetHeight();
+	float dLength = inLength;
+	float dWidth = inWidth;
+	float dHeight = inHeight;
 
 	mNumCellLength = inGridResolution;
 	mNumCellWidth = inGridResolution;
@@ -911,7 +911,7 @@ void MACGrid3D::ApplyPreconditioner(std::vector<float>& outResult, const std::ve
 	}
 }
 
-const MACGrid3D::CellType MACGrid3D::GetCellTypeFromPosition(const glm::vec3& inPosition)
+const CellType MACGrid3D::GetCellTypeFromPosition(const glm::vec3& inPosition)
 {
 	int index = GetClosestCell(inPosition);
 

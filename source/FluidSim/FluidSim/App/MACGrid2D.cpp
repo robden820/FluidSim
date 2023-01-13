@@ -9,19 +9,19 @@
 
 //using namespace oneapi;
 
-MACGrid2D::MACGrid2D(const Domain2D& inDomain, const std::vector<glm::vec2>& inParticlePositions, int inGridResolution)
+MACGrid2D::MACGrid2D(float inLeft, float inBottom, float inWidth, float inHeight, const std::vector<glm::vec2>& inParticlePositions, int inGridResolution)
 {
-	InitializeFromDomain(inDomain, inGridResolution);
+	InitializeFromDimensions(inLeft, inBottom, inWidth, inHeight, inGridResolution);
 	InitializeCellsFromParticles(inParticlePositions);
 }
 
-void MACGrid2D::InitializeFromDomain(const Domain2D& inDomain, int inGridResolution)
+void MACGrid2D::InitializeFromDimensions(float inLeft, float inBottom, float inWidth, float inHeight, int inGridResolution)
 {
-	/*float*/ dLeft = inDomain.GetLeft();
-	/*float*/ dBottom = inDomain.GetBottom();
+	/*float*/ dLeft = inLeft;
+	/*float*/ dBottom = inBottom;
 
-	float dWidth = inDomain.GetWidth();
-	float dHeight = inDomain.GetHeight();
+	float dWidth = inWidth;
+	float dHeight = inHeight;
 
 	mNumCellWidth = inGridResolution;
 	mNumCellHeight = inGridResolution;
@@ -677,7 +677,7 @@ void MACGrid2D::ApplyPreconditioner(std::vector<float>& outResult, const std::ve
 	}
 }
 
-const MACGrid2D::CellType MACGrid2D::GetCellTypeFromPosition(const glm::vec2& inPos)
+const CellType MACGrid2D::GetCellTypeFromPosition(const glm::vec2& inPos)
 {
 	int index = GetClosestCell(inPos);
 

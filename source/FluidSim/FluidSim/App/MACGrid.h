@@ -2,22 +2,14 @@
 
 #include <vector>
 
-#include "Domain.h"
-
 #include "glm/glm.hpp"
 #include "onetbb/oneapi/tbb.h"
+
+#include "ApplicationData.h"
 
 class MACGrid
 {
 	public:
-
-		enum CellType
-		{
-			eFLUID = 0,
-			eSOLID = 1,
-			eAIR = 2,
-			eNONE = 3
-		};
 
 		virtual ~MACGrid() = default;
 

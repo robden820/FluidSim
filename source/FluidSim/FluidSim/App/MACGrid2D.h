@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "MACGrid.h"
-#include "Domain2D.h"
 
 #include "glm/glm.hpp"
 #include "oneapi/tbb.h"
@@ -14,7 +13,7 @@ public:
 	MACGrid2D() = default;
 	~MACGrid2D() = default;
 
-	MACGrid2D(const Domain2D& inDomain, const std::vector<glm::vec2>& inParticlePositions, int inGridResolution);
+	MACGrid2D(float inLeft, float inBottom, float inWidth, float inHeight, const std::vector<glm::vec2>& inParticlePositions, int inGridResolution);
 
 	void Update(float deltaTime);
 
@@ -43,7 +42,7 @@ public:
 
 private:
 
-	void InitializeFromDomain(const Domain2D& inDomain, int inGridResolution);
+	void InitializeFromDimensions(float inLeft, float inBottom, float inWidth, float inHeight, int inGridResolution);
 	void InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions);
 
 	void CalculateCellDivergence(float deltaTime);

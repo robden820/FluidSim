@@ -2,28 +2,26 @@
 
 #include <iostream>
 
-VoxelFluid3D::VoxelFluid3D(const Fluid3D& inFluid)
+VoxelFluid3D::VoxelFluid3D(const ApplicationData& inData)
 {
-	mVoxelSize = inFluid.GetDomain().GetLength() / inFluid.GetMACGridResolution();
+	mVoxelSize = inData.GetGridCellSize();
 
-	InitializeFromDomain(inFluid.GetDomain());
+	Initialize(inData);
 }
 
-void VoxelFluid3D::InitializeFromDomain(const Domain3D& inDomain)
+void VoxelFluid3D::Initialize(const ApplicationData& inData)
 {
-	glm::vec3 dCenter = inDomain.GetCenter();
+	float dLeft = inData.GetGridLeft();
+	float dBack = inData.GetGridBack();
+	float dBottom = inData.GetGridBottom();
 
-	float dLeft = inDomain.GetLeft();
-	float dBack = inDomain.GetBack();
-	float dBottom = inDomain.GetBottom();
+	float dLength = inData.GetGridLength();
+	float dWidth = inData.GetGridWidth();
+	float dHeight = inData.GetGridHeight();
 
-	float dLength = inDomain.GetLength();
-	float dWidth = inDomain.GetWidth();
-	float dHeight = inDomain.GetHeight();
-
-	mNumVoxelsLength = floor(dLength / mVoxelSize);
-	mNumVoxelsWidth = floor(dWidth / mVoxelSize);
-	mNumVoxelsHeight = floor(dHeight / mVoxelSize);
+	mNumVoxelsLength = inData.GetNumGridCellsLength();
+	mNumVoxelsWidth = inData.GetNumGridCellsWidth();
+	mNumVoxelsHeight = inData.GetNumGridCellsHeight();
 
 	mNumVoxels = mNumVoxelsLength * mNumVoxelsWidth * mNumVoxelsHeight;
 
@@ -47,23 +45,6 @@ void VoxelFluid3D::InitializeFromDomain(const Domain3D& inDomain)
 				mVoxelCenters.push_back(glm::vec3(centerX, centerY, centerZ));
 				mVoxelStates.push_back(VoxelState::eNONE);
 			}
-		}
-	}
-}
-
-void VoxelFluid3D::UpdateVoxelStates(const Fluid3D& inFluid)
-{
-	for (int index = 0; index < mNumVoxels; index++)
-	{
-		mVoxelStates[index] = VoxelState::eNONE;
-
-		if (inFluid.GetMACGrid().GetCellType(index) == MACGrid::CellType::eFLUID)
-		{
-			mVoxelStates[index] = VoxelState::eFLUID;
-		}
-		else if (inFluid.GetMACGrid().GetCellType(index) == MACGrid::CellType::eSOLID)
-		{
-			mVoxelStates[index] = VoxelState::eSOLID;
 		}
 	}
 }
