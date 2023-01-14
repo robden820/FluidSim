@@ -6,7 +6,6 @@
 #include "VoxelFluid.h"
 
 #include "Fluid3D.h"
-#include "Domain3D.h"
 
 class VoxelFluid3D : public VoxelFluid
 {
@@ -15,9 +14,7 @@ public:
 	VoxelFluid3D() = default;
 	~VoxelFluid3D() = default;
 
-	VoxelFluid3D(const Fluid3D& inFluid);
-
-	void UpdateVoxelStates(const Fluid3D& inFluid);
+	VoxelFluid3D(const ApplicationData& inData);
 
 	const std::vector<glm::vec3>& GetVoxelCenters() const { return mVoxelCenters; }
 	const glm::vec3& GetVoxelCenter(int index) const { return mVoxelCenters[index]; }
@@ -28,7 +25,7 @@ public:
 
 private:
 
-	void InitializeFromDomain(const Domain3D& inDomain);
+	void Initialize(const ApplicationData& inData) override;
 
 	int mNumVoxelsLength;
 	int mNumVoxelsHeight;

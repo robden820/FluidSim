@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "Domain3D.h"
 #include "MACGrid.h"
 
 #include "glm/glm.hpp"
@@ -15,9 +14,9 @@ public:
 	MACGrid3D() = default;
 	~MACGrid3D() = default;
 
-	MACGrid3D(const Domain3D& inDomain, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution);
+	MACGrid3D(const ApplicationData& inData);
 
-	void Update(float deltaTime) override;
+	void Update(ApplicationData& inOutData) override;
 
 	int GetNumCells() const override { return mNumCellWidth * mNumCellHeight * mNumCellLength; }
 
@@ -39,7 +38,7 @@ public:
 
 private:
 
-	void InitializeFromDomain(const Domain3D& inDomain, int inGridResolution);
+	void InitializeGrid(const ApplicationData& inData) override;
 	void InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions);
 
 	void CalculateCellDivergence(float deltaTime) override;

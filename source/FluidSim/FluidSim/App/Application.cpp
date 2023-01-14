@@ -8,6 +8,24 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mShader.Use();
 
 	m3Dsimulation = false;
+
+	ApplicationData newData;
+	mApplicationData = newData;
+
+	// Initialise simulation data.
+	mApplicationData.SetDeltaTime(0.1f);
+	mApplicationData.SetNumParticles(100);
+	mApplicationData.SetFluidDensity(1000.0f);
+
+	// Set MACGrid data
+	mApplicationData.SetGridLeft(-5.0f);
+	mApplicationData.SetGridBottom(-5.0f);
+
+	mApplicationData.SetNumGridCellsWidth(100);
+	mApplicationData.SetNumGridCellsHeight(100);
+	mApplicationData.UpdateNumGridCells();
+
+	mApplicationData.SetGridCellSize(0.1f);
 }
 
 void Application::Initialize()
@@ -16,21 +34,18 @@ void Application::Initialize()
 	{
 		float start = glfwGetTime();
 
-		Fluid3D fluid(1000);
+		Fluid3D fluid(mApplicationData);
 		mFluid = std::make_unique<Fluid3D>(fluid);
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
-
-		DrawFluid3D drawFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
-		mDrawFluid3D = drawFluid;
 
 		std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
 
 		// Needs to be set to 10/MACGrid resolution
 		// TO DO: fix all initialization values.
-		VoxelFluid3D voxelFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
+		VoxelFluid3D voxelFluid(mApplicationData);
 		mVoxelFluid3D = voxelFluid;
 
 		std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
@@ -48,21 +63,18 @@ void Application::Initialize()
 	{
 		float start = glfwGetTime();
 
-		Fluid2D fluid(100);
+		Fluid2D fluid(mApplicationData);
 		mFluid = std::make_unique<Fluid2D>(fluid);
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
-
-		DrawFluid2D drawFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
-		mDrawFluid2D = drawFluid;
 
 		std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
 
 		// Needs to be set to 10/MACGrid resolution
 		// TO DO: fix all initialization values.
-		VoxelFluid2D voxelFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
+		VoxelFluid2D voxelFluid(mApplicationData);
 		mVoxelFluid2D = voxelFluid;
 
 		std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
@@ -137,18 +149,7 @@ void Application::SetShader(Shader& inShader)
 
 void Application::Update(float deltaTime)
 {
-	mFluid->StepSimulation(deltaTime);
-
-	if (m3Dsimulation)
-	{
-		mDrawFluid3D.FromFluid(dynamic_cast<Fluid3D&>(*mFluid.get()));
-		mVoxelFluid3D.UpdateVoxelStates(dynamic_cast<Fluid3D&>(*mFluid.get()));
-	}
-	else
-	{
-		mDrawFluid2D.FromFluid(dynamic_cast<Fluid2D&>(*mFluid.get()));
-		mVoxelFluid2D.UpdateVoxelStates(dynamic_cast<Fluid2D&>(*mFluid.get()));
-	}
+	mFluid->Update(mApplicationData);
 }
 
 void Application::Render(float inAspectRatio)
@@ -166,10 +167,12 @@ void Application::Render(float inAspectRatio)
 	
 	if (m3Dsimulation)
 	{
-		for (int p = 0; p < mDrawFluid3D.mParticlePoints.size(); p++)
+		for (int p = 0; p < mApplicationData.GetNumParticles(); p++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, mDrawFluid3D.mParticlePoints[p]);
+			glm::vec3 particlePosition = mApplicationData.Get3DParticlePosition(p);
+
+			model = glm::translate(model, particlePosition);
 			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
 
 			mShader.SetMatrix("model", model);
@@ -201,13 +204,14 @@ void Application::Render(float inAspectRatio)
 	}
 	else
 	{
-		for (int p = 0; p < mDrawFluid2D.mParticlePoints.size(); p++)
+		for (int p = 0; p < mApplicationData.GetNumParticles(); p++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 
-			glm::vec3 vec = { mDrawFluid2D.mParticlePoints[p].x, mDrawFluid2D.mParticlePoints[p].y, 0.0f };
+			glm::vec2 vec = mApplicationData.Get2DParticlePosition(p);
+			glm::vec3 particlePosition = { vec.x, vec.y, 0.f };
 
-			model = glm::translate(model, vec);
+			model = glm::translate(model, particlePosition);
 			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
 
 			mShader.SetMatrix("model", model);
@@ -226,13 +230,13 @@ void Application::Render(float inAspectRatio)
 
 			mShader.SetMatrix("model", model);
 
-			if (mVoxelFluid2D.GetVoxelState(v) == VoxelFluid::VoxelState::eFLUID)
+			if (mApplicationData.GetCellType(v) == CellType::eFLUID)
 			{
 				mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
 				mShader.SetFloat("alpha", 1.0f);
 				glDrawArrays(GL_LINES, 0, 36);
 			}
-			else if (mVoxelFluid2D.GetVoxelState(v) == VoxelFluid::VoxelState::eSOLID)
+			else if (mApplicationData.GetCellType(v) == CellType::eSOLID)
 			{
 				mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
 				mShader.SetFloat("alpha", 0.1f);

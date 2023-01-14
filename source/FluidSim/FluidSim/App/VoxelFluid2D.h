@@ -5,9 +5,6 @@
 
 #include "VoxelFluid.h"
 
-#include "Fluid2D.h"
-#include "Domain2D.h"
-
 class VoxelFluid2D : public VoxelFluid
 {
 public:
@@ -15,9 +12,8 @@ public:
 	VoxelFluid2D() = default;
 	~VoxelFluid2D() = default;
 
-	VoxelFluid2D(const Fluid2D& inFluid);
+	VoxelFluid2D(const ApplicationData& inData);
 
-	void UpdateVoxelStates(const Fluid2D& inFluid);
 
 	const std::vector<glm::vec2>& GetVoxelCenters() const { return mVoxelCenters; }
 	const glm::vec2& GetVoxelCenter(int index) const { return mVoxelCenters[index]; }
@@ -27,8 +23,7 @@ public:
 	void SetVoxelState(int index, VoxelState inState) { mVoxelStates[index] = inState; }
 
 private:
-
-	void InitializeFromDomain(const Domain2D& inDomain);
+	void Initialize(const ApplicationData& inData) override;
 
 	int mNumVoxelsLength;
 	int mNumVoxelsHeight;

@@ -9,29 +9,29 @@
 
 using namespace oneapi;
 
-MACGrid3D::MACGrid3D(const Domain3D& inDomain, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution)
+MACGrid3D::MACGrid3D(const ApplicationData& inData)
 {
-	InitializeFromDomain(inDomain, inGridResolution);
-	InitializeCellsFromParticles(inParticlePositions);
+	InitializeGrid(inData);
+	InitializeCellsFromParticles(inData.Get3DParticlePositions());
 }
 
-void MACGrid3D::InitializeFromDomain(const Domain3D& inDomain, int inGridResolution)
+void MACGrid3D::InitializeGrid(const ApplicationData& inData)
 {
-	/*float*/ dLeft = inDomain.GetLeft();
-	/*float*/ dBack = inDomain.GetBack();
-	/*float*/ dBottom = inDomain.GetBottom();
+	dLeft = inData.GetGridLeft();
+	dBack = inData.GetGridBack();
+	dBottom = inData.GetGridBottom();
 
-	float dLength = inDomain.GetLength();
-	float dWidth = inDomain.GetWidth();
-	float dHeight = inDomain.GetHeight();
+	float dLength = inData.GetGridLength();
+	float dWidth = inData.GetGridWidth();
+	float dHeight = inData.GetGridHeight();
 
-	mNumCellLength = inGridResolution;
-	mNumCellWidth = inGridResolution;
-	mNumCellHeight = inGridResolution;
+	mNumCellLength = inData.GetNumGridCellsLength();
+	mNumCellWidth = inData.GetNumGridCellsWidth();
+	mNumCellHeight = inData.GetNumGridCellsHeight();
 
-	mNumCells = mNumCellLength * mNumCellWidth * mNumCellHeight;
+	mNumCells = inData.GetNumGridCells();
 
-	mCellSize = dLength / inGridResolution;
+	mCellSize = inData.GetGridCellSize();
 	mInvCellSize = 1 / mCellSize;
 
 	float halfCell = mCellSize * 0.5f;
@@ -61,7 +61,7 @@ void MACGrid3D::InitializeFromDomain(const Domain3D& inDomain, int inGridResolut
 	mIntYVelocities.assign(mNumCells, 0.f);
 	mIntZVelocities.assign(mNumCells, 0.f);
 
-	mDensity = 1000.0f;
+	mDensity = inData.GetFluidDensity();
 }
 
 void MACGrid3D::InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions)
@@ -90,8 +90,10 @@ void MACGrid3D::InitializeCellsFromParticles(const std::vector<glm::vec3>& inPar
 	});
 }
 
-void MACGrid3D::Update(float deltaTime)
+void MACGrid3D::Update(ApplicationData& inOutData)
 {
+	float deltaTime = inOutData.GetDeltaTime();
+
 	//Advection
 	float start = glfwGetTime();
 	AdvectCellVelocity(deltaTime);
@@ -911,7 +913,7 @@ void MACGrid3D::ApplyPreconditioner(std::vector<float>& outResult, const std::ve
 	}
 }
 
-const MACGrid3D::CellType MACGrid3D::GetCellTypeFromPosition(const glm::vec3& inPosition)
+const CellType MACGrid3D::GetCellTypeFromPosition(const glm::vec3& inPosition)
 {
 	int index = GetClosestCell(inPosition);
 

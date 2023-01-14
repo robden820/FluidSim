@@ -2,25 +2,20 @@
 
 #include <iostream>
 
-VoxelFluid2D::VoxelFluid2D(const Fluid2D& inFluid)
+VoxelFluid2D::VoxelFluid2D(const ApplicationData& inData)
 {
-	mVoxelSize = inFluid.GetDomain().GetWidth() / inFluid.GetMACGridResolution();
+	mVoxelSize = inData.GetGridCellSize();
 
-	InitializeFromDomain(inFluid.GetDomain());
+	Initialize(inData);
 }
 
-void VoxelFluid2D::InitializeFromDomain(const Domain2D& inDomain)
+void VoxelFluid2D::Initialize(const ApplicationData& inData)
 {
-	glm::vec2 dCenter = inDomain.GetCenter();
+	float dLeft = inData.GetGridLeft();
+	float dBottom = inData.GetGridBottom();
 
-	float dLeft = inDomain.GetLeft();
-	float dBottom = inDomain.GetBottom();
-
-	float dWidth = inDomain.GetWidth();
-	float dHeight = inDomain.GetHeight();
-
-	mNumVoxelsWidth = floor(dWidth / mVoxelSize);
-	mNumVoxelsHeight = floor(dHeight / mVoxelSize);
+	mNumVoxelsWidth = inData.GetNumGridCellsWidth();
+	mNumVoxelsHeight = inData.GetNumGridCellsHeight();
 
 	mNumVoxels = mNumVoxelsWidth * mNumVoxelsHeight;
 
@@ -39,23 +34,6 @@ void VoxelFluid2D::InitializeFromDomain(const Domain2D& inDomain)
 
 			mVoxelCenters.push_back(glm::vec2(centerX, centerY));
 			mVoxelStates.push_back(VoxelState::eNONE);
-		}
-	}
-}
-
-void VoxelFluid2D::UpdateVoxelStates(const Fluid2D& inFluid)
-{
-	for (int index = 0; index < mNumVoxels; index++)
-	{
-		mVoxelStates[index] = VoxelState::eNONE;
-
-		if (inFluid.GetMACGrid().GetCellType(index) == MACGrid::CellType::eFLUID)
-		{
-			mVoxelStates[index] = VoxelState::eFLUID;
-		}
-		else if (inFluid.GetMACGrid().GetCellType(index) == MACGrid::CellType::eSOLID)
-		{
-			mVoxelStates[index] = VoxelState::eSOLID;
 		}
 	}
 }

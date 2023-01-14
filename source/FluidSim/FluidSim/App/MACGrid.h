@@ -2,26 +2,18 @@
 
 #include <vector>
 
-#include "Domain.h"
-
 #include "glm/glm.hpp"
 #include "onetbb/oneapi/tbb.h"
+
+#include "ApplicationData.h"
 
 class MACGrid
 {
 	public:
 
-		enum CellType
-		{
-			eFLUID = 0,
-			eSOLID = 1,
-			eAIR = 2,
-			eNONE = 3
-		};
-
 		virtual ~MACGrid() = default;
 
-		virtual void Update(float deltaTime) = 0;
+		virtual void Update(ApplicationData& inOutData) = 0;
 
 		virtual int GetNumCells() const = 0;
 
@@ -34,6 +26,8 @@ class MACGrid
 		float GetCellSize() { return mCellSize; }
 
 	protected:
+
+		virtual void InitializeGrid(const ApplicationData& inData) = 0;
 
 		virtual void CalculateCellDivergence(float deltaTime) = 0;
 

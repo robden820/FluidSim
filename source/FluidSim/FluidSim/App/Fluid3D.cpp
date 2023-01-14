@@ -4,19 +4,20 @@
 #include "oneapi/tbb.h"
 #include "GLFW/glfw3.h"
 
-Fluid3D::Fluid3D(int numParticles)
+Fluid3D::Fluid3D(const ApplicationData& inData)
 {
 	float start = glfwGetTime();
 	std::cout << "Initializing particles: ";
 	// Initialize particles
-	mParticles.reserve(numParticles);
-	mParticlePositions.reserve(numParticles);
+	mParticles.reserve(inData.GetNumParticles());
+	mParticlePositions.reserve(inData.GetNumParticles());
 
-	for (int x = 0; x < 10; x++)
+	// TO DO: fix particle initialisation.
+	for (int x = 0; x < inData.GetNumGridCellsWidth(); x++)
 	{
-		for (int y = 0; y < 10; y++)
+		for (int y = 0; y < inData.GetNumGridCellsHeight(); y++)
 		{
-			for (int z = 0; z < 10; z++)
+			for (int z = 0; z < inData.GetNumGridCellsLength(); z++)
 			{
 				glm::vec3 position((x + 10) * 0.5f, (y + 10) * 0.5f, (z + 10) * 0.5f);
 
@@ -31,34 +32,26 @@ Fluid3D::Fluid3D(int numParticles)
 	std::cout << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
-	std::cout << "Initializing domain: ";
-
-	// Initialize simulation Domain.
-	Domain3D d(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(10.0f, 10.0f, 10.0f));
-	mDomain = d;
-
-	std::cout << glfwGetTime() - start << "\n";
-	start = glfwGetTime();
-
 	std::cout << "------------------------ \n";
 	std::cout << "Initializing MAC Grid: \n";
 
 	// Initialize Grid.
-	mMACGridResolution = 50;
-	MACGrid3D g(mDomain, mParticlePositions, mMACGridResolution);
-	mMACGrid = g;
+	MACGrid3D grid(inData);
+	mMACGrid = grid;
 
 	std::cout <<"Total : " << glfwGetTime() - start << "\n";
 	std::cout << "------------------------ \n";
 }
 
-void Fluid3D::StepSimulation(float deltaTime)
+void Fluid3D::Update(ApplicationData& inOutData)
 {
+	float deltaTime = inOutData.GetDeltaTime();
+
 	// Transfer particle velocities to grid.
 	InterpolateToGrid();
 
 	// Update grid velocities.
-	mMACGrid.Update(deltaTime);
+	mMACGrid.Update(inOutData);
 
 	// Interpolate velocities back to particles.
 	InterpolateFromGrid();
@@ -69,6 +62,7 @@ void Fluid3D::StepSimulation(float deltaTime)
 		mParticles[p].StepParticle(deltaTime);
 	}
 
+	/* TO DO: shouldn't be necessary
 	// Ensure particles stay inside the simulation domain.
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
@@ -77,8 +71,12 @@ void Fluid3D::StepSimulation(float deltaTime)
 			ClampParticleToDomain(mParticles[p]);
 		}
 	}
+	*/
+
+	inOutData.Set3DParticlePositions(mParticlePositions);
 }
 
+/*
 void Fluid3D::ClampParticleToDomain(Particle3D& particle)
 {
 	glm::vec3 particlePos = particle.GetPosition();
@@ -119,15 +117,15 @@ void Fluid3D::ClampParticleToDomain(Particle3D& particle)
 
 	particle.SetPosition(particlePos);
 	particle.SetVelocity(particleVel);
-}
+}*/
 
 void Fluid3D::InterpolateToGrid()
 {
 	for (int c = 0; c < mMACGrid.GetNumCells(); c++)
 	{
-		if (mMACGrid.GetCellType(c) != MACGrid::CellType::eSOLID)
+		if (mMACGrid.GetCellType(c) != CellType::eSOLID)
 		{
-			mMACGrid.SetCellType(c, MACGrid::CellType::eAIR);
+			mMACGrid.SetCellType(c, CellType::eAIR);
 		}
 	}
 
@@ -166,9 +164,9 @@ void Fluid3D::InterpolateToGrid()
 		float velocityY = mMACGrid.GetCellYVelocity(cellIndex) * yWeight;
 		float velocityZ = mMACGrid.GetCellZVelocity(cellIndex) * zWeight;
 
-		if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
+		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
-			mMACGrid.SetCellType(cellIndex, MACGrid::CellType::eFLUID);
+			mMACGrid.SetCellType(cellIndex, CellType::eFLUID);
 
 			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x * xWeight;
 			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y * yWeight;
@@ -185,7 +183,7 @@ void Fluid3D::InterpolateToGrid()
 			{
 				int neighbourLeft = mMACGrid.GetIndexFromXYZ(x - 1, y, z);
 
-				if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
+				if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 				{
 					interpXVelocities[neighbourLeft] += mParticles[p].GetVelocity().x * (1 - xWeight);
 					interpYVelocities[neighbourLeft] += mParticles[p].GetVelocity().y * (1 - yWeight);
@@ -200,7 +198,7 @@ void Fluid3D::InterpolateToGrid()
 			{
 				int neighbourBottom = mMACGrid.GetIndexFromXYZ(x, y - 1, z);
 
-				if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
+				if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 				{
 					interpXVelocities[neighbourBottom] += mParticles[p].GetVelocity().x * (1 - xWeight);
 					interpYVelocities[neighbourBottom] += mParticles[p].GetVelocity().y * (1 - yWeight);
@@ -215,7 +213,7 @@ void Fluid3D::InterpolateToGrid()
 			{
 				int neighbourBack = mMACGrid.GetIndexFromXYZ(x, y, z - 1);
 
-				if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
+				if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 				{
 					interpXVelocities[neighbourBack] += mParticles[p].GetVelocity().x * (1 - xWeight);
 					interpYVelocities[neighbourBack] += mParticles[p].GetVelocity().y * (1 - yWeight);
@@ -244,7 +242,7 @@ void Fluid3D::InterpolateToGrid()
 			interpZVelocities[c] *= 1.0f / contributedZWeights[c];
 		}
 		
-		if (mMACGrid.GetCellType(c) != MACGrid::CellType::eSOLID)
+		if (mMACGrid.GetCellType(c) != CellType::eSOLID)
 		{
 			mMACGrid.SetCellXVelocity(c, interpXVelocities[c]);
 			mMACGrid.SetCellYVelocity(c, interpYVelocities[c]);
@@ -259,7 +257,7 @@ void Fluid3D::InterpolateFromGrid()
 	{
 		int cellIndex = ClosestCellToParticle(mParticles[p]);
 		
-		if (mMACGrid.GetCellType(cellIndex) != MACGrid::CellType::eSOLID)
+		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
 			int x, y, z;
 			std::tie(x, y, z) = mMACGrid.GetXYZFromIndex(cellIndex);

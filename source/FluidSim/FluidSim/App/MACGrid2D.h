@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "MACGrid.h"
-#include "Domain2D.h"
 
 #include "glm/glm.hpp"
 #include "oneapi/tbb.h"
@@ -14,9 +13,9 @@ public:
 	MACGrid2D() = default;
 	~MACGrid2D() = default;
 
-	MACGrid2D(const Domain2D& inDomain, const std::vector<glm::vec2>& inParticlePositions, int inGridResolution);
+	MACGrid2D(const ApplicationData& inData);
 
-	void Update(float deltaTime);
+	void Update(ApplicationData& inOutData);
 
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth; }
 
@@ -43,7 +42,7 @@ public:
 
 private:
 
-	void InitializeFromDomain(const Domain2D& inDomain, int inGridResolution);
+	void InitializeGrid(const ApplicationData& inData) override;
 	void InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions);
 
 	void CalculateCellDivergence(float deltaTime);
@@ -65,23 +64,12 @@ private:
 	float dLeft;
 	float dBottom;
 
-	int mNumCells;
-
-	float mCellSize;    // deltaX
-	float mInvCellSize; // 1 / deltaX
-
-	float mDensity;
-
 	std::vector<glm::vec2> mCellCenters;
-	std::vector<float> mCellDivergence;
 
-	std::vector<float> mCellPressures;
 	std::vector<float> mCellXVelocities;
 	std::vector<float> mCellYVelocities;
 
 	// Intermediate cell velocities
 	std::vector<float> mIntXVelocities;
 	std::vector<float> mIntYVelocities;
-
-	std::vector<CellType> mCellType;
 };
