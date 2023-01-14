@@ -26,8 +26,6 @@ public:
 
 	const MACGrid3D& GetMACGrid() const { return mMACGrid; }
 
-	int GetMACGridResolution() const { return mMACGridResolution; }
-
 private:
 
 	void InterpolateToGrid() override;

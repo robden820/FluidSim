@@ -21,6 +21,4 @@ class Fluid
 
 		virtual void InterpolateToGrid() = 0;
 		virtual void InterpolateFromGrid() = 0;
-
-		int mMACGridResolution;
 };

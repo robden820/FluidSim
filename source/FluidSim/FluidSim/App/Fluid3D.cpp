@@ -36,9 +36,8 @@ Fluid3D::Fluid3D(const ApplicationData& inData)
 	std::cout << "Initializing MAC Grid: \n";
 
 	// Initialize Grid.
-	mMACGridResolution = 50;
-	MACGrid3D g(inData.GetGridLeft(), inData.GetGridBottom(), inData.GetGridBack(), inData.GetGridWidth(), inData.GetGridHeight(), inData.GetGridLength(), mParticlePositions, mMACGridResolution);
-	mMACGrid = g;
+	MACGrid3D grid(inData);
+	mMACGrid = grid;
 
 	std::cout <<"Total : " << glfwGetTime() - start << "\n";
 	std::cout << "------------------------ \n";
