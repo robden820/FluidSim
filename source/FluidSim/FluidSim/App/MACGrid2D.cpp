@@ -55,7 +55,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mIntXVelocities.assign(mNumCells, 0.f);
 	mIntYVelocities.assign(mNumCells, 0.f);
 
-	mDensity = 1000.0f;
+	mDensity = inData.GetFluidDensity();
 }
 
 void MACGrid2D::InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions)

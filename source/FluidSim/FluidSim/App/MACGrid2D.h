@@ -42,7 +42,7 @@ public:
 
 private:
 
-	void InitializeGrid(const ApplicationData& inData);
+	void InitializeGrid(const ApplicationData& inData) override;
 	void InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions);
 
 	void CalculateCellDivergence(float deltaTime);

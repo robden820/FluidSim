@@ -13,7 +13,7 @@ class MACGrid
 
 		virtual ~MACGrid() = default;
 
-		virtual void Update(float deltaTime) = 0;
+		virtual void Update(ApplicationData& inOutData) = 0;
 
 		virtual int GetNumCells() const = 0;
 
@@ -26,6 +26,8 @@ class MACGrid
 		float GetCellSize() { return mCellSize; }
 
 	protected:
+
+		virtual void InitializeGrid(const ApplicationData& inData) = 0;
 
 		virtual void CalculateCellDivergence(float deltaTime) = 0;
 

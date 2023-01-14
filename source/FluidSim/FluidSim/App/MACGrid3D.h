@@ -14,9 +14,9 @@ public:
 	MACGrid3D() = default;
 	~MACGrid3D() = default;
 
-	MACGrid3D(float inLeft, float inBottom, float inBack, float inWidth, float inHeight, float inLength, const std::vector<glm::vec3>& inParticlePositions, int inGridResolution);
+	MACGrid3D(const ApplicationData& inData);
 
-	void Update(float deltaTime) override;
+	void Update(ApplicationData& inOutData) override;
 
 	int GetNumCells() const override { return mNumCellWidth * mNumCellHeight * mNumCellLength; }
 
@@ -38,7 +38,7 @@ public:
 
 private:
 
-	void InitializeFromDimensions(float inLeft, float inBottom, float inBack, float inWidth, float inHeight, float inLength, int inGridResolution);
+	void InitializeGrid(const ApplicationData& inData) override;
 	void InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions);
 
 	void CalculateCellDivergence(float deltaTime) override;
