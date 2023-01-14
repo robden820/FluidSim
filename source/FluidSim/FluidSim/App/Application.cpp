@@ -20,8 +20,8 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mApplicationData.SetGridLeft(-5.0f);
 	mApplicationData.SetGridBottom(-5.0f);
 
-	mApplicationData.SetNumGridCellsWidth(10);
-	mApplicationData.SetNumGridCellsHeight(10);
+	mApplicationData.SetNumGridCellsWidth(100);
+	mApplicationData.SetNumGridCellsHeight(100);
 	mApplicationData.UpdateNumGridCells();
 
 	mApplicationData.SetGridCellSize(0.1f);
@@ -229,13 +229,13 @@ void Application::Render(float inAspectRatio)
 
 			mShader.SetMatrix("model", model);
 
-			if (mVoxelFluid2D.GetVoxelState(v) == VoxelFluid::VoxelState::eFLUID)
+			if (mApplicationData.GetCellType(v) == CellType::eFLUID)
 			{
 				mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
 				mShader.SetFloat("alpha", 1.0f);
 				glDrawArrays(GL_LINES, 0, 36);
 			}
-			else if (mVoxelFluid2D.GetVoxelState(v) == VoxelFluid::VoxelState::eSOLID)
+			else if (mApplicationData.GetCellType(v) == CellType::eSOLID)
 			{
 				mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
 				mShader.SetFloat("alpha", 0.1f);
