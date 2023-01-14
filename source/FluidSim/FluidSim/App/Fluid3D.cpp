@@ -52,7 +52,7 @@ void Fluid3D::Update(ApplicationData& inOutData)
 	InterpolateToGrid();
 
 	// Update grid velocities.
-	mMACGrid.Update(deltaTime);
+	mMACGrid.Update(inOutData);
 
 	// Interpolate velocities back to particles.
 	InterpolateFromGrid();

@@ -12,11 +12,11 @@ Fluid2D::Fluid2D(const ApplicationData& inData)
 	mParticles.reserve(inData.GetNumParticles());
 	mParticlePositions.reserve(inData.GetNumParticles());
 
-	for (int x = 0; x < inData.GetNumGridCellsWidth(); x++)
+	for (int x = 0; x < 10; x++)
 	{
-		for (int y = 0; y < inData.GetNumGridCellsHeight(); y++)
+		for (int y = 0; y < 10; y++)
 		{
-				glm::vec2 position((x + 10) * 0.5f, (y + 10) * 0.5f);
+				glm::vec2 position((x - 5) * 0.25f, (y - 5) * 0.25f);
 
 				Particle2D particle(position);
 
@@ -32,9 +32,8 @@ Fluid2D::Fluid2D(const ApplicationData& inData)
 	std::cout << "Initializing MAC Grid: \n";
 
 	// Initialize Grid.
-	mMACGridResolution = 50;
-	MACGrid2D g(inData.GetGridLeft(), inData.GetGridBottom(), inData.GetGridWidth(), inData.GetGridHeight(), mParticlePositions, mMACGridResolution);
-	mMACGrid = g;
+	MACGrid2D grid(inData);
+	mMACGrid = grid;
 
 	std::cout << "Total : " << glfwGetTime() - start << "\n";
 	std::cout << "------------------------ \n";
@@ -47,7 +46,7 @@ void Fluid2D::Update(ApplicationData& inOutData)
 	InterpolateToGrid();
 
 	// Update grid velocities.
-	mMACGrid.Update(deltaTime);
+	mMACGrid.Update(inOutData);
 
 	// Interpolate velocities back to particles.
 	InterpolateFromGrid();
