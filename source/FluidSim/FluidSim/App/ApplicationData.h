@@ -36,6 +36,9 @@ class ApplicationData
 		int GetNumParticles() const { return mNumParticles; }
 		void SetNumParticles(int inNumParticles);
 
+		float GetFluidDensity() const { return mFluidDensity; }
+		void SetFluidDensity(float inDensity) { mFluidDensity = inDensity; }
+
 		const std::vector<glm::vec2>& Get2DParticlePositions() const { return mParticlePositions2D; }
 		const glm::vec2& Get2DParticlePosition(int index) const;
 		void Set2DParticlePositions(const std::vector<glm::vec2>& inPositions);
@@ -46,6 +49,8 @@ class ApplicationData
 
 	private:
 		int mNumParticles;
+
+		float mFluidDensity;
 
 		std::vector<glm::vec2> mParticlePositions2D;
 		std::vector<glm::vec3> mParticlePositions3D;
