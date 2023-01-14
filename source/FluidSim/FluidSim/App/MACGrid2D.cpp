@@ -9,26 +9,26 @@
 
 //using namespace oneapi;
 
-MACGrid2D::MACGrid2D(float inLeft, float inBottom, float inWidth, float inHeight, const std::vector<glm::vec2>& inParticlePositions, int inGridResolution)
+MACGrid2D::MACGrid2D(const ApplicationData& inData)
 {
-	InitializeFromDimensions(inLeft, inBottom, inWidth, inHeight, inGridResolution);
-	InitializeCellsFromParticles(inParticlePositions);
+	InitializeGrid(inData);
+	InitializeCellsFromParticles(inData.Get2DParticlePositions());
 }
 
-void MACGrid2D::InitializeFromDimensions(float inLeft, float inBottom, float inWidth, float inHeight, int inGridResolution)
+void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 {
-	/*float*/ dLeft = inLeft;
-	/*float*/ dBottom = inBottom;
+	dLeft = inData.GetGridLeft();
+	dBottom = inData.GetGridBottom();
 
-	float dWidth = inWidth;
-	float dHeight = inHeight;
+	float dWidth = inData.GetGridWidth();
+	float dHeight = inData.GetGridHeight();
 
-	mNumCellWidth = inGridResolution;
-	mNumCellHeight = inGridResolution;
+	mNumCellWidth = inData.GetNumGridCellsWidth();
+	mNumCellHeight = inData.GetNumGridCellsHeight();
 
-	mNumCells = mNumCellWidth * mNumCellHeight;
+	mNumCells = inData.GetNumGridCells();
 
-	mCellSize = dWidth / inGridResolution;
+	mCellSize = inData.GetGridCellSize();
 	mInvCellSize = 1 / mCellSize;
 
 	float halfCell = mCellSize * 0.5f;
@@ -82,8 +82,10 @@ void MACGrid2D::InitializeCellsFromParticles(const std::vector<glm::vec2>& inPar
 	});
 }
 
-void MACGrid2D::Update(float deltaTime)
+void MACGrid2D::Update(ApplicationData& inOutData)
 {
+	float deltaTime = inOutData.GetDeltaTime();
+
 	//Advection
 	float start = glfwGetTime();
 	AdvectCellVelocity(deltaTime);
@@ -102,6 +104,8 @@ void MACGrid2D::Update(float deltaTime)
 	UpdateCellVelocity(deltaTime);
 
 	std::cout << "MAC: cell update: " << glfwGetTime() - start << "\n";
+
+	inOutData.SetCellTypes(mCellType);
 }
 
 void MACGrid2D::AdvectCellVelocity(float deltaTime)
