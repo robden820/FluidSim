@@ -13,7 +13,7 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mApplicationData = newData;
 
 	// Initialise simulation data.
-	mApplicationData.SetDeltaTime(0.1f);
+	mApplicationData.SetDeltaTime(0.01f);
 	mApplicationData.SetNumParticles(100);
 	mApplicationData.SetFluidDensity(1000.0f);
 
