@@ -242,6 +242,17 @@ void Fluid2D::InterpolateFromGrid()
 				velocityY *= (1 - yWeight);
 			}
 
+			// Handle solid bottom
+			if (y > 0)
+			{
+				int neighbourBottom = mMACGrid.GetIndexFromXY(x, y - 1);
+
+				if (mMACGrid.GetCellType(neighbourBottom) == CellType::eSOLID)
+				{
+					mParticles[p].ApplyForce(glm::vec2{ 0.f, 9.8f } * mParticles[p].GetMass());
+				}
+			}
+
 			mParticles[p].SetVelocity(glm::vec2(velocityX, velocityY));
 		}
 		else

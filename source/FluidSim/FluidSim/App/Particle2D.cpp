@@ -15,10 +15,12 @@ Particle2D::Particle2D(const glm::vec2& inPosition, const glm::vec2& inVelocity,
 
 void Particle2D::StepParticle(float deltaTime)
 {
+	mAcceleration = mForceAccumulator * mMass;
+
 	mPosition += mVelocity * deltaTime + mAcceleration * deltaTime * deltaTime;
 	mVelocity += mAcceleration * deltaTime;
 
 	float g = -9.8f * mMass; // Downwards force due to gravity;
 
-	mForceAccumulator = { 0.0f, g};
+	mForceAccumulator = { 0.0f, g }; // Always applly gravitational force.
 }
