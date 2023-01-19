@@ -16,7 +16,7 @@ public:
 	Fluid2D() = default;
 	~Fluid2D() = default;
 
-	Fluid2D(const ApplicationData& inData);
+	Fluid2D(ApplicationData& inOutData);
 
 	void Update(ApplicationData& inOutData) override;
 

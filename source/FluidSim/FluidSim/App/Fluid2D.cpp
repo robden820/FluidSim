@@ -4,19 +4,20 @@
 #include "oneapi/tbb.h"
 #include "GLFW/glfw3.h"
 
-Fluid2D::Fluid2D(const ApplicationData& inData)
+Fluid2D::Fluid2D(ApplicationData& inOutData)
 {
 	float start = glfwGetTime();
 	std::cout << "Initializing particles: ";
 	// Initialize particles
-	mParticles.reserve(inData.GetNumParticles());
-	mParticlePositions.reserve(inData.GetNumParticles());
+	mParticles.reserve(inOutData.GetNumParticles());
+	mParticlePositions.reserve(inOutData.GetNumParticles());
 
+	//TO DO : fix this initialization to not rely on literals.
 	for (int x = 0; x < 10; x++)
 	{
 		for (int y = 0; y < 10; y++)
 		{
-				glm::vec2 position((x - 5) * 0.25f, (y - 5) * 0.25f);
+				glm::vec2 position((x - 5) * 0.125f, (y - 5) * 0.125f);
 
 				Particle2D particle(position);
 
@@ -25,6 +26,8 @@ Fluid2D::Fluid2D(const ApplicationData& inData)
 		}
 	}
 
+	inOutData.Set2DParticlePositions(mParticlePositions);
+
 	std::cout << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
@@ -32,7 +35,7 @@ Fluid2D::Fluid2D(const ApplicationData& inData)
 	std::cout << "Initializing MAC Grid: \n";
 
 	// Initialize Grid.
-	MACGrid2D grid(inData);
+	MACGrid2D grid(inOutData);
 	mMACGrid = grid;
 
 	std::cout << "Total : " << glfwGetTime() - start << "\n";
@@ -131,6 +134,11 @@ void Fluid2D::InterpolateToGrid()
 	{
 		int cellIndex = ClosestCellToParticle(mParticles[p]);
 
+		if (cellIndex < 0)
+		{
+			continue;
+		}
+
 		glm::vec2 particlePos = mParticles[p].GetPosition();
 		glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
 
@@ -139,9 +147,6 @@ void Fluid2D::InterpolateToGrid()
 
 		float xWeight = (xDiff / mMACGrid.GetCellSize()) + 0.5f;
 		float yWeight = (yDiff / mMACGrid.GetCellSize()) + 0.5f;
-
-		float velocityX = mMACGrid.GetCellXVelocity(cellIndex) * xWeight;
-		float velocityY = mMACGrid.GetCellYVelocity(cellIndex) * yWeight;
 
 		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
@@ -160,7 +165,7 @@ void Fluid2D::InterpolateToGrid()
 			{
 				int neighbourLeft = mMACGrid.GetIndexFromXY(x - 1, y);
 
-				if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
+				if (mMACGrid.GetCellType(neighbourLeft) != CellType::eSOLID)
 				{
 					interpXVelocities[neighbourLeft] += mParticles[p].GetVelocity().x * (1 - xWeight);
 					interpYVelocities[neighbourLeft] += mParticles[p].GetVelocity().y * (1 - yWeight);
@@ -173,7 +178,7 @@ void Fluid2D::InterpolateToGrid()
 			{
 				int neighbourBottom = mMACGrid.GetIndexFromXY(x, y - 1);
 
-				if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
+				if (mMACGrid.GetCellType(neighbourBottom) != CellType::eSOLID)
 				{
 					interpXVelocities[neighbourBottom] += mParticles[p].GetVelocity().x * (1 - xWeight);
 					interpYVelocities[neighbourBottom] += mParticles[p].GetVelocity().y * (1 - yWeight);
@@ -209,6 +214,11 @@ void Fluid2D::InterpolateFromGrid()
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
 		int cellIndex = ClosestCellToParticle(mParticles[p]);
+
+		if (cellIndex < 0)
+		{
+			continue;
+		}
 
 		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
