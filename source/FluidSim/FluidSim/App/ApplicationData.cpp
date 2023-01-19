@@ -50,10 +50,6 @@ void ApplicationData::Set3DParticlePositions(const std::vector<glm::vec3>& inPos
 
 void ApplicationData::UpdateNumGridCells()
 {
-//	mNumGridCellsWidth = mNumGridCellsWidth <= 0 ? 1 : mNumGridCellsWidth;
-//	mNumGridCellsHeight = mNumGridCellsHeight <= 0 ? 1 : mNumGridCellsHeight;
-//	mNumGridCellsLength = mNumGridCellsLength <= 0 ? 1 : mNumGridCellsLength;
-
 	mNumGridCells = mNumGridCellsWidth * mNumGridCellsHeight * mNumGridCellsLength;
 
 	mCellTypes.clear();
