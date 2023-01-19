@@ -21,7 +21,7 @@ public:
 	~Application() = default;
 
 	void Initialize();
-	void Update(float deltaTime);
+	void Update();
 	void Render(float aspectRatio);
 	void Shutdown();
 

@@ -18,11 +18,11 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mApplicationData.SetFluidDensity(1000.0f);
 
 	// Set MACGrid data
-	mApplicationData.SetGridLeft(-5.0f);
-	mApplicationData.SetGridBottom(-5.0f);
+	mApplicationData.SetGridLeft(-10.0f);
+	mApplicationData.SetGridBottom(-10.0f);
 
-	mApplicationData.SetNumGridCellsWidth(100);
-	mApplicationData.SetNumGridCellsHeight(100);
+	mApplicationData.SetNumGridCellsWidth(200);
+	mApplicationData.SetNumGridCellsHeight(200);
 	mApplicationData.UpdateNumGridCells();
 
 	mApplicationData.SetGridCellSize(0.1f);
@@ -147,7 +147,7 @@ void Application::SetShader(Shader& inShader)
 	mShader.Use();
 }
 
-void Application::Update(float deltaTime)
+void Application::Update()
 {
 	mFluid->Update(mApplicationData);
 }
