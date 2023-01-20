@@ -18,6 +18,7 @@ public:
 	void Update(ApplicationData& inOutData);
 
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth; }
+	int GetNumCellsWidth() const { return mNumCellWidth; }
 
 	const glm::vec2& GetCellCenter(int index) const { return mCellCenters[index]; }
 	int GetClosestCell(const glm::vec2& inPos);
@@ -72,4 +73,6 @@ private:
 	// Intermediate cell velocities
 	std::vector<float> mIntXVelocities;
 	std::vector<float> mIntYVelocities;
+
+	std::vector<float> mCellPressures;
 };

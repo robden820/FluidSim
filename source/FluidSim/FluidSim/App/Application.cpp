@@ -14,7 +14,7 @@ Application::Application(Camera& inCamera, Shader& inShader)
 
 	// Initialise simulation data.
 	mApplicationData.SetDeltaTime(0.01f);
-	mApplicationData.SetNumParticles(100);
+	mApplicationData.SetNumParticles(900);
 	mApplicationData.SetFluidDensity(1000.0f);
 
 	// Set MACGrid data
@@ -164,6 +164,8 @@ void Application::Render(float inAspectRatio)
 
 	mShader.SetVector("color", glm::vec3(1.0f, 0.0f, 0.0f));
 	mShader.SetFloat("alpha", 1.0f);
+
+	float scale = mApplicationData.GetGridCellSize();
 	
 	if (m3Dsimulation)
 	{
@@ -173,7 +175,7 @@ void Application::Render(float inAspectRatio)
 			glm::vec3 particlePosition = mApplicationData.Get3DParticlePosition(p);
 
 			model = glm::translate(model, particlePosition);
-			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+			model = glm::scale(model, glm::vec3(scale * 0.1f));
 
 			mShader.SetMatrix("model", model);
 
@@ -184,7 +186,7 @@ void Application::Render(float inAspectRatio)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, mVoxelFluid3D.GetVoxelCenter(v));
-			model = glm::scale(model, glm::vec3(0.5f));
+			model = glm::scale(model, glm::vec3(scale));
 
 			mShader.SetMatrix("model", model);
 
@@ -212,7 +214,7 @@ void Application::Render(float inAspectRatio)
 			glm::vec3 particlePosition = { vec.x, vec.y, 0.f };
 
 			model = glm::translate(model, particlePosition);
-			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+			model = glm::scale(model, glm::vec3(scale * 0.1f));
 
 			mShader.SetMatrix("model", model);
 
@@ -226,7 +228,7 @@ void Application::Render(float inAspectRatio)
 			glm::vec3 vec = { mVoxelFluid2D.GetVoxelCenter(v).x, mVoxelFluid2D.GetVoxelCenter(v).y, 0.0f };
 
 			model = glm::translate(model, vec);
-			model = glm::scale(model, glm::vec3(0.5f));
+			model = glm::scale(model, glm::vec3(scale));
 
 			mShader.SetMatrix("model", model);
 

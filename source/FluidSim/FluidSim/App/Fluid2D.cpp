@@ -13,11 +13,11 @@ Fluid2D::Fluid2D(ApplicationData& inOutData)
 	mParticlePositions.reserve(inOutData.GetNumParticles());
 
 	//TO DO : fix this initialization to not rely on literals.
-	for (int x = 0; x < 10; x++)
+	for (int x = 0; x < 30; x++)
 	{
-		for (int y = 0; y < 10; y++)
+		for (int y = 0; y < 30; y++)
 		{
-				glm::vec2 position((x - 5) * 0.125f, (y - 5) * 0.125f);
+				glm::vec2 position((x - 5) * 0.1f, (y - 5) * 0.1f);
 
 				Particle2D particle(position);
 
@@ -61,52 +61,8 @@ void Fluid2D::Update(ApplicationData& inOutData)
 		mParticlePositions[p] = mParticles[p].GetPosition();
 	}
 
-	/* TO DO: this should happen automatically with correct handling of solid pressures.
-	// Ensure particles stay inside the simulation domain.
-	for (int p = 0; p < GetNumParticles(); p++)
-	{
-		if (!mDomain.IsPointInDomain(mParticles[p].GetPosition()))
-		{
-			ClampParticleToDomain(mParticles[p]);
-		}
-	}
-	*/
-
 	inOutData.Set2DParticlePositions(mParticlePositions);
 }
-
-/* TO DO: this should happen automatically with correct handling of solid pressures.
-void Fluid2D::ClampParticleToDomain(Particle2D& particle)
-{
-	glm::vec2 particlePos = particle.GetPosition();
-	glm::vec2 particleVel = particle.GetVelocity();
-
-	if (particlePos.x < mDomain.GetLeft())
-	{
-		particlePos.x = mDomain.GetLeft();
-		particleVel.x = 0.0f;
-	}
-	else if (particlePos.x > mDomain.GetRight())
-	{
-		particlePos.x = mDomain.GetRight();
-		particleVel.x = 0.0f;
-	}
-
-	if (particlePos.y < mDomain.GetBottom())
-	{
-		particlePos.y = mDomain.GetBottom();
-		particleVel.y = 0.0f;
-	}
-	else if (particlePos.y > mDomain.GetTop())
-	{
-		particlePos.y = mDomain.GetTop();
-		particleVel.y = 0.0f;
-	}
-
-	particle.SetPosition(particlePos);
-	particle.SetVelocity(particleVel);
-}
-*/
 
 void Fluid2D::InterpolateToGrid()
 {
@@ -201,11 +157,8 @@ void Fluid2D::InterpolateToGrid()
 			interpYVelocities[c] *= 1.0f / contributedYWeights[c];
 		}
 
-		if (mMACGrid.GetCellType(c) != CellType::eSOLID)
-		{
-			mMACGrid.SetCellXVelocity(c, interpXVelocities[c]);
-			mMACGrid.SetCellYVelocity(c, interpYVelocities[c]);
-		}
+		mMACGrid.SetCellXVelocity(c, interpXVelocities[c]);
+		mMACGrid.SetCellYVelocity(c, interpYVelocities[c]);
 	}
 }
 

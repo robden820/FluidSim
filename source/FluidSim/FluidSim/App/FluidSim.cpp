@@ -86,7 +86,7 @@ int main()
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Here we can set up our camera ~~~~~ */
-	Camera cam(glm::vec3(10.0f, 10.0f, 50.0f));
+	Camera cam(glm::vec3(0.0f, 0.0f, 27.0f));
 	camera = cam;
 
 	/* ~~~~~ Set up our shaders ~~~~~ */
@@ -142,7 +142,7 @@ int main()
 		
 
 		// Render the application
-		gApplication.Update(0.1f);
+		gApplication.Update();
 		// Do we need to do this every frame?
 		//glBindVertexArray(VAO);
 		float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;

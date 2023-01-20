@@ -78,7 +78,7 @@ void MACGrid2D::InitializeCellsFromParticles(const std::vector<glm::vec2>& inPar
 		int cellIndex = GetClosestCell(inParticlePositions[pIndex]);
 
 		mCellType[cellIndex] = CellType::eFLUID;
-		mCellPressures[cellIndex] = 1.0f;
+		mCellPressures[cellIndex] = 10.0f;
 	});
 }
 
@@ -110,9 +110,7 @@ void MACGrid2D::Update(ApplicationData& inOutData)
 
 void MACGrid2D::AdvectCellVelocity(float deltaTime)
 {
-	//tbb::parallel_for(0, mNumCells, 1, [&](int index)
-	//{
-	for (int index = 0; index < mNumCells; index++)
+	tbb::parallel_for(0, mNumCells, 1, [&](int index)
 	{
 		int x, y;
 		std::tie(x, y) = GetXYFromIndex(index);
@@ -160,16 +158,22 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 			mIntYVelocities[index] += mCellYVelocities[prevNeighbourBottom];
 			mIntYVelocities[index] *= 0.5f;
 		}
-		//});
-	}
+	});
 }
 
 int MACGrid2D::GetClosestCell(const glm::vec2& inPos)
 {
-	int x = floor((inPos.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize);
-	int y = floor((inPos.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize);
+	float tempA = (inPos.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize;
+	float tempB = (inPos.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize;
+	int x = round(tempA);
+	int y = round(tempB);
 
 	int approxIndex = GetIndexFromXY(x, y);
+
+	if (approxIndex >= mNumCells)
+	{
+		approxIndex = -1;
+	}
 
 	return approxIndex;
 }
@@ -202,7 +206,6 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 					mCellXVelocities[index] -= scale * (mCellPressures[index] - mCellPressures[neighbourLeft]);
 				}
 			}
-			//else mark as unknown
 		}
 		if (y > 0)
 		{
@@ -219,7 +222,6 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 					mCellYVelocities[index] -= scale * (mCellPressures[index] - mCellPressures[neighbourBottom]);
 				}
 			}
-			//else mark as unknown
 		}
 	}
 }
@@ -441,10 +443,7 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::cout << "------------------------------\n";
 
 	// Set pressure
-	for (int i = 0; i < mNumCells; i++)
-	{
-		mCellPressures[i] = newPressure[i];
-	}
+	mCellPressures = newPressure;
 }
 
 void MACGrid2D::InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY)
