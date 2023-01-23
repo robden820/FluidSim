@@ -7,6 +7,8 @@
 #include "glm/glm.hpp"
 #include "oneapi/tbb.h"
 
+#include <Eigen/Sparse>
+
 class MACGrid2D : public MACGrid
 {
 public:
@@ -46,6 +48,8 @@ private:
 	void InitializeGrid(const ApplicationData& inData) override;
 	void InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions);
 
+	void UpdateCellPressureSparse(float deltaTime, int maxIterations);
+
 	void CalculateCellDivergence(float deltaTime);
 
 	void AdvectCellVelocity(float deltaTime);
@@ -53,8 +57,10 @@ private:
 	void UpdateCellVelocity(float deltaTime);
 
 	void InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY);
+	void InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<float>& inOutA);
 
 	void CalculatePreconditioner(std::vector<float>& inOutPrecon, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY);
+	void CalculatePreconditionerSparse(Eigen::VectorXf& inOutPrecon, const Eigen::SparseMatrix<float>& inA);
 
 	void ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY);
 	void ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY);
