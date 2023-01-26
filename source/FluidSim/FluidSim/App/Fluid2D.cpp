@@ -17,7 +17,7 @@ Fluid2D::Fluid2D(ApplicationData& inOutData)
 	{
 		for (int y = 0; y < 30; y++)
 		{
-				glm::vec2 position((x - 5) * 0.1f, (y - 5) * 0.1f);
+				glm::vec2 position((x - 15) * 0.1f, (y - 15) * 0.1f);
 
 				Particle2D particle(position);
 
@@ -117,7 +117,7 @@ void Fluid2D::InterpolateToGrid()
 			int x, y;
 			std::tie(x, y) = mMACGrid.GetXYFromIndex(cellIndex);
 
-			if (x < 0)
+			if (x > 0)
 			{
 				int neighbourLeft = mMACGrid.GetIndexFromXY(x - 1, y);
 
@@ -130,7 +130,7 @@ void Fluid2D::InterpolateToGrid()
 					contributedYWeights[neighbourLeft] += (1 - yWeight);
 				}
 			}
-			if (y < 0)
+			if (y > 0)
 			{
 				int neighbourBottom = mMACGrid.GetIndexFromXY(x, y - 1);
 
