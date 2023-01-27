@@ -21,6 +21,7 @@ public:
 
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth; }
 	int GetNumCellsWidth() const { return mNumCellWidth; }
+	int GetNumCellsHeight() const { return mNumCellHeight; }
 
 	const glm::vec2& GetCellCenter(int index) const { return mCellCenters[index]; }
 	int GetClosestCell(const glm::vec2& inPos);
@@ -41,7 +42,8 @@ public:
 	std::tuple<int, int> GetXYFromIndex(int index);
 	int GetIndexFromXY(int X, int Y);
 
-	float GetCellSize() { return mCellSize; }
+	float GetCellSize() const { return mCellSize; }
+	float GetInverseCellSize() const { return mInvCellSize; }
 
 private:
 
@@ -73,8 +75,8 @@ private:
 
 	std::vector<glm::vec2> mCellCenters;
 
-	std::vector<float> mCellXVelocities;
-	std::vector<float> mCellYVelocities;
+	std::vector<float> mCellXVelocities; // X velocity of the cell, staggered to the cells left edge.
+	std::vector<float> mCellYVelocities; // Y velocity of the cell, staggered to the cells bottom edge.
 
 	// Intermediate cell velocities
 	std::vector<float> mIntXVelocities;
