@@ -98,49 +98,43 @@ void Fluid2D::InterpolateToGrid()
 		glm::vec2 particlePos = mParticles[p].GetPosition();
 		glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
 
-		float xDiff = particlePos.x - cellPos.x;
-		float yDiff = particlePos.y - cellPos.y;
+		glm::vec2 diff = cellPos - particlePos;
 
-		float xWeight = (xDiff / mMACGrid.GetCellSize()) + 0.5f;
-		float yWeight = (yDiff / mMACGrid.GetCellSize()) + 0.5f;
+		glm::vec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
 
 		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
 			mMACGrid.SetCellType(cellIndex, CellType::eFLUID);
 
-			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x * xWeight;
-			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y * yWeight;
+			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x * weight.x;
+			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y * weight.y;
 
-			contributedXWeights[cellIndex] += xWeight;
-			contributedYWeights[cellIndex] += yWeight;
+			contributedXWeights[cellIndex] += weight.x;
+			contributedYWeights[cellIndex] += weight.y;
 
 			int x, y;
 			std::tie(x, y) = mMACGrid.GetXYFromIndex(cellIndex);
 
-			if (x > 0)
+			if (x < mMACGrid.GetNumCellsWidth() - 1)
 			{
-				int neighbourLeft = mMACGrid.GetIndexFromXY(x - 1, y);
+				int neighbourRight = mMACGrid.GetIndexFromXY(x + 1, y);
 
-				if (mMACGrid.GetCellType(neighbourLeft) != CellType::eSOLID)
+				if (mMACGrid.GetCellType(neighbourRight) != CellType::eSOLID)
 				{
-					interpXVelocities[neighbourLeft] += mParticles[p].GetVelocity().x * (1 - xWeight);
-					interpYVelocities[neighbourLeft] += mParticles[p].GetVelocity().y * (1 - yWeight);
+					interpXVelocities[neighbourRight] += mParticles[p].GetVelocity().x * (1 - weight.x);
 
-					contributedXWeights[neighbourLeft] += (1 - xWeight);
-					contributedYWeights[neighbourLeft] += (1 - yWeight);
+					contributedXWeights[neighbourRight] += (1 - weight.x);
 				}
 			}
-			if (y > 0)
+			if (y < mMACGrid.GetNumCellsHeight() - 1)
 			{
-				int neighbourBottom = mMACGrid.GetIndexFromXY(x, y - 1);
+				int neighbourTop = mMACGrid.GetIndexFromXY(x, y + 1);
 
-				if (mMACGrid.GetCellType(neighbourBottom) != CellType::eSOLID)
+				if (mMACGrid.GetCellType(neighbourTop) != CellType::eSOLID)
 				{
-					interpXVelocities[neighbourBottom] += mParticles[p].GetVelocity().x * (1 - xWeight);
-					interpYVelocities[neighbourBottom] += mParticles[p].GetVelocity().y * (1 - yWeight);
+					interpYVelocities[neighbourTop] += mParticles[p].GetVelocity().y * (1 - weight.y);
 
-					contributedXWeights[neighbourBottom] += (1 - xWeight);
-					contributedYWeights[neighbourBottom] += (1 - yWeight);
+					contributedYWeights[neighbourTop] += (1 - weight.y);
 				}
 			}
 		}
@@ -181,26 +175,24 @@ void Fluid2D::InterpolateFromGrid()
 			glm::vec2 particlePos = mParticles[p].GetPosition();
 			glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
 
-			float xDiff = particlePos.x - cellPos.x;
-			float yDiff = particlePos.y - cellPos.y;
+			glm::vec2 diff = cellPos - particlePos;
 
-			float xWeight = (xDiff / mMACGrid.GetCellSize()) + 0.5f;
-			float yWeight = (yDiff / mMACGrid.GetCellSize()) + 0.5f;
+			glm::vec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
 
-			float velocityX = mMACGrid.GetCellXVelocity(cellIndex) * xWeight;
-			float velocityY = mMACGrid.GetCellYVelocity(cellIndex) * yWeight;
+			float velocityX = mMACGrid.GetCellXVelocity(cellIndex) * weight.x;
+			float velocityY = mMACGrid.GetCellYVelocity(cellIndex) * weight.y;
 
-			if (x > 0)
+			if (x < mMACGrid.GetNumCellsWidth() - 1)
 			{
-				int neighbourLeft = mMACGrid.GetIndexFromXY(x - 1, y);
+				int neighbourRight = mMACGrid.GetIndexFromXY(x + 1, y);
 
-				velocityX += mMACGrid.GetCellXVelocity(neighbourLeft) * (1 - xWeight);
+				velocityX += mMACGrid.GetCellXVelocity(neighbourRight) * (1 - weight.x);
 			}
-			if (y > 0)
+			if (y < mMACGrid.GetNumCellsHeight() - 1)
 			{
-				int neighbourBottom = mMACGrid.GetIndexFromXY(x, y - 1);
+				int neighbourTop = mMACGrid.GetIndexFromXY(x, y + 1);
 
-				velocityY += mMACGrid.GetCellYVelocity(neighbourBottom) * (1 - yWeight);
+				velocityY += mMACGrid.GetCellYVelocity(neighbourTop) * (1 - weight.y);
 			}
 
 			// Handle bottom solid boundary
