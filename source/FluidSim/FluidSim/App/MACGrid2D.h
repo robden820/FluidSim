@@ -64,8 +64,8 @@ private:
 	void CalculatePreconditioner(std::vector<double>& inOutPrecon, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
 	void CalculatePreconditionerSparse(Eigen::VectorXf& inOutPrecon, const Eigen::SparseMatrix<float>& inA);
 
-	void ApplyA(float deltaTime, std::vector<double>& outResult, const std::vector<double>& inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
-	void ApplyPreconditioner(std::vector<double>& outResult, const std::vector<double>& inResidual, const std::vector<double>& inPrecon, const std::vector<double>& inX, const std::vector<double>& inY);
+	void ApplyA(float deltaTime, Eigen::VectorXd& outResult, const Eigen::VectorXd &inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
+	void ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::VectorXd& inResidual, const std::vector<double>& inPrecon, const std::vector<double>& inX, const std::vector<double>& inY);
 
 	int mNumCellWidth;
 	int mNumCellHeight;
