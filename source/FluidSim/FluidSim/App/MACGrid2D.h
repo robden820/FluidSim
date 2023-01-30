@@ -26,13 +26,13 @@ public:
 	const glm::vec2& GetCellCenter(int index) const { return mCellCenters[index]; }
 	int GetClosestCell(const glm::vec2& inPos);
 
-	const float GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
-	const float GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
+	const double GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
+	const double GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
 
-	void SetCellXVelocity(int index, float inVelocity) { mCellXVelocities[index] = inVelocity; }
-	void SetCellYVelocity(int index, float inVelocity) { mCellYVelocities[index] = inVelocity; }
+	void SetCellXVelocity(int index, double inVelocity) { mCellXVelocities[index] = inVelocity; }
+	void SetCellYVelocity(int index, double inVelocity) { mCellYVelocities[index] = inVelocity; }
 
-	const float GetCellPressure(int index) const { return mCellPressures[index]; }
+	const double GetCellPressure(int index) const { return mCellPressures[index]; }
 	void SetCellPressure(int index, float inPressure) { mCellPressures[index] = inPressure; }
 
 	const CellType GetCellType(int index) const { return mCellType[index]; }
@@ -58,14 +58,14 @@ private:
 	void UpdateCellPressure(float deltaTime, int maxIterations);
 	void UpdateCellVelocity(float deltaTime);
 
-	void InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY);
+	void InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY);
 	void InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<float>& inOutA);
 
-	void CalculatePreconditioner(std::vector<float>& inOutPrecon, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY);
+	void CalculatePreconditioner(std::vector<double>& inOutPrecon, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
 	void CalculatePreconditionerSparse(Eigen::VectorXf& inOutPrecon, const Eigen::SparseMatrix<float>& inA);
 
-	void ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY);
-	void ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY);
+	void ApplyA(float deltaTime, std::vector<double>& outResult, const std::vector<double>& inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
+	void ApplyPreconditioner(std::vector<double>& outResult, const std::vector<double>& inResidual, const std::vector<double>& inPrecon, const std::vector<double>& inX, const std::vector<double>& inY);
 
 	int mNumCellWidth;
 	int mNumCellHeight;
@@ -75,12 +75,12 @@ private:
 
 	std::vector<glm::vec2> mCellCenters;
 
-	std::vector<float> mCellXVelocities; // X velocity of the cell, staggered to the cells left edge.
-	std::vector<float> mCellYVelocities; // Y velocity of the cell, staggered to the cells bottom edge.
+	std::vector<double> mCellXVelocities; // X velocity of the cell, staggered to the cells left edge.
+	std::vector<double> mCellYVelocities; // Y velocity of the cell, staggered to the cells bottom edge.
 
 	// Intermediate cell velocities
-	std::vector<float> mIntXVelocities;
-	std::vector<float> mIntYVelocities;
+	std::vector<double> mIntXVelocities;
+	std::vector<double> mIntYVelocities;
 
-	std::vector<float> mCellPressures;
+	std::vector<double> mCellPressures;
 };

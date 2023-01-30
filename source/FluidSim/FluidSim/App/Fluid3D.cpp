@@ -6,7 +6,7 @@
 
 Fluid3D::Fluid3D(const ApplicationData& inData)
 {
-	float start = glfwGetTime();
+	double start = glfwGetTime();
 	std::cout << "Initializing particles: ";
 	// Initialize particles
 	mParticles.reserve(inData.GetNumParticles());

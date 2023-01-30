@@ -17,7 +17,7 @@ class MACGrid
 
 		virtual int GetNumCells() const = 0;
 
-		float GetCellPressure(int index) const { return mCellPressures[index]; }
+		double GetCellPressure(int index) const { return mCellPressures[index]; }
 		void SetCellPressure(int index, float inPressure) { mCellPressures[index]= inPressure; }
 
 		const CellType GetCellType(int index) const { return mCellType[index]; }
@@ -42,9 +42,9 @@ class MACGrid
 
 		float mDensity;
 
-		std::vector<float> mCellDivergence;
+		std::vector<double> mCellDivergence;
 
-		std::vector<float> mCellPressures;
+		std::vector<double> mCellPressures;
 
 		std::vector<CellType> mCellType;
 };
