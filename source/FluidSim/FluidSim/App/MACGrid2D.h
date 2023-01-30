@@ -19,6 +19,7 @@ public:
 
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth; }
 	int GetNumCellsWidth() const { return mNumCellWidth; }
+	int GetNumCellsHeight() const { return mNumCellHeight; }
 
 	const glm::vec2& GetCellCenter(int index) const { return mCellCenters[index]; }
 	int GetClosestCell(const glm::vec2& inPos);
@@ -39,7 +40,8 @@ public:
 	std::tuple<int, int> GetXYFromIndex(int index);
 	int GetIndexFromXY(int X, int Y);
 
-	float GetCellSize() { return mCellSize; }
+	float GetCellSize() const { return mCellSize; }
+	float GetInverseCellSize() const { return mInvCellSize; }
 
 private:
 
