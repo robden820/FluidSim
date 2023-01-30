@@ -13,7 +13,7 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mApplicationData = newData;
 
 	// Initialise simulation data.
-	mApplicationData.SetDeltaTime(0.01f);
+	mApplicationData.SetDeltaTime(0.005f);
 	mApplicationData.SetNumParticles(900);
 	mApplicationData.SetFluidDensity(1000.0f);
 
@@ -32,7 +32,7 @@ void Application::Initialize()
 {
 	if (m3Dsimulation)
 	{
-		float start = glfwGetTime();
+		double start = glfwGetTime();
 
 		Fluid3D fluid(mApplicationData);
 		mFluid = std::make_unique<Fluid3D>(fluid);
@@ -61,7 +61,7 @@ void Application::Initialize()
 	}
 	else
 	{
-		float start = glfwGetTime();
+		double start = glfwGetTime();
 
 		Fluid2D fluid(mApplicationData);
 		mFluid = std::make_unique<Fluid2D>(fluid);
@@ -175,7 +175,7 @@ void Application::Render(float inAspectRatio)
 			glm::vec3 particlePosition = mApplicationData.Get3DParticlePosition(p);
 
 			model = glm::translate(model, particlePosition);
-			model = glm::scale(model, glm::vec3(scale * 0.1f));
+			model = glm::scale(model, glm::vec3(scale * 0.25f));
 
 			mShader.SetMatrix("model", model);
 
@@ -214,7 +214,7 @@ void Application::Render(float inAspectRatio)
 			glm::vec3 particlePosition = { vec.x, vec.y, 0.f };
 
 			model = glm::translate(model, particlePosition);
-			model = glm::scale(model, glm::vec3(scale * 0.1f));
+			model = glm::scale(model, glm::vec3(scale * 0.9f));
 
 			mShader.SetMatrix("model", model);
 
