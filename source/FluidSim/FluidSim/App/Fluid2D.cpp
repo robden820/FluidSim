@@ -66,6 +66,7 @@ void Fluid2D::Update(ApplicationData& inOutData)
 
 void Fluid2D::InterpolateToGrid()
 {
+	// Reset all non-solid cell types as air.
 	for (int c = 0; c < mMACGrid.GetNumCells(); c++)
 	{
 		if (mMACGrid.GetCellType(c) != CellType::eSOLID)
@@ -92,55 +93,51 @@ void Fluid2D::InterpolateToGrid()
 
 		if (cellIndex < 0)
 		{
+			// Invalid cell index returned if no closest cell found, i.e. particle has left grid.
 			continue;
 		}
 
-		glm::vec2 particlePos = mParticles[p].GetPosition();
-		glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
-
-		float xDiff = particlePos.x - cellPos.x;
-		float yDiff = particlePos.y - cellPos.y;
-
-		float xWeight = (xDiff / mMACGrid.GetCellSize()) + 0.5f;
-		float yWeight = (yDiff / mMACGrid.GetCellSize()) + 0.5f;
-
 		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
+			// Update cell type as it contains a fluid particle
 			mMACGrid.SetCellType(cellIndex, CellType::eFLUID);
 
-			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x * xWeight;
-			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y * yWeight;
+			// Interpolate the particle velocities to the grid cell and right hand neighbour.
+			glm::vec2 particlePos = mParticles[p].GetPosition();
+			glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
 
-			contributedXWeights[cellIndex] += xWeight;
-			contributedYWeights[cellIndex] += yWeight;
+			glm::vec2 diff = cellPos - particlePos;
+			glm::vec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
+
+			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x * weight.x;
+			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y * weight.y;
+
+			contributedXWeights[cellIndex] += weight.x;
+			contributedYWeights[cellIndex] += weight.y;
 
 			int x, y;
 			std::tie(x, y) = mMACGrid.GetXYFromIndex(cellIndex);
 
-			if (x < 0)
+			if (x < mMACGrid.GetNumCellsWidth() - 1)
 			{
-				int neighbourLeft = mMACGrid.GetIndexFromXY(x - 1, y);
+				int neighbourRight = mMACGrid.GetIndexFromXY(x + 1, y);
 
-				if (mMACGrid.GetCellType(neighbourLeft) != CellType::eSOLID)
+				if (mMACGrid.GetCellType(neighbourRight) != CellType::eSOLID)
 				{
-					interpXVelocities[neighbourLeft] += mParticles[p].GetVelocity().x * (1 - xWeight);
-					interpYVelocities[neighbourLeft] += mParticles[p].GetVelocity().y * (1 - yWeight);
+					interpXVelocities[neighbourRight] += mParticles[p].GetVelocity().x * (1 - weight.x);
 
-					contributedXWeights[neighbourLeft] += (1 - xWeight);
-					contributedYWeights[neighbourLeft] += (1 - yWeight);
+					contributedXWeights[neighbourRight] += (1 - weight.x);
 				}
 			}
-			if (y < 0)
+			if (y < mMACGrid.GetNumCellsHeight() - 1)
 			{
-				int neighbourBottom = mMACGrid.GetIndexFromXY(x, y - 1);
+				int neighbourTop = mMACGrid.GetIndexFromXY(x, y + 1);
 
-				if (mMACGrid.GetCellType(neighbourBottom) != CellType::eSOLID)
+				if (mMACGrid.GetCellType(neighbourTop) != CellType::eSOLID)
 				{
-					interpXVelocities[neighbourBottom] += mParticles[p].GetVelocity().x * (1 - xWeight);
-					interpYVelocities[neighbourBottom] += mParticles[p].GetVelocity().y * (1 - yWeight);
+					interpYVelocities[neighbourTop] += mParticles[p].GetVelocity().y * (1 - weight.y);
 
-					contributedXWeights[neighbourBottom] += (1 - xWeight);
-					contributedYWeights[neighbourBottom] += (1 - yWeight);
+					contributedYWeights[neighbourTop] += (1 - weight.y);
 				}
 			}
 		}
@@ -170,37 +167,47 @@ void Fluid2D::InterpolateFromGrid()
 
 		if (cellIndex < 0)
 		{
+			// Invalid cell index returned if no closest cell found, i.e. particle has left grid.
 			continue;
 		}
 
 		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
-			int x, y;
-			std::tie(x, y) = mMACGrid.GetXYFromIndex(cellIndex);
-
 			glm::vec2 particlePos = mParticles[p].GetPosition();
 			glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
 
-			float xDiff = particlePos.x - cellPos.x;
-			float yDiff = particlePos.y - cellPos.y;
+			glm::vec2 diff = cellPos - particlePos;
 
-			float xWeight = (xDiff / mMACGrid.GetCellSize()) + 0.5f;
-			float yWeight = (yDiff / mMACGrid.GetCellSize()) + 0.5f;
+			glm::dvec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
 
-			float velocityX = mMACGrid.GetCellXVelocity(cellIndex) * xWeight;
-			float velocityY = mMACGrid.GetCellYVelocity(cellIndex) * yWeight;
+			double velocityX = mMACGrid.GetCellXVelocity(cellIndex) * weight.x;
+			double velocityY = mMACGrid.GetCellYVelocity(cellIndex) * weight.y;
 
-			if (x > 0)
+			int x, y;
+			std::tie(x, y) = mMACGrid.GetXYFromIndex(cellIndex);
+
+			if (x < mMACGrid.GetNumCellsWidth() - 1)
 			{
-				int neighbourLeft = mMACGrid.GetIndexFromXY(x - 1, y);
+				int neighbourRight = mMACGrid.GetIndexFromXY(x + 1, y);
 
-				velocityX += mMACGrid.GetCellXVelocity(neighbourLeft) * (1 - xWeight);
+				velocityX += mMACGrid.GetCellXVelocity(neighbourRight) * (1 - weight.x);
 			}
-			if (y > 0)
+			else
 			{
-				int neighbourBottom = mMACGrid.GetIndexFromXY(x, y - 1);
+				// Normalize the velocity if weights don't sum to 1.
+				velocityX *= 1 / weight.x;
+			}
 
-				velocityY += mMACGrid.GetCellYVelocity(neighbourBottom) * (1 - yWeight);
+			if (y < mMACGrid.GetNumCellsHeight() - 1)
+			{
+				int neighbourTop = mMACGrid.GetIndexFromXY(x, y + 1);
+
+				velocityY += mMACGrid.GetCellYVelocity(neighbourTop) * (1 - weight.y);
+			}
+			else
+			{
+				// Normalize the velocity if weights don't sum to 1.
+				velocityY *= 1 / weight.y;
 			}
 
 			// Handle bottom solid boundary
@@ -210,7 +217,7 @@ void Fluid2D::InterpolateFromGrid()
 
 				if (mMACGrid.GetCellType(neighbourBottom) == CellType::eSOLID)
 				{
-					mParticles[p].ApplyForce(glm::vec2{ 0.f, 9.8f } * mParticles[p].GetMass());
+					mParticles[p].ApplyForce(glm::vec2{ 0.f, 9.8f } *mParticles[p].GetMass());
 				}
 			}
 
@@ -236,13 +243,9 @@ void Fluid2D::InterpolateFromGrid()
 
 			mParticles[p].SetVelocity(glm::vec2(velocityX, velocityY));
 		}
-		else
-		{
-			std::cout << "WARNING - particle may have penetrated solid boundary. \n";
-			std::cout << "Fluid2D.pp - InterpolateFromGrid function. \n";
-		}
 	}
 }
+
 
 int Fluid2D::ClosestCellToParticle(const Particle2D& particle)
 {
