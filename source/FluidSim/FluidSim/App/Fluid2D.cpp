@@ -6,7 +6,7 @@
 
 Fluid2D::Fluid2D(ApplicationData& inOutData)
 {
-	float start = glfwGetTime();
+	double start = glfwGetTime();
 	std::cout << "Initializing particles: ";
 	// Initialize particles
 	mParticles.reserve(inOutData.GetNumParticles());
@@ -17,7 +17,7 @@ Fluid2D::Fluid2D(ApplicationData& inOutData)
 	{
 		for (int y = 0; y < 30; y++)
 		{
-				glm::vec2 position((x - 5) * 0.1f, (y - 5) * 0.1f);
+				glm::vec2 position((x - 15) * 0.2f, (y - 15) * 0.2f);
 
 				Particle2D particle(position);
 
@@ -197,11 +197,9 @@ void Fluid2D::InterpolateFromGrid()
 				// Normalize the velocity if weights don't sum to 1.
 				velocityX *= 1 / weight.x;
 			}
-
 			if (y < mMACGrid.GetNumCellsHeight() - 1)
 			{
 				int neighbourTop = mMACGrid.GetIndexFromXY(x, y + 1);
-
 				velocityY += mMACGrid.GetCellYVelocity(neighbourTop) * (1 - weight.y);
 			}
 			else

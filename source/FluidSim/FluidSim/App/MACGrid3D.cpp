@@ -95,7 +95,7 @@ void MACGrid3D::Update(ApplicationData& inOutData)
 	float deltaTime = inOutData.GetDeltaTime();
 
 	//Advection
-	float start = glfwGetTime();
+	double start = glfwGetTime();
 	AdvectCellVelocity(deltaTime);
 
 	std::cout << "MAC: advect: " << glfwGetTime() - start << "\n";
@@ -186,9 +186,9 @@ void MACGrid3D::AdvectCellVelocity(float deltaTime)
 
 int MACGrid3D::GetClosestCell(const glm::vec3& inPosition)
 {
-	int x = floor((inPosition.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize);
-	int y = floor((inPosition.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize);
-	int z = floor((inPosition.z - dBack - (mCellSize * 0.5f)) * mInvCellSize);
+	int x = static_cast<int>(floor((inPosition.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize));
+	int y = static_cast<int>(floor((inPosition.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize));
+	int z = static_cast<int>(floor((inPosition.z - dBack - (mCellSize * 0.5f)) * mInvCellSize));
 
 	int approxIndex = GetIndexFromXYZ(x, y, z);
 
@@ -457,7 +457,7 @@ void MACGrid3D::UpdateCellPressure(float deltaTime, int maxIterations)
 	Az.assign(mNumCells, 0.0f);
 
 	std::cout << "--------------------------------\n";
-	float start = glfwGetTime();
+	double start = glfwGetTime();
 	std::cout << "Initialize linear system: ";
 
 	InitializeLinearSystem(deltaTime, Adiagonal, Ax, Ay, Az);
@@ -475,7 +475,7 @@ void MACGrid3D::UpdateCellPressure(float deltaTime, int maxIterations)
 
 	std::cout << glfwGetTime() - start << "\n";
 	
-	std::vector<float> residuals;
+	std::vector<double> residuals;
 	residuals = mCellDivergence;
 
 	float maxResidual = -1.0f;
@@ -830,7 +830,7 @@ void MACGrid3D::CalculatePreconditioner(std::vector<float>& inOutPrecon, const s
 	}
 }
 
-void MACGrid3D::ApplyPreconditioner(std::vector<float>& outResult, const std::vector<float>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
+void MACGrid3D::ApplyPreconditioner(std::vector<float>& outResult, const std::vector<double>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ)
 {
 	std::vector<float> intermediate;  // q
 	intermediate.assign(mNumCells, 0.f);
@@ -873,7 +873,7 @@ void MACGrid3D::ApplyPreconditioner(std::vector<float>& outResult, const std::ve
 			preconk = inPrecon[neighbourBack];
 			intermediatek = intermediate[neighbourBack];
 
-			float t = inResidual[index] - Axi * preconi * intermediatei
+			double t = inResidual[index] - Axi * preconi * intermediatei
 										- Ayj * preconj * intermediatej
 										- Azk * preconk * intermediatek;
 

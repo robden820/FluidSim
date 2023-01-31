@@ -22,7 +22,7 @@ public:
 
 	const std::vector<Particle2D>& GetParticles() const { return mParticles; }
 	const Particle2D& GetParticle(int index) const { return mParticles[index]; }
-	int GetNumParticles() const { return mParticles.size(); }
+	size_t GetNumParticles() const { return mParticles.size(); }
 
 	const MACGrid2D& GetMACGrid() const { return mMACGrid; }
 
