@@ -178,7 +178,7 @@ void Fluid2D::InterpolateFromGrid()
 
 			glm::vec2 diff = cellPos - particlePos;
 
-			glm::vec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
+			glm::dvec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
 
 			double velocityX = mMACGrid.GetCellXVelocity(cellIndex) * weight.x;
 			double velocityY = mMACGrid.GetCellYVelocity(cellIndex) * weight.y;
@@ -197,11 +197,9 @@ void Fluid2D::InterpolateFromGrid()
 				// Normalize the velocity if weights don't sum to 1.
 				velocityX *= 1 / weight.x;
 			}
-
 			if (y < mMACGrid.GetNumCellsHeight() - 1)
 			{
 				int neighbourTop = mMACGrid.GetIndexFromXY(x, y + 1);
-
 				velocityY += mMACGrid.GetCellYVelocity(neighbourTop) * (1 - weight.y);
 			}
 			else
@@ -217,7 +215,7 @@ void Fluid2D::InterpolateFromGrid()
 
 				if (mMACGrid.GetCellType(neighbourBottom) == CellType::eSOLID)
 				{
-					mParticles[p].ApplyForce(glm::vec2{ 0.f, 9.8f } * mParticles[p].GetMass());
+					mParticles[p].ApplyForce(glm::vec2{ 0.f, 9.8f } *mParticles[p].GetMass());
 				}
 			}
 
@@ -245,6 +243,7 @@ void Fluid2D::InterpolateFromGrid()
 		}
 	}
 }
+
 
 int Fluid2D::ClosestCellToParticle(const Particle2D& particle)
 {

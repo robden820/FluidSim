@@ -115,61 +115,61 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 {
 	tbb::parallel_for(0, mNumCells, 1, [&](int index)
 	{
-			if (mCellType[index] == CellType::eFLUID)
+		if (mCellType[index] == CellType::eFLUID)
+		{
+			int x, y;
+			std::tie(x, y) = GetXYFromIndex(index);
+
+			glm::vec2 cellVelocity = { mCellXVelocities[index], mCellYVelocities[index] };
+
+			//Runge Kutta
+			// First take a half step backwards over half the timestep to find the average velocity
+			glm::vec2 halfPrevPosition = mCellCenters[index] - cellVelocity * 0.5f * deltaTime;
+
+			int midStepIndex = GetClosestCell(halfPrevPosition);
+
+			int midStepX, midStepY;
+			std::tie(midStepX, midStepY) = GetXYFromIndex(midStepIndex);
+
+			int midStepNeighbourRight = GetIndexFromXY(midStepX + 1, midStepY);
+			int midStepNeighbourTop = GetIndexFromXY(midStepX, midStepY + 1);
+
+			// Compute the avgerage velocity by interpolating the velocity of the mid step position.
+			glm::vec2 diff = mCellCenters[midStepIndex] - halfPrevPosition;
+
+			glm::dvec2 weight = (diff * mInvCellSize) + 0.5f;
+
+			double avgStepXVelocity = (mCellXVelocities[midStepIndex] * weight.x) + (mCellXVelocities[midStepNeighbourRight] * (1 - weight.x));
+			double avgStepYVelocity = (mCellYVelocities[midStepIndex] * weight.y) + (mCellYVelocities[midStepNeighbourTop] * (1 - weight.y));
+
+			glm::vec2 avgStepVelocity = { avgStepXVelocity, avgStepYVelocity };
+
+			// Now that we have the average velocity of the step, we can work out the original position at the beginning of the step.
+			glm::vec2 prevPosition = mCellCenters[index] - avgStepVelocity * deltaTime;
+
+			int prevCellIndex = GetClosestCell(prevPosition);
+
+			int prevX, prevY;
+			std::tie(prevX, prevY) = GetXYFromIndex(prevCellIndex);
+
+			int prevNeighbourRight = GetIndexFromXY(prevX + 1, prevY);
+			int prevNeighbourTop = GetIndexFromXY(prevX, prevY + 1);
+
+
+			if (prevCellIndex >= 0)
 			{
-				int x, y;
-				std::tie(x, y) = GetXYFromIndex(index);
+				// Recalculate our weights for interpolation
+				diff = mCellCenters[prevCellIndex] - prevPosition;
 
-				glm::vec2 cellVelocity = { mCellXVelocities[index], mCellYVelocities[index] };
+				weight = (diff * mInvCellSize) + 0.5f;
 
-				//Runge Kutta
-				// First take a half step backwards over half the timestep to find the average velocity
-				glm::vec2 halfPrevPosition = mCellCenters[index] - cellVelocity * 0.5f * deltaTime;
+				double prevXVelocity = (mCellXVelocities[prevCellIndex] * weight.x) + (mCellXVelocities[prevNeighbourRight] * (1 - weight.x));
+				double prevYVelocity = (mCellYVelocities[prevCellIndex] * weight.y) + (mCellYVelocities[prevNeighbourTop] * (1 - weight.y));
 
-				int midStepIndex = GetClosestCell(halfPrevPosition);
-
-				int midStepX, midStepY;
-				std::tie(midStepX, midStepY) = GetXYFromIndex(midStepIndex);
-				  
-				int midStepNeighbourRight = GetIndexFromXY(midStepX + 1, midStepY);
-				int midStepNeighbourTop = GetIndexFromXY(midStepX, midStepY + 1);
-
-				// Compute the avgerage velocity by interpolating the velocity of the mid step position.
-				glm::vec2 diff = mCellCenters[midStepIndex] - halfPrevPosition;
-
-				glm::dvec2 weight = (diff * mInvCellSize) + 0.5f;
-
-				double avgStepXVelocity = (mCellXVelocities[midStepIndex] * weight.x) + (mCellXVelocities[midStepNeighbourRight] * (1 - weight.x));
-				double avgStepYVelocity = (mCellYVelocities[midStepIndex] * weight.y) + (mCellYVelocities[midStepNeighbourTop] * (1 - weight.y));
-
-				glm::vec2 avgStepVelocity = { avgStepXVelocity, avgStepYVelocity };
-
-				// Now that we have the average velocity of the step, we can work out the original position at the beginning of the step.
-				glm::vec2 prevPosition = mCellCenters[index] - avgStepVelocity * deltaTime;
-
-				int prevCellIndex = GetClosestCell(prevPosition);
-
-				int prevX, prevY;
-				std::tie(prevX, prevY) = GetXYFromIndex(prevCellIndex);
-
-				int prevNeighbourRight = GetIndexFromXY(prevX + 1, prevY);
-				int prevNeighbourTop = GetIndexFromXY(prevX, prevY + 1);
-
-
-				if (prevCellIndex >= 0)
-				{
-					// Recalculate our weights for interpolation
-					diff = mCellCenters[prevCellIndex] - prevPosition;
-
-					weight = (diff * mInvCellSize) + 0.5f;
-
-					double prevXVelocity = (mCellXVelocities[prevCellIndex] * weight.x) + (mCellXVelocities[prevNeighbourRight] * (1 - weight.x));
-					double prevYVelocity = (mCellYVelocities[prevCellIndex] * weight.y) + (mCellYVelocities[prevNeighbourTop] * (1 - weight.y));
-
-					mIntXVelocities[index] = prevXVelocity;
-					mIntYVelocities[index] = prevYVelocity;
-				}
+				mIntXVelocities[index] = prevXVelocity;
+				mIntYVelocities[index] = prevYVelocity;
 			}
+		}
 	});
 }
 
@@ -407,7 +407,6 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 		ApplyPreconditioner(z, residuals, precon, Ax, Ay);
 
 		// SigmaNew = dot product of z and residuals.
-
 		double sigmaNew = z.dot(residuals);
 		double beta = sigmaNew / sigma;
 
