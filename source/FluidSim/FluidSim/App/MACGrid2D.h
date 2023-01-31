@@ -50,8 +50,6 @@ private:
 	void InitializeGrid(const ApplicationData& inData) override;
 	void InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions);
 
-	void UpdateCellPressureSparse(float deltaTime, int maxIterations);
-
 	void CalculateCellDivergence(float deltaTime);
 
 	void AdvectCellVelocity(float deltaTime);
@@ -59,10 +57,8 @@ private:
 	void UpdateCellVelocity(float deltaTime);
 
 	void InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY);
-	void InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<float>& inOutA);
 
 	void CalculatePreconditioner(std::vector<double>& inOutPrecon, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
-	void CalculatePreconditionerSparse(Eigen::VectorXf& inOutPrecon, const Eigen::SparseMatrix<float>& inA);
 
 	void ApplyA(float deltaTime, Eigen::VectorXd& outResult, const Eigen::VectorXd &inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
 	void ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::VectorXd& inResidual, const std::vector<double>& inPrecon, const std::vector<double>& inX, const std::vector<double>& inY);
