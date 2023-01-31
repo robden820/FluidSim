@@ -41,6 +41,7 @@ class MACGrid
 		float mInvCellSize; // 1 / deltaX
 
 		float mDensity;
+		float mInvDensity; // 1 / density;
 
 		std::vector<double> mCellDivergence;
 
