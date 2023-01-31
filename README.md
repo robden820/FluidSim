@@ -5,6 +5,7 @@ To do:
  - Parallel computing.
  - - CUDA: to do.
  - Faster linear algebra -> Eigen?
+ - - Remove unused parts of Eigen library.
  - Correct handling of solid cells and domain boundaries.
  
 
