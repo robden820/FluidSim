@@ -6,7 +6,7 @@
 
 Fluid2D::Fluid2D(ApplicationData& inOutData)
 {
-	float start = glfwGetTime();
+	double start = glfwGetTime();
 	std::cout << "Initializing particles: ";
 	// Initialize particles
 	mParticles.reserve(inOutData.GetNumParticles());
@@ -17,7 +17,7 @@ Fluid2D::Fluid2D(ApplicationData& inOutData)
 	{
 		for (int y = 0; y < 30; y++)
 		{
-				glm::vec2 position((x - 15) * 0.1f, (y - 15) * 0.1f);
+				glm::vec2 position((x - 15) * 0.2f, (y - 15) * 0.2f);
 
 				Particle2D particle(position);
 
@@ -66,6 +66,7 @@ void Fluid2D::Update(ApplicationData& inOutData)
 
 void Fluid2D::InterpolateToGrid()
 {
+	// Reset all non-solid cell types as air.
 	for (int c = 0; c < mMACGrid.GetNumCells(); c++)
 	{
 		if (mMACGrid.GetCellType(c) != CellType::eSOLID)
@@ -92,19 +93,21 @@ void Fluid2D::InterpolateToGrid()
 
 		if (cellIndex < 0)
 		{
+			// Invalid cell index returned if no closest cell found, i.e. particle has left grid.
 			continue;
 		}
 
-		glm::vec2 particlePos = mParticles[p].GetPosition();
-		glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
-
-		glm::vec2 diff = cellPos - particlePos;
-
-		glm::vec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
-
 		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
+			// Update cell type as it contains a fluid particle
 			mMACGrid.SetCellType(cellIndex, CellType::eFLUID);
+
+			// Interpolate the particle velocities to the grid cell and right hand neighbour.
+			glm::vec2 particlePos = mParticles[p].GetPosition();
+			glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
+
+			glm::vec2 diff = cellPos - particlePos;
+			glm::vec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
 
 			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x * weight.x;
 			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y * weight.y;
@@ -164,14 +167,12 @@ void Fluid2D::InterpolateFromGrid()
 
 		if (cellIndex < 0)
 		{
+			// Invalid cell index returned if no closest cell found, i.e. particle has left grid.
 			continue;
 		}
 
 		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
-			int x, y;
-			std::tie(x, y) = mMACGrid.GetXYFromIndex(cellIndex);
-
 			glm::vec2 particlePos = mParticles[p].GetPosition();
 			glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
 
@@ -179,8 +180,11 @@ void Fluid2D::InterpolateFromGrid()
 
 			glm::vec2 weight = diff * mMACGrid.GetInverseCellSize() + 0.5f;
 
-			float velocityX = mMACGrid.GetCellXVelocity(cellIndex) * weight.x;
-			float velocityY = mMACGrid.GetCellYVelocity(cellIndex) * weight.y;
+			double velocityX = mMACGrid.GetCellXVelocity(cellIndex) * weight.x;
+			double velocityY = mMACGrid.GetCellYVelocity(cellIndex) * weight.y;
+
+			int x, y;
+			std::tie(x, y) = mMACGrid.GetXYFromIndex(cellIndex);
 
 			if (x < mMACGrid.GetNumCellsWidth() - 1)
 			{
@@ -188,11 +192,22 @@ void Fluid2D::InterpolateFromGrid()
 
 				velocityX += mMACGrid.GetCellXVelocity(neighbourRight) * (1 - weight.x);
 			}
+			else
+			{
+				// Normalize the velocity if weights don't sum to 1.
+				velocityX *= 1 / weight.x;
+			}
+
 			if (y < mMACGrid.GetNumCellsHeight() - 1)
 			{
 				int neighbourTop = mMACGrid.GetIndexFromXY(x, y + 1);
 
 				velocityY += mMACGrid.GetCellYVelocity(neighbourTop) * (1 - weight.y);
+			}
+			else
+			{
+				// Normalize the velocity if weights don't sum to 1.
+				velocityY *= 1 / weight.y;
 			}
 
 			// Handle bottom solid boundary
@@ -227,11 +242,6 @@ void Fluid2D::InterpolateFromGrid()
 			}
 
 			mParticles[p].SetVelocity(glm::vec2(velocityX, velocityY));
-		}
-		else
-		{
-			std::cout << "WARNING - particle may have penetrated solid boundary. \n";
-			std::cout << "Fluid2D.pp - InterpolateFromGrid function. \n";
 		}
 	}
 }
