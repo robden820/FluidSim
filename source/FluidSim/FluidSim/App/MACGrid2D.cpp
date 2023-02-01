@@ -7,6 +7,15 @@
 #define PRECON_TUNER 0.97
 #define PRECON_SAFETY 0.25
 
+MACGrid2D::MACGrid2D()
+{
+	dLeft = 0.f;
+	dBottom = 0.f;
+
+	mNumCellWidth = 0;
+	mNumCellHeight = 0;
+}
+
 MACGrid2D::MACGrid2D(const ApplicationData& inData)
 {
 	InitializeGrid(inData);
@@ -74,7 +83,7 @@ void MACGrid2D::InitializeCellsFromParticles(const std::vector<glm::vec2>& inPar
 		int cellIndex = GetClosestCell(inParticlePositions[pIndex]);
 
 		mCellType[cellIndex] = CellType::eFLUID;
-		mCellPressures[cellIndex] = 1.0f;
+		mCellPressures[cellIndex] = 1.0;
 	});
 }
 

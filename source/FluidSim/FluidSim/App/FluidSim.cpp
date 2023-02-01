@@ -112,18 +112,18 @@ int main()
 	gApplication.Initialize();
 
 	// Timing 
-	float deltaTime = 0.0f;   // Time between previous and current frame
-	float lastFrame = 0.0f;   // Time of the last frame.
+	double deltaTime = 0.0;   // Time between previous and current frame
+	double lastFrame = 0.0;   // Time of the last frame.
 
 	int iteration = 0;
 
 	// The render loop. Checks if the widnow has been told to close.
 	while (!glfwWindowShouldClose(window))
 	{
-		float currentFrame = glfwGetTime();
+		double currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-		float frameRate = 1 / deltaTime;
+		double frameRate = 1.0 / deltaTime;
 
 		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n";
 		std::cout << "Iteration: " << iteration << " || Current FPS: " << frameRate << "\n";
@@ -135,7 +135,7 @@ int main()
 		// ~~~ RENDERING ~~~ //
 
 		// Specify our clear color.
-		glClearColor(0.f, 0.f, 0.f, 1.0f);
+		glClearColor(0.f, 0.f, 0.f, 1.f);
 		// Clears the specified buffer with the color we just set. We also want to clear our depth buffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

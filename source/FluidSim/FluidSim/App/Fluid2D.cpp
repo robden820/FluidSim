@@ -226,7 +226,7 @@ void Fluid2D::InterpolateFromGrid()
 
 				if (mMACGrid.GetCellType(neighbourLeft) == CellType::eSOLID)
 				{
-					velocityX = 0.f;
+					velocityX = 0.0;
 				}
 			}
 			if (x < mMACGrid.GetNumCellsWidth() - 1)
@@ -235,7 +235,7 @@ void Fluid2D::InterpolateFromGrid()
 
 				if (mMACGrid.GetCellType(neighbourRight) == CellType::eSOLID)
 				{
-					velocityX = 0.f;
+					velocityX = 0.0;
 				}
 			}
 

@@ -2,6 +2,13 @@
 
 #include <iostream>
 
+VoxelFluid2D::VoxelFluid2D()
+{
+	mNumVoxels = 0;
+	mNumVoxelsHeight = 0;
+	mNumVoxelsWidth = 0;
+}
+
 VoxelFluid2D::VoxelFluid2D(const ApplicationData& inData)
 {
 	mVoxelSize = inData.GetGridCellSize();

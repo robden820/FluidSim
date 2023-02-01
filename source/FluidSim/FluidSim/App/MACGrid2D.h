@@ -12,10 +12,9 @@
 class MACGrid2D : public MACGrid
 {
 public:
-	MACGrid2D() = default;
-	~MACGrid2D() = default;
-
+	MACGrid2D();
 	MACGrid2D(const ApplicationData& inData);
+	~MACGrid2D() = default;
 
 	void Update(ApplicationData& inOutData);
 

@@ -9,7 +9,7 @@ class VoxelFluid2D : public VoxelFluid
 {
 public:
 
-	VoxelFluid2D() = default;
+	VoxelFluid2D();
 	~VoxelFluid2D() = default;
 
 	VoxelFluid2D(const ApplicationData& inData);
@@ -25,7 +25,6 @@ public:
 private:
 	void Initialize(const ApplicationData& inData) override;
 
-	int mNumVoxelsLength;
 	int mNumVoxelsHeight;
 	int mNumVoxelsWidth;
 
