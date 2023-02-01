@@ -51,11 +51,14 @@ private:
 
 	void CalculateCellDivergence(float deltaTime);
 
-	void AdvectCellVelocity(float deltaTime);
 	void UpdateCellPressure(float deltaTime, int maxIterations);
+	void UpdateCellPressureSpare(float deltaTime, int maxIterations);
+
+	void AdvectCellVelocity(float deltaTime);
 	void UpdateCellVelocity(float deltaTime);
 
 	void InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY);
+	void InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<double>& A);
 
 	void CalculatePreconditioner(std::vector<double>& inOutPrecon, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
 

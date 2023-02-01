@@ -107,7 +107,8 @@ void MACGrid2D::Update(ApplicationData& inOutData)
 	// Projection step
 	start = glfwGetTime();
 	
-	UpdateCellPressure(deltaTime, 200);
+	//UpdateCellPressure(deltaTime, 200);
+	UpdateCellPressureSpare(deltaTime, 200);
 
 	std::cout << "MAC: Pressure: " << glfwGetTime() - start << "\n";
 	std::cout << "------------------------------\n";
@@ -222,10 +223,6 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 					mCellXVelocities[index] -= scale * (mCellPressures[index] - mCellPressures[neighbourLeft]);
 				}
 			}
-			else
-			{
-				mCellXVelocities[index] = 0.0;
-			}
 		}
 		if (y > 0)
 		{
@@ -242,17 +239,13 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 					mCellYVelocities[index] -= scale * (mCellPressures[index] - mCellPressures[neighbourBottom]);
 				}
 			}
-			else
-			{
-				mCellYVelocities[index] = 0.0;
-			}
 		}
 	}
 }
 
 void MACGrid2D::CalculateCellDivergence(float deltaTime)
 {
-	float scale = mInvCellSize;
+	float scale = -mInvCellSize;
 
 	float solidXVel = 0.0f;
 	float solidYVel = 0.0f;
@@ -273,12 +266,12 @@ void MACGrid2D::CalculateCellDivergence(float deltaTime)
 			int neighbourTop = GetIndexFromXY(x, y + 1);
 			divergence += mIntYVelocities[neighbourTop] - mIntYVelocities[index];
 
-			divergence *= -scale;
+			divergence *= scale;
 
 			mCellDivergence[index] = divergence;
 		}
 	}
-
+	
 	// Update divergence to account for solid cells.
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -508,6 +501,113 @@ void MACGrid2D::InitializeLinearSystem(float deltaTime, std::vector<double>& inD
 			}
 		}
 	}
+}
+
+void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
+{
+	Eigen::SparseMatrix<double> A(mNumCells, mNumCells);
+
+	InitializeLinearSystemSparse(deltaTime, A);
+
+	Eigen::VectorXd divergence(mNumCells);
+	Eigen::VectorXd pressure(mNumCells);
+
+	for (int i = 0; i < mNumCells; i++)
+	{
+		divergence[i] = mCellDivergence[i];
+	}
+
+	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>> solver;
+
+	solver.setMaxIterations(maxIterations);
+	solver.setTolerance(TOLERANCE);
+
+	solver.compute(A);
+
+	pressure = solver.solve(divergence);
+
+	for (int i = 0; i < mNumCells; i++)
+	{
+		mCellPressures[i] = pressure[i];
+	}
+
+	std::cout << "NUM PRESSURE SOLVE ITERATIONS: " << solver.iterations() << "\n";
+	std::cout << "PRESSURE SOLVE ERROR: " << solver.error() << "\n";
+}
+
+void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<double>& A)
+{
+	double scale = (double)deltaTime * mInvCellSize * mInvCellSize * mInvDensity;
+
+	std::vector<Eigen::Triplet<double>> coefficients; // TO DO: reserve memory. Num fluid cells?
+
+	for (int index = 0; index < mNumCells; index++)
+	{
+		int x, y;
+		std::tie(x, y) = GetXYFromIndex(index);
+
+		if (mCellType[index] == CellType::eFLUID)
+		{
+
+			int numFluidNeighbours = 0;
+
+			// Handle left neighbour
+			if (x > 0)
+			{
+				int neighbourLeft = GetIndexFromXY(x - 1, y);
+
+				if (mCellType[neighbourLeft] == CellType::eFLUID)
+				{
+					++numFluidNeighbours;
+				}
+			}
+			// Handle right neighbour
+			if (x < mNumCellWidth - 1)
+			{
+				int neighbourRight = GetIndexFromXY(x + 1, y);
+
+				if (mCellType[neighbourRight] == CellType::eFLUID)
+				{
+					++numFluidNeighbours;
+					coefficients.push_back(Eigen::Triplet<double>(neighbourRight, index, -scale));
+				}
+				else if (mCellType[neighbourRight] != CellType::eSOLID)
+				{
+					++numFluidNeighbours;
+				}
+			}
+			// Handle bottom neighbour
+			if (y > 0)
+			{
+				int neighbourBottom = GetIndexFromXY(x, y - 1);
+
+				if (mCellType[neighbourBottom] == CellType::eFLUID)
+				{
+					++numFluidNeighbours;
+				}
+			}
+			// Handle top neighbour
+			if (y < mNumCellHeight - 1)
+			{
+				int neighbourTop = GetIndexFromXY(x, y + 1);
+
+				if (mCellType[neighbourTop] == CellType::eFLUID)
+				{
+					++numFluidNeighbours;
+					coefficients.push_back(Eigen::Triplet<double>(neighbourTop, index, -scale));
+				}
+				else if (mCellType[neighbourTop] != CellType::eSOLID)
+				{
+					++numFluidNeighbours;
+				}
+			}
+
+
+			coefficients.push_back(Eigen::Triplet<double>(index, index, scale * numFluidNeighbours));
+		}
+	}
+
+	A.setFromTriplets(coefficients.begin(), coefficients.end());
 }
 
 void MACGrid2D::ApplyA(float deltaTime, Eigen::VectorXd& outResult, const Eigen::VectorXd& inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY)
