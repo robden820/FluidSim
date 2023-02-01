@@ -13,11 +13,11 @@ Fluid2D::Fluid2D(ApplicationData& inOutData)
 	mParticlePositions.reserve(inOutData.GetNumParticles());
 
 	//TO DO : fix this initialization to not rely on literals.
-	for (int x = 0; x < 30; x++)
+	for (int x = 0; x < 20; x++)
 	{
-		for (int y = 0; y < 30; y++)
+		for (int y = 0; y < 20; y++)
 		{
-				glm::vec2 position((x - 15) * 0.2f, (y - 15) * 0.2f);
+				glm::vec2 position((x - 10) * 0.15f, (y - 5) * 0.15f);
 
 				Particle2D particle(position);
 
@@ -46,7 +46,7 @@ void Fluid2D::Update(ApplicationData& inOutData)
 {
 	float deltaTime = inOutData.GetDeltaTime();
 	// Transfer particle velocities to grid.
-	InterpolateToGrid();
+//	InterpolateToGrid();
 
 	// Update grid velocities.
 	mMACGrid.Update(inOutData);
@@ -61,12 +61,16 @@ void Fluid2D::Update(ApplicationData& inOutData)
 		mParticlePositions[p] = mParticles[p].GetPosition();
 	}
 
+	mMACGrid.UpdateCellTypesFromParticles(mParticlePositions);
+
 	inOutData.Set2DParticlePositions(mParticlePositions);
+	inOutData.SetCellTypes(mMACGrid.GetCellTypes());
 }
 
 void Fluid2D::InterpolateToGrid()
 {
 	// Reset all non-solid cell types as air.
+/*
 	for (int c = 0; c < mMACGrid.GetNumCells(); c++)
 	{
 		if (mMACGrid.GetCellType(c) != CellType::eSOLID)
@@ -74,7 +78,7 @@ void Fluid2D::InterpolateToGrid()
 			mMACGrid.SetCellType(c, CellType::eAIR);
 		}
 	}
-
+	*/
 	std::vector<float> contributedXWeights;
 	std::vector<float> contributedYWeights;
 
@@ -86,7 +90,7 @@ void Fluid2D::InterpolateToGrid()
 
 	contributedXWeights.assign(mMACGrid.GetNumCells(), 0.f);
 	contributedYWeights.assign(mMACGrid.GetNumCells(), 0.f);
-
+	
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
 		int cellIndex = ClosestCellToParticle(mParticles[p]);
@@ -100,8 +104,8 @@ void Fluid2D::InterpolateToGrid()
 		if (mMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
 			// Update cell type as it contains a fluid particle
-			mMACGrid.SetCellType(cellIndex, CellType::eFLUID);
-
+//			mMACGrid.SetCellType(cellIndex, CellType::eFLUID);
+			
 			// Interpolate the particle velocities to the grid cell and right hand neighbour.
 			glm::vec2 particlePos = mParticles[p].GetPosition();
 			glm::vec2 cellPos = mMACGrid.GetCellCenter(cellIndex);
@@ -140,9 +144,10 @@ void Fluid2D::InterpolateToGrid()
 					contributedYWeights[neighbourTop] += (1 - weight.y);
 				}
 			}
+			
 		}
 	}
-
+	
 	for (int c = 0; c < mMACGrid.GetNumCells(); c++)
 	{
 		if (contributedXWeights[c] != 0.f)

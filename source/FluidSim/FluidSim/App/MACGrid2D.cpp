@@ -3,7 +3,7 @@
 #include <iostream>
 #include "GLFW/glfw3.h"
 
-#define TOLERANCE 0.000001
+#define TOLERANCE 0.0000001
 #define PRECON_TUNER 0.97
 #define PRECON_SAFETY 0.25
 
@@ -19,7 +19,8 @@ MACGrid2D::MACGrid2D()
 MACGrid2D::MACGrid2D(const ApplicationData& inData)
 {
 	InitializeGrid(inData);
-	InitializeCellsFromParticles(inData.Get2DParticlePositions());
+	UpdateCellTypesFromParticles(inData.Get2DParticlePositions());
+	InitializeGridPressure();
 }
 
 void MACGrid2D::InitializeGrid(const ApplicationData& inData)
@@ -54,26 +55,48 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellXVelocities.assign(mNumCells, 0.0);
 	mCellYVelocities.assign(mNumCells, 0.0);
 	mCellDivergence.assign(mNumCells, 0.0);
-	mCellType.assign(mNumCells, CellType::eNONE);
+	
 
 	mIntXVelocities.assign(mNumCells, 0.0);
 	mIntYVelocities.assign(mNumCells, 0.0);
 
 	mDensity = inData.GetFluidDensity();
 	mInvDensity = 1.0f / mDensity;
-}
 
-void MACGrid2D::InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions)
-{
-	// Set edge cells to be solid.
-	tbb::parallel_for(0, mNumCells, 1, [&](int cIndex)
+	//Initialize cell types and solid boundary.
+	mCellType.assign(mNumCells, CellType::eNONE);
+
+	// TO DO: initialize solid boundary from file.
+	for (int index = 0; index < mNumCells; index++)
 	{
 		int x, y;
-		std::tie(x, y) = GetXYFromIndex(cIndex);
+		std::tie(x, y) = GetXYFromIndex(index);
 
-		if (x == 0 || x == mNumCellWidth - 1 || y == 0 || y == mNumCellHeight - 1 )
+		if (x == 0 || x == mNumCellWidth - 1 || y == 0 || y == mNumCellHeight - 1)
 		{
-			mCellType[cIndex] = CellType::eSOLID;
+			mCellType[index] = CellType::eSOLID;
+		}
+	}
+}
+
+void MACGrid2D::InitializeGridPressure()
+{
+	for (int index = 0; index < mNumCells; index++)
+	{
+		if (mCellType[index] == CellType::eFLUID)
+		{
+			mCellPressures[index] = 1.0;
+		}
+	}
+}
+
+void MACGrid2D::UpdateCellTypesFromParticles(const std::vector<glm::vec2>& inParticlePositions)
+{
+	tbb::parallel_for(0, mNumCells, 1, [&](int cIndex)
+	{
+		if (mCellType[cIndex] != CellType::eSOLID)
+		{
+			mCellType[cIndex] = CellType::eAIR;
 		}
 	});
 
@@ -82,12 +105,27 @@ void MACGrid2D::InitializeCellsFromParticles(const std::vector<glm::vec2>& inPar
 	{
 		int cellIndex = GetClosestCell(inParticlePositions[pIndex]);
 
-		mCellType[cellIndex] = CellType::eFLUID;
-		mCellPressures[cellIndex] = 1.0;
+		if (cellIndex >= 0)
+		{
+			mCellType[cellIndex] = CellType::eFLUID;
+		}
 	});
 }
 
 void MACGrid2D::Update(ApplicationData& inOutData)
+{
+	float deltaTime = inOutData.GetDeltaTime();
+
+	Advect(inOutData);
+
+	ApplyForces(deltaTime);
+
+	Project(inOutData);
+
+//	inOutData.SetCellTypes(mCellType);
+}
+
+void MACGrid2D::Advect(ApplicationData& inOutData)
 {
 	float deltaTime = inOutData.GetDeltaTime();
 
@@ -96,9 +134,14 @@ void MACGrid2D::Update(ApplicationData& inOutData)
 	AdvectCellVelocity(deltaTime);
 
 	std::cout << "MAC: advect: " << glfwGetTime() - start << "\n";
+}
+
+void MACGrid2D::Project(ApplicationData& inOutData)
+{
+	float deltaTime = inOutData.GetDeltaTime();
 
 	// Calculate cell divergence
-	start = glfwGetTime();
+	double start = glfwGetTime();
 
 	CalculateCellDivergence(deltaTime);
 
@@ -106,7 +149,7 @@ void MACGrid2D::Update(ApplicationData& inOutData)
 
 	// Projection step
 	start = glfwGetTime();
-	
+
 	//UpdateCellPressure(deltaTime, 200);
 	UpdateCellPressureSpare(deltaTime, 200);
 
@@ -118,8 +161,6 @@ void MACGrid2D::Update(ApplicationData& inOutData)
 	UpdateCellVelocity(deltaTime);
 
 	std::cout << "MAC: cell update: " << glfwGetTime() - start << "\n";
-
-	inOutData.SetCellTypes(mCellType);
 }
 
 void MACGrid2D::AdvectCellVelocity(float deltaTime)
@@ -177,6 +218,11 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 			mIntXVelocities[index] = prevXVelocity;
 			mIntYVelocities[index] = prevYVelocity;
 		}
+		else
+		{
+			mIntXVelocities[index] = 0.0;
+			mIntYVelocities[index] = 0.0;
+		}
 	});
 }
 
@@ -193,6 +239,17 @@ int MACGrid2D::GetClosestCell(const glm::vec2& inPos)
 	}
 
 	return approxIndex;
+}
+
+void MACGrid2D::ApplyForces(float deltaTime)
+{
+	for (int index = 0; index < mNumCells; index++)
+	{
+		if (mCellType[index] == CellType::eFLUID)
+		{
+			mIntYVelocities[index] -= 9.8 * deltaTime;
+		}
+	}
 }
 
 void MACGrid2D::UpdateCellVelocity(float deltaTime)
@@ -220,7 +277,7 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 				}
 				else
 				{
-					mCellXVelocities[index] -= scale * (mCellPressures[index] - mCellPressures[neighbourLeft]);
+					mCellXVelocities[index] = mIntXVelocities[index] - scale * (mCellPressures[index] - mCellPressures[neighbourLeft]);
 				}
 			}
 		}
@@ -236,7 +293,7 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 				}
 				else
 				{
-					mCellYVelocities[index] -= scale * (mCellPressures[index] - mCellPressures[neighbourBottom]);
+					mCellYVelocities[index] = mIntYVelocities[index] - scale * (mCellPressures[index] - mCellPressures[neighbourBottom]);
 				}
 			}
 		}
@@ -269,6 +326,10 @@ void MACGrid2D::CalculateCellDivergence(float deltaTime)
 			divergence *= scale;
 
 			mCellDivergence[index] = divergence;
+		}
+		else
+		{
+			mCellDivergence[index] = 0.0f;
 		}
 	}
 	
@@ -431,11 +492,20 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::cout << "NUM PRESSURE SOLVE ITERATIONS: " << iteration << "\n";
 	std::cout << "PRESSURE SOLVE ERROR: " << maxResidual << "\n";
 
+
+	double maxPressure = 0.0;
 	// Set pressure
 	for (int i = 0; i < mNumCells; i++)
 	{
 		mCellPressures[i] = newPressure[i];
+
+		if (mCellPressures[i] > maxPressure)
+		{
+			maxPressure = mCellPressures[i];
+		}
 	}
+
+	std::cout << "MAX NEW PRESSURE: " << maxPressure << "\n";
 }
 
 void MACGrid2D::InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY)
@@ -526,13 +596,21 @@ void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
 
 	pressure = solver.solve(divergence);
 
+	double maxPressure = 0.0;
+
 	for (int i = 0; i < mNumCells; i++)
 	{
 		mCellPressures[i] = pressure[i];
+
+		if (mCellPressures[i] > maxPressure)
+		{
+			maxPressure = mCellPressures[i];
+		}
 	}
 
 	std::cout << "NUM PRESSURE SOLVE ITERATIONS: " << solver.iterations() << "\n";
 	std::cout << "PRESSURE SOLVE ERROR: " << solver.error() << "\n";
+	std::cout << "MAX NEW PRESSURE: " << maxPressure << "\n";
 }
 
 void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<double>& A)

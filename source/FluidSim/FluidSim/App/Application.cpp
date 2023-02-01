@@ -13,19 +13,19 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mApplicationData = newData;
 
 	// Initialise simulation data.
-	mApplicationData.SetDeltaTime(0.005f);
-	mApplicationData.SetNumParticles(900);
+	mApplicationData.SetDeltaTime(0.03f);
+	mApplicationData.SetNumParticles(400);
 	mApplicationData.SetFluidDensity(1000.0f);
 
 	// Set MACGrid data
 	mApplicationData.SetGridLeft(-10.0f);
 	mApplicationData.SetGridBottom(-10.0f);
 
-	mApplicationData.SetNumGridCellsWidth(200);
-	mApplicationData.SetNumGridCellsHeight(200);
+	mApplicationData.SetNumGridCellsWidth(100);
+	mApplicationData.SetNumGridCellsHeight(100);
 	mApplicationData.UpdateNumGridCells();
 
-	mApplicationData.SetGridCellSize(0.1f);
+	mApplicationData.SetGridCellSize(0.2f);
 }
 
 void Application::Initialize()
@@ -72,13 +72,10 @@ void Application::Initialize()
 		std::cout << "Initializing Draw fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
 
-		// Needs to be set to 10/MACGrid resolution
-		// TO DO: fix all initialization values.
 		VoxelFluid2D voxelFluid(mApplicationData);
 		mVoxelFluid2D = voxelFluid;
 
 		std::cout << "Initializing voxel grid: " << glfwGetTime() - start << "\n";
-
 
 		Sphere s;
 		mSphere = s;
@@ -214,7 +211,7 @@ void Application::Render(float inAspectRatio)
 			glm::vec3 particlePosition = { vec.x, vec.y, 0.f };
 
 			model = glm::translate(model, particlePosition);
-			model = glm::scale(model, glm::vec3(scale * 0.9f));
+			model = glm::scale(model, glm::vec3(scale * 0.5f));
 
 			mShader.SetMatrix("model", model);
 

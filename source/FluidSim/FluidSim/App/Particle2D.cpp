@@ -17,7 +17,7 @@ void Particle2D::StepParticle(float deltaTime)
 {
 	mAcceleration = mForceAccumulator * mMass;
 
-	mPosition += mVelocity * deltaTime + mAcceleration * deltaTime * deltaTime;
+	mPosition += mVelocity * deltaTime +mAcceleration * deltaTime * deltaTime;
 	mVelocity += mAcceleration * deltaTime;
 
 	float g = -9.8f * mMass; // Downwards force due to gravity;

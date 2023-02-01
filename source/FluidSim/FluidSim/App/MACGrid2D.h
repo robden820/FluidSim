@@ -18,6 +18,9 @@ public:
 
 	void Update(ApplicationData& inOutData);
 
+	void Advect(ApplicationData& inOutData);
+	void Project(ApplicationData& inOutData);
+
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth; }
 	int GetNumCellsWidth() const { return mNumCellWidth; }
 	int GetNumCellsHeight() const { return mNumCellHeight; }
@@ -35,6 +38,7 @@ public:
 	void SetCellPressure(int index, float inPressure) { mCellPressures[index] = inPressure; }
 
 	const CellType GetCellType(int index) const { return mCellType[index]; }
+	const std::vector<CellType>& GetCellTypes() const { return mCellType; }
 	const CellType GetCellTypeFromPosition(const glm::vec2& inPos);
 	void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
 
@@ -44,10 +48,12 @@ public:
 	float GetCellSize() const { return mCellSize; }
 	float GetInverseCellSize() const { return mInvCellSize; }
 
+	void UpdateCellTypesFromParticles(const std::vector<glm::vec2>& inParticlePositions);
+
 private:
 
 	void InitializeGrid(const ApplicationData& inData) override;
-	void InitializeCellsFromParticles(const std::vector<glm::vec2>& inParticlePositions);
+	void InitializeGridPressure();
 
 	void CalculateCellDivergence(float deltaTime);
 
@@ -55,6 +61,7 @@ private:
 	void UpdateCellPressureSpare(float deltaTime, int maxIterations);
 
 	void AdvectCellVelocity(float deltaTime);
+	void ApplyForces(float deltaTime);
 	void UpdateCellVelocity(float deltaTime);
 
 	void InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY);
