@@ -13,9 +13,24 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mApplicationData = newData;
 
 	// Initialise simulation data.
-	mApplicationData.SetDeltaTime(0.03f);
+	mApplicationData.SetDeltaTime(0.016f);
 	mApplicationData.SetNumParticles(400);
 	mApplicationData.SetFluidDensity(1000.0f);
+
+	// Initialise particle data.
+	// TO DO: this data should come from a file rather than hard coded.
+	std::vector<glm::vec2> particlePositions2D;
+	particlePositions2D.reserve(mApplicationData.GetNumParticles());
+	for (int x = 0; x < 20; x++)
+	{
+		for (int y = 0; y < 20; y++)
+		{
+			glm::vec2 position((x - 10) * 0.15f, (y - 5) * 0.15f);
+			particlePositions2D.push_back(position);
+		}
+	}
+
+	mApplicationData.Set2DParticlePositions(particlePositions2D);
 
 	// Set MACGrid data
 	mApplicationData.SetGridLeft(-10.0f);
@@ -63,8 +78,11 @@ void Application::Initialize()
 	{
 		double start = glfwGetTime();
 
-		Fluid2D fluid(mApplicationData);
-		mFluid = std::make_unique<Fluid2D>(fluid);
+//		Fluid2D fluid(mApplicationData);
+//		mFluid = std::make_unique<Fluid2D>(fluid);
+
+		Simulation2D sim(mApplicationData);
+		mSimulation = sim;
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
@@ -146,7 +164,8 @@ void Application::SetShader(Shader& inShader)
 
 void Application::Update()
 {
-	mFluid->Update(mApplicationData);
+	//mFluid->Update(mApplicationData);
+	mSimulation.StepSimulation(mApplicationData);
 }
 
 void Application::Render(float inAspectRatio)

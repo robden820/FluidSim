@@ -19,6 +19,7 @@ public:
 	void Update(ApplicationData& inOutData);
 
 	void Advect(ApplicationData& inOutData);
+	void ApplyForces(float deltaTime);
 	void Project(ApplicationData& inOutData);
 
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth; }
@@ -26,13 +27,16 @@ public:
 	int GetNumCellsHeight() const { return mNumCellHeight; }
 
 	const glm::vec2& GetCellCenter(int index) const { return mCellCenters[index]; }
-	int GetClosestCell(const glm::vec2& inPos);
+	int GetClosestCell(const glm::vec2& inPos) const;
 
 	const double GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
 	const double GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
 
 	void SetCellXVelocity(int index, double inVelocity) { mCellXVelocities[index] = inVelocity; }
 	void SetCellYVelocity(int index, double inVelocity) { mCellYVelocities[index] = inVelocity; }
+
+	void SetIntXVelocity(int index, double inVelocity) { mIntXVelocities[index] = inVelocity; }
+	void SetIntYVelocity(int index, double inVelocity) { mIntYVelocities[index] = inVelocity; }
 
 	const double GetCellPressure(int index) const { return mCellPressures[index]; }
 	void SetCellPressure(int index, float inPressure) { mCellPressures[index] = inPressure; }
@@ -42,13 +46,15 @@ public:
 	const CellType GetCellTypeFromPosition(const glm::vec2& inPos);
 	void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
 
-	std::tuple<int, int> GetXYFromIndex(int index);
-	int GetIndexFromXY(int X, int Y);
+	std::tuple<int, int> GetXYFromIndex(int index) const;
+	int GetIndexFromXY(int X, int Y) const;
 
 	float GetCellSize() const { return mCellSize; }
 	float GetInverseCellSize() const { return mInvCellSize; }
 
 	void UpdateCellTypesFromParticles(const std::vector<glm::vec2>& inParticlePositions);
+
+	void UpdateApplicationData(ApplicationData& inOutData);
 
 private:
 
@@ -61,7 +67,6 @@ private:
 	void UpdateCellPressureSpare(float deltaTime, int maxIterations);
 
 	void AdvectCellVelocity(float deltaTime);
-	void ApplyForces(float deltaTime);
 	void UpdateCellVelocity(float deltaTime);
 
 	void InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY);

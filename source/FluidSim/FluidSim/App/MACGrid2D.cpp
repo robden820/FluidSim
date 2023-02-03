@@ -19,7 +19,6 @@ MACGrid2D::MACGrid2D()
 MACGrid2D::MACGrid2D(const ApplicationData& inData)
 {
 	InitializeGrid(inData);
-	UpdateCellTypesFromParticles(inData.Get2DParticlePositions());
 	InitializeGridPressure();
 }
 
@@ -56,7 +55,6 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellYVelocities.assign(mNumCells, 0.0);
 	mCellDivergence.assign(mNumCells, 0.0);
 	
-
 	mIntXVelocities.assign(mNumCells, 0.0);
 	mIntYVelocities.assign(mNumCells, 0.0);
 
@@ -65,6 +63,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 
 	//Initialize cell types and solid boundary.
 	mCellType.assign(mNumCells, CellType::eNONE);
+	UpdateCellTypesFromParticles(inData.Get2DParticlePositions());
 
 	// TO DO: initialize solid boundary from file.
 	for (int index = 0; index < mNumCells; index++)
@@ -105,7 +104,7 @@ void MACGrid2D::UpdateCellTypesFromParticles(const std::vector<glm::vec2>& inPar
 	{
 		int cellIndex = GetClosestCell(inParticlePositions[pIndex]);
 
-		if (cellIndex >= 0)
+		if (cellIndex >= 0 && mCellType[cellIndex] != CellType::eSOLID)
 		{
 			mCellType[cellIndex] = CellType::eFLUID;
 		}
@@ -121,8 +120,6 @@ void MACGrid2D::Update(ApplicationData& inOutData)
 	ApplyForces(deltaTime);
 
 	Project(inOutData);
-
-//	inOutData.SetCellTypes(mCellType);
 }
 
 void MACGrid2D::Advect(ApplicationData& inOutData)
@@ -226,7 +223,7 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 	});
 }
 
-int MACGrid2D::GetClosestCell(const glm::vec2& inPos)
+int MACGrid2D::GetClosestCell(const glm::vec2& inPos) const
 {
 	int x = static_cast<int>(round((inPos.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize));
 	int y = static_cast<int>(round((inPos.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize));
@@ -329,7 +326,7 @@ void MACGrid2D::CalculateCellDivergence(float deltaTime)
 		}
 		else
 		{
-			mCellDivergence[index] = 0.0f;
+			mCellDivergence[index] = 0.0;
 		}
 	}
 	
@@ -492,20 +489,11 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 	std::cout << "NUM PRESSURE SOLVE ITERATIONS: " << iteration << "\n";
 	std::cout << "PRESSURE SOLVE ERROR: " << maxResidual << "\n";
 
-
-	double maxPressure = 0.0;
 	// Set pressure
 	for (int i = 0; i < mNumCells; i++)
 	{
 		mCellPressures[i] = newPressure[i];
-
-		if (mCellPressures[i] > maxPressure)
-		{
-			maxPressure = mCellPressures[i];
-		}
 	}
-
-	std::cout << "MAX NEW PRESSURE: " << maxPressure << "\n";
 }
 
 void MACGrid2D::InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY)
@@ -596,21 +584,13 @@ void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
 
 	pressure = solver.solve(divergence);
 
-	double maxPressure = 0.0;
-
 	for (int i = 0; i < mNumCells; i++)
 	{
 		mCellPressures[i] = pressure[i];
-
-		if (mCellPressures[i] > maxPressure)
-		{
-			maxPressure = mCellPressures[i];
-		}
 	}
 
 	std::cout << "NUM PRESSURE SOLVE ITERATIONS: " << solver.iterations() << "\n";
 	std::cout << "PRESSURE SOLVE ERROR: " << solver.error() << "\n";
-	std::cout << "MAX NEW PRESSURE: " << maxPressure << "\n";
 }
 
 void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<double>& A)
@@ -861,7 +841,7 @@ const CellType MACGrid2D::GetCellTypeFromPosition(const glm::vec2& inPos)
 	return GetCellType(index);
 }
 
-std::tuple<int, int> MACGrid2D::GetXYFromIndex(int index)
+std::tuple<int, int> MACGrid2D::GetXYFromIndex(int index) const
 {
 	int x = 0;
 	int y = 0;
@@ -872,7 +852,12 @@ std::tuple<int, int> MACGrid2D::GetXYFromIndex(int index)
 	return std::tuple<int, int>(x, y);
 }
 
-int MACGrid2D::GetIndexFromXY(int X, int Y)
+int MACGrid2D::GetIndexFromXY(int X, int Y) const
 {
 	return  Y + X * mNumCellHeight;
+}
+
+void MACGrid2D::UpdateApplicationData(ApplicationData& inOutData)
+{
+	inOutData.SetCellTypes(mCellType);
 }

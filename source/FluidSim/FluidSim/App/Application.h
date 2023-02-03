@@ -10,6 +10,8 @@
 #include "Fluid3D.h"
 #include "Fluid2D.h"
 
+#include "Simulation2D.h"
+
 #include "ApplicationData.h"
 
 #include "Sphere.h"
@@ -49,6 +51,8 @@ private:
 	VoxelFluid3D mVoxelFluid3D;
 
 	std::unique_ptr<Fluid> mFluid;
+
+	Simulation2D mSimulation;
 
 	Sphere mSphere; // Contains vertex & index information to draw particles.
 
