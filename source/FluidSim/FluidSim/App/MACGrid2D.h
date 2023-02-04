@@ -43,7 +43,7 @@ public:
 
 	const CellType GetCellType(int index) const { return mCellType[index]; }
 	const std::vector<CellType>& GetCellTypes() const { return mCellType; }
-	const CellType GetCellTypeFromPosition(const glm::vec2& inPos);
+	const CellType GetCellTypeFromPosition (const glm::vec2& inPos) const;
 	void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
 
 	std::tuple<int, int> GetXYFromIndex(int index) const;

@@ -834,7 +834,7 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 	}
 }
 
-const CellType MACGrid2D::GetCellTypeFromPosition(const glm::vec2& inPos)
+const CellType MACGrid2D::GetCellTypeFromPosition(const glm::vec2& inPos) const
 {
 	int index = GetClosestCell(inPos);
 
