@@ -23,7 +23,7 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 
 //	mMACGrid.Advect(inOutData);
 
-	mMACGrid.ApplyForces(deltaTime);
+//	mMACGrid.ApplyForces(deltaTime);
 
 	mMACGrid.Project(inOutData);
 
