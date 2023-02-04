@@ -14,18 +14,18 @@ Application::Application(Camera& inCamera, Shader& inShader)
 
 	// Initialise simulation data.
 	mApplicationData.SetDeltaTime(0.016f);
-	mApplicationData.SetNumParticles(400);
+	mApplicationData.SetNumParticles(1500);
 	mApplicationData.SetFluidDensity(1000.0f);
 
 	// Initialise particle data.
 	// TO DO: this data should come from a file rather than hard coded.
 	std::vector<glm::vec2> particlePositions2D;
 	particlePositions2D.reserve(mApplicationData.GetNumParticles());
-	for (int x = 0; x < 20; x++)
+	for (int x = 0; x < 30; x++)
 	{
-		for (int y = 0; y < 20; y++)
+		for (int y = 0; y < 50; y++)
 		{
-			glm::vec2 position((x - 10) * 0.15f, (y - 5) * 0.15f);
+			glm::vec2 position((x - 40) * 0.15f, (y - 5) * 0.15f);
 			particlePositions2D.push_back(position);
 		}
 	}
