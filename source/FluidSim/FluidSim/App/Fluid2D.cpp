@@ -38,17 +38,19 @@ void Fluid2D::StepParticles(float deltaTime)
 
 void Fluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 {
-	std::vector<float> contributedXWeights;
-	std::vector<float> contributedYWeights;
+	std::vector<double> contributedXWeights;
+	std::vector<double> contributedYWeights;
 
-	std::vector<float> interpXVelocities;
-	std::vector<float> interpYVelocities;
+	std::vector<double> interpXVelocities;
+	std::vector<double> interpYVelocities;
 
-	interpXVelocities.assign(inMACGrid.GetNumCells(), 0.f);
-	interpYVelocities.assign(inMACGrid.GetNumCells(), 0.f);
+	int numCells = inMACGrid.GetNumCells();
 
-	contributedXWeights.assign(inMACGrid.GetNumCells(), 0.f);
-	contributedYWeights.assign(inMACGrid.GetNumCells(), 0.f);
+	interpXVelocities.assign(numCells, 0.f);
+	interpYVelocities.assign(numCells, 0.f);
+
+	contributedXWeights.assign(numCells, 0.f);
+	contributedYWeights.assign(numCells, 0.f);
 
 	for (int p = 0; p < GetNumParticles(); p++)
 	{
@@ -66,8 +68,8 @@ void Fluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 			glm::vec2 particlePos = mParticles[p].GetPosition();
 			glm::vec2 cellPos = inMACGrid.GetCellCenter(cellIndex);
 
-			glm::vec2 diff = cellPos - particlePos;
-			glm::vec2 weight = diff * inMACGrid.GetInverseCellSize() + 0.5f;
+			glm::dvec2 diff = cellPos - particlePos;
+			glm::dvec2 weight = diff * (double)inMACGrid.GetInverseCellSize() + 0.5;
 
 			interpXVelocities[cellIndex] += mParticles[p].GetVelocity().x * weight.x;
 			interpYVelocities[cellIndex] += mParticles[p].GetVelocity().y * weight.y;
@@ -115,8 +117,8 @@ void Fluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 			interpYVelocities[c] *= 1.0f / contributedYWeights[c];
 		}
 
-		inMACGrid.SetCellXVelocity(c, interpXVelocities[c]);
-		inMACGrid.SetCellYVelocity(c, interpYVelocities[c]);
+		inMACGrid.SetIntXVelocity(c, interpXVelocities[c]);
+		inMACGrid.SetIntYVelocity(c, interpYVelocities[c]);
 	}
 }
 
