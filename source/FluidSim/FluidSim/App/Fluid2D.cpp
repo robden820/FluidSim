@@ -155,20 +155,10 @@ void Fluid2D::InterpolateFromGrid(const MACGrid2D& inMACGrid)
 
 				velocityX += inMACGrid.GetCellXVelocity(neighbourRight) * (1 - weight.x);
 			}
-			else
-			{
-				// Normalize the velocity if weights don't sum to 1.
-				velocityX *= 1 / weight.x;
-			}
 			if (y < inMACGrid.GetNumCellsHeight() - 1)
 			{
 				int neighbourTop = inMACGrid.GetIndexFromXY(x, y + 1);
 				velocityY += inMACGrid.GetCellYVelocity(neighbourTop) * (1 - weight.y);
-			}
-			else
-			{
-				// Normalize the velocity if weights don't sum to 1.
-				velocityY *= 1 / weight.y;
 			}
 
 			// Handle bottom solid boundary
@@ -187,7 +177,8 @@ void Fluid2D::InterpolateFromGrid(const MACGrid2D& inMACGrid)
 			{
 				int neighbourLeft = inMACGrid.GetIndexFromXY(x - 1, y);
 
-				if (inMACGrid.GetCellType(neighbourLeft) == CellType::eSOLID)
+				// If the left neighbour is solid and the particle is moving left.
+				if (inMACGrid.GetCellType(neighbourLeft) == CellType::eSOLID && velocityX < 0.0)
 				{
 					velocityX = 0.0;
 				}
@@ -196,7 +187,8 @@ void Fluid2D::InterpolateFromGrid(const MACGrid2D& inMACGrid)
 			{
 				int neighbourRight = inMACGrid.GetIndexFromXY(x + 1, y);
 
-				if (inMACGrid.GetCellType(neighbourRight) == CellType::eSOLID)
+				// If the right neighbour is solid and the particle is moving right.
+				if (inMACGrid.GetCellType(neighbourRight) == CellType::eSOLID && velocityX > 0.0)
 				{
 					velocityX = 0.0;
 				}
