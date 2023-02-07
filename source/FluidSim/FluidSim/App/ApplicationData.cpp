@@ -75,6 +75,44 @@ void ApplicationData::SetCellTypes(const std::vector<CellType>& inCellTypes)
 	mCellTypes = inCellTypes;
 }
 
+const glm::vec2& ApplicationData::GetCellCenter2D(int index) const
+{
+	if (index < 0 || index > mCellCenters2D.size() - 1)
+	{
+		LogError("Attempting to access invalid 2D cell center index.");
+		return glm::vec2(0.0f, 0.0f);
+	}
+
+	return mCellCenters2D[index];
+}
+
+void ApplicationData::SetCellCenters2D(const std::vector<glm::vec2>& inCellCenters)
+{
+	mCellCenters2D.clear();
+	mCellCenters2D.reserve(inCellCenters.size());
+
+	mCellCenters2D = inCellCenters;
+}
+
+const glm::vec3& ApplicationData::GetCellCenter3D(int index) const
+{
+	if (index < 0 || index > mCellCenters3D.size() - 1)
+	{
+		LogError("Attempting to access invalid 2D cell center index.");
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+
+	return mCellCenters3D[index];
+}
+
+void ApplicationData::SetCellCenters3D(const std::vector<glm::vec3>& inCellCenters)
+{
+	mCellCenters3D.clear();
+	mCellCenters3D.reserve(inCellCenters.size());
+
+	mCellCenters3D = inCellCenters;
+}
+
 void ApplicationData::LogError(const std::string& inErrorMsg) const
 {
 	std::cout << "ERROR: " << inErrorMsg << "\n";

@@ -87,6 +87,14 @@ class ApplicationData
 		CellType GetCellType(int index) const;
 		void SetCellTypes(const std::vector<CellType>& inCellTypes);
 
+		const std::vector<glm::vec2>& GetCellCenters2D() const { return mCellCenters2D; }
+		const glm::vec2& GetCellCenter2D(int index) const;
+		void SetCellCenters2D(const std::vector<glm::vec2>& inCellCenters);
+
+		const std::vector<glm::vec3>& GetCellCenters3D() const { return mCellCenters3D; }
+		const glm::vec3& GetCellCenter3D(int index) const;
+		void SetCellCenters3D(const std::vector<glm::vec3>& inCellCenters);
+
 	private:
 		int mNumGridCellsWidth = 1;
 		int mNumGridCellsHeight = 1;
@@ -101,6 +109,8 @@ class ApplicationData
 		float mGridCellSize; // Only support grid with regular sized cells;
 
 		std::vector<CellType> mCellTypes;
+		std::vector<glm::vec2> mCellCenters2D;
+		std::vector<glm::vec3> mCellCenters3D;
 
 	// -------------------------------------------------- //
 	// Rendering Data
