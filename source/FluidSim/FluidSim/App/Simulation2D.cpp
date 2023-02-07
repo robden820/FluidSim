@@ -19,7 +19,8 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 {
 	float deltaTime = inOutData.GetDeltaTime();
 
-	mFluid.InterpolateToGrid(mMACGrid);
+//	mFluid.InterpolateToGrid(mMACGrid);
+	mFluid.InterpolateToGridBSpline(mMACGrid);
 
 //	mMACGrid.Advect(inOutData);
 
@@ -32,8 +33,9 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	//mFluid.StepParticles(deltaTime);
 	mFluid.StepParticlesRK3(deltaTime, mMACGrid);
 
+	mFluid.UpdateApplicationData(inOutData);
 	mMACGrid.UpdateCellTypesFromParticles(inOutData.Get2DParticlePositions());
 
-	mFluid.UpdateApplicationData(inOutData);
+	
 	mMACGrid.UpdateApplicationData(inOutData);
 }

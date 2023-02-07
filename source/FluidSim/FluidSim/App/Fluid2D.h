@@ -23,6 +23,7 @@ public:
 	void UpdateApplicationData(ApplicationData& inOutData);
 
 	void InterpolateToGrid(MACGrid2D& inMACGrid);
+	void InterpolateToGridBSpline(MACGrid2D& inMACGrid);
 	void InterpolateFromGrid(const MACGrid2D& inMACGrid);
 
 	const std::vector<Particle2D>& GetParticles() const { return mParticles; }
@@ -34,6 +35,8 @@ public:
 	void InterpolateToGrid() override {};
 	void InterpolateFromGrid() override {};
 private:
+	float InterpolateToGridSupport(const glm::vec2& diff, float invCellSize);
+	float BSpline(float input);
 
 	int ClosestCellToParticle(const MACGrid2D& inMACGrid, const Particle2D& particle);
 
