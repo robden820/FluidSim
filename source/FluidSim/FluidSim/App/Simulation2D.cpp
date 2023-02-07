@@ -23,13 +23,14 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 
 //	mMACGrid.Advect(inOutData);
 
-//	mMACGrid.ApplyForces(deltaTime);
+	mMACGrid.ApplyForces(deltaTime);
 
 	mMACGrid.Project(inOutData);
 
 	mFluid.InterpolateFromGrid(mMACGrid);
 
-	mFluid.StepParticles(deltaTime);
+	//mFluid.StepParticles(deltaTime);
+	mFluid.StepParticlesRK3(deltaTime, mMACGrid);
 
 	mMACGrid.UpdateCellTypesFromParticles(inOutData.Get2DParticlePositions());
 

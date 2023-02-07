@@ -12,6 +12,7 @@ public:
 	Particle2D(const glm::vec2& inPosition, const glm::vec2& inVelocity = glm::vec2(0.0f, 0.0f), float inMass = 1.0f, float inRadius = 0.1f);
 
 	void StepParticle(float deltaTime);
+	void StepRK3(float deltaTime, const glm::vec2& K1, const glm::vec2& K2, const glm::vec2& K3);
 
 	const glm::vec2& GetPosition() const { return mPosition; }
 	void SetPosition(const glm::vec2& inPos) { mPosition = inPos; }

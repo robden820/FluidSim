@@ -19,6 +19,7 @@ public:
 	Fluid2D(const ApplicationData& inOutData);
 
 	void StepParticles(float deltaTime);
+	void StepParticlesRK3(float deltaTime, const MACGrid2D& inMACGrid);
 	void UpdateApplicationData(ApplicationData& inOutData);
 
 	void InterpolateToGrid(MACGrid2D& inMACGrid);
@@ -35,6 +36,9 @@ public:
 private:
 
 	int ClosestCellToParticle(const MACGrid2D& inMACGrid, const Particle2D& particle);
+
+	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
+	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
 
 	std::vector<Particle2D> mParticles;
 	std::vector<glm::vec2> mParticlePositions;
