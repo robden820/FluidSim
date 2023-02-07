@@ -34,7 +34,11 @@ public:
 	void Update(ApplicationData& inOutData) override {};
 	void InterpolateToGrid() override {};
 	void InterpolateFromGrid() override {};
+
 private:
+
+	void SeedParticles(const ApplicationData& inOutData);
+
 	float InterpolateToGridSupport(const glm::vec2& diff, float invCellSize);
 	float BSpline(float input);
 

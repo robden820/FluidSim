@@ -63,9 +63,9 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 
 	//Initialize cell types and solid boundary.
 	mCellType.assign(mNumCells, CellType::eNONE);
-	UpdateCellTypesFromParticles(inData.Get2DParticlePositions());
+	//UpdateCellTypesFromParticles(inData.Get2DParticlePositions());
 
-	// TO DO: initialize solid boundary from file.
+	// TO DO: initialize solid boundary and initial fluid cells from file.
 	for (int index = 0; index < mNumCells; index++)
 	{
 		int x, y;
@@ -74,6 +74,11 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 		if (x == 0 || x == mNumCellWidth - 1 || y == 0 || y == mNumCellHeight - 1)
 		{
 			mCellType[index] = CellType::eSOLID;
+		}
+
+		if (x > 20 && x < 50 && y > 30 && y < 70)
+		{
+			mCellType[index] = CellType::eFLUID;
 		}
 	}
 }
@@ -860,4 +865,5 @@ int MACGrid2D::GetIndexFromXY(int X, int Y) const
 void MACGrid2D::UpdateApplicationData(ApplicationData& inOutData)
 {
 	inOutData.SetCellTypes(mCellType);
+	inOutData.SetCellCenters2D(mCellCenters);
 }

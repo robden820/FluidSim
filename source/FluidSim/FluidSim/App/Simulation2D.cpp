@@ -8,11 +8,13 @@ Simulation2D::Simulation2D(ApplicationData& inOutData)
 	MACGrid2D grid(inOutData);
 	mMACGrid = grid;
 
+	mMACGrid.UpdateApplicationData(inOutData);
+
 	// Initialise new fluid.
 	Fluid2D fluid(inOutData);
 	mFluid = fluid;
 
-	inOutData.SetCellTypes(mMACGrid.GetCellTypes());
+	mFluid.UpdateApplicationData(inOutData);
 }
 
 void Simulation2D::StepSimulation(ApplicationData& inOutData)

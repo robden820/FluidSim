@@ -8,23 +8,47 @@ Fluid2D::Fluid2D(const ApplicationData& inOutData)
 {
 	double start = glfwGetTime();
 	std::cout << "Initializing particles: ";
-	// Initialize particles
-	mParticles.reserve(inOutData.GetNumParticles());
-	mParticlePositions = inOutData.Get2DParticlePositions();
 
-	for (int pIndex = 0; pIndex < inOutData.GetNumParticles(); pIndex++)
-	{
-		Particle2D particle(mParticlePositions[pIndex]);
-		mParticles.push_back(particle);
-	}
+	SeedParticles(inOutData);
 
 	std::cout << "Total : " << glfwGetTime() - start << "\n";
 	std::cout << "------------------------ \n";
 }
 
+void Fluid2D::SeedParticles(const ApplicationData& inOutData)
+{
+	float gridCellSize = inOutData.GetGridCellSize();
+	float halfGridCell = gridCellSize * 0.5f;
+
+	// To do: reserve memory space for particles array.
+
+	for (int cellIndex = 0; cellIndex < inOutData.GetNumGridCells(); cellIndex++)
+	{
+		if (inOutData.GetCellType(cellIndex) == CellType::eFLUID)
+		{
+			// Seed 4 particles at each fluid cell.
+			// To do : allow a user to set this value.
+
+			for (int i = 0; i < 4; i++)
+			{
+				glm::vec2 particlePos = inOutData.GetCellCenter2D(cellIndex);
+
+				particlePos.x += (rand() % 100) * 0.01f * gridCellSize + halfGridCell;
+				particlePos.y += (rand() % 100) * 0.01f * gridCellSize + halfGridCell;
+
+				Particle2D particle(particlePos);
+
+				mParticles.push_back(particle);
+				mParticlePositions.push_back(particlePos);
+			}
+		}
+	}
+}
+
 void Fluid2D::UpdateApplicationData(ApplicationData& inOutData)
 {
 	inOutData.Set2DParticlePositions(mParticlePositions);
+	inOutData.SetNumParticles(mParticles.size());
 }
 
 void Fluid2D::StepParticles(float deltaTime)
