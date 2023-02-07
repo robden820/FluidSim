@@ -1,12 +1,12 @@
 # FluidSim
 
 To do:
- - Add weights to interpolation to/from grid.
  - Parallel computing.
  - - CUDA: to do.
- - Faster linear algebra -> Eigen?
- - - Remove unused parts of Eigen library.
+ - Remove unused parts of Eigen library.
  - Correct handling of solid cells and domain boundaries.
+ - Improve particle seeding. Intialise some grid cells as fluid, then seed particles. Rather than current method of placing particles.
+ - Improve interpolation from grid to particles, B-spline as well?
  
 
 Long term:
