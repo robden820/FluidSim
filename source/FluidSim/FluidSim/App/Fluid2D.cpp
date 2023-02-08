@@ -209,7 +209,7 @@ void Fluid2D::InterpolateToGridBSpline(MACGrid2D& inMACGrid)
 		int x, y;
 		std::tie(x, y) = inMACGrid.GetXYFromIndex(cellIndex);
 
-		for (int i = x - 2; i <= x + 2; i++)
+		for (int i = x - 3; i <= x + 3; i++)
 		{
 			// If there isn't a cell where we are looking, continue.
 			if (i < 0 || i > inMACGrid.GetNumCellsWidth() - 1)
@@ -217,7 +217,7 @@ void Fluid2D::InterpolateToGridBSpline(MACGrid2D& inMACGrid)
 				continue;
 			}
 
-			for (int j = y - 2; j <= y + 2; j++)
+			for (int j = y - 3; j <= y + 3; j++)
 			{
 				// If there isn't a cell where we are looking, continue.
 				if (j < 0 || j > inMACGrid.GetNumCellsHeight() - 1)
@@ -230,9 +230,9 @@ void Fluid2D::InterpolateToGridBSpline(MACGrid2D& inMACGrid)
 				if (inMACGrid.GetCellType(nearbyCellIndex) != CellType::eSOLID)
 				{
 					glm::vec2 particlePos = mParticles[particleIndex].GetPosition();
-					glm::vec2 cellPos = inMACGrid.GetCellCenter(cellIndex);
+					glm::vec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
 
-					glm::vec2 diff = particlePos - cellPos;
+					glm::vec2 diff = particlePos - nearbyCellPos;
 
 					float k = InterpolateToGridSupport(diff, inMACGrid.GetInverseCellSize());
 
