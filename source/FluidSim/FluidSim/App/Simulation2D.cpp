@@ -36,6 +36,8 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	//mFluid.StepParticles(deltaTime);
 	mFluid.StepParticlesRK3(deltaTime, mMACGrid);
 
+	mFluid.DeleteBadParticles(mMACGrid);
+
 	mFluid.UpdateApplicationData(inOutData);
 	mMACGrid.UpdateCellTypesFromParticles(inOutData.Get2DParticlePositions());
 

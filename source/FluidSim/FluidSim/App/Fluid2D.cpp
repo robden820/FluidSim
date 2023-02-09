@@ -190,11 +190,11 @@ void Fluid2D::InterpolateToGridBSpline(MACGrid2D& inMACGrid)
 
 	int numCells = inMACGrid.GetNumCells();
 
-	interpXVelocities.assign(numCells, 0.f);
-	interpYVelocities.assign(numCells, 0.f);
+	interpXVelocities.assign(numCells, 0.0);
+	interpYVelocities.assign(numCells, 0.0);
 
-	contributedXWeights.assign(numCells, 0.f);
-	contributedYWeights.assign(numCells, 0.f);
+	contributedXWeights.assign(numCells, 0.0);
+	contributedYWeights.assign(numCells, 0.0);
 
 	for (int particleIndex = 0; particleIndex < GetNumParticles(); particleIndex++)
 	{
@@ -208,7 +208,8 @@ void Fluid2D::InterpolateToGridBSpline(MACGrid2D& inMACGrid)
 
 		int x, y;
 		std::tie(x, y) = inMACGrid.GetXYFromIndex(cellIndex);
-
+		
+		// Interpolate to cells that may be close enough to particle.
 		for (int i = x - 3; i <= x + 3; i++)
 		{
 			// If there isn't a cell where we are looking, continue.
@@ -358,4 +359,27 @@ int Fluid2D::ClosestCellToParticle(const MACGrid2D& inMACGrid, const Particle2D&
 	glm::vec2 particlePos = particle.GetPosition();
 
 	return inMACGrid.GetClosestCell(particlePos);
+}
+
+void Fluid2D::DeleteBadParticles(const MACGrid2D& inMACGrid)
+{
+	std::vector<Particle2D> safeParticles;
+	std::vector<glm::vec2> safeParticlePositions;
+	safeParticles.reserve(mParticles.size());
+	safeParticlePositions.reserve(mParticlePositions.size());
+
+	for (int pIndex = 0; pIndex < mParticles.size(); pIndex++)
+	{
+		if (ClosestCellToParticle(inMACGrid, mParticles[pIndex]) >= 0)
+		{
+			safeParticles.push_back(mParticles[pIndex]);
+			safeParticlePositions.push_back(mParticlePositions[pIndex]);
+		}
+	}
+
+	safeParticles.shrink_to_fit();
+	safeParticlePositions.shrink_to_fit();
+
+	mParticles = safeParticles;
+	mParticlePositions = safeParticlePositions;
 }

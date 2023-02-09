@@ -30,6 +30,8 @@ public:
 	const Particle2D& GetParticle(int index) const { return mParticles[index]; }
 	size_t GetNumParticles() const { return mParticles.size(); }
 
+	void DeleteBadParticles(const MACGrid2D& inMACGrid);
+
 	// TO DO: remove the use of these functions. Requires updating Fluid class. Will do this when updating Fluid3D.
 	void Update(ApplicationData& inOutData) override {};
 	void InterpolateToGrid() override {};
