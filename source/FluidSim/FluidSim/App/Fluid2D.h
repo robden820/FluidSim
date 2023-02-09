@@ -24,7 +24,9 @@ public:
 
 	void InterpolateToGrid(MACGrid2D& inMACGrid);
 	void InterpolateToGridBSpline(MACGrid2D& inMACGrid);
+
 	void InterpolateFromGrid(const MACGrid2D& inMACGrid);
+	void InterpolateFromGridBSpline(const MACGrid2D& inMACGrid);
 
 	const std::vector<Particle2D>& GetParticles() const { return mParticles; }
 	const Particle2D& GetParticle(int index) const { return mParticles[index]; }
@@ -41,13 +43,16 @@ private:
 
 	void SeedParticles(const ApplicationData& inOutData);
 
-	float InterpolateToGridSupport(const glm::vec2& diff, float invCellSize);
+	float InterpolateSupport(const glm::vec2& diff, float invCellSize);
 	float BSpline(float input);
 
 	int ClosestCellToParticle(const MACGrid2D& inMACGrid, const Particle2D& particle);
 
 	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
+
+	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
+	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
 
 	std::vector<Particle2D> mParticles;
 	std::vector<glm::vec2> mParticlePositions;
