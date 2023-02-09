@@ -25,10 +25,11 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	mFluid.InterpolateToGridBSpline(mMACGrid);
 
 //	mMACGrid.Advect(inOutData);
-
+	mMACGrid.ExtrapolateVelocityField(true);
 	mMACGrid.ApplyForces(deltaTime);
-
+	
 	mMACGrid.Project(inOutData);
+	mMACGrid.ExtrapolateVelocityField(false);
 
 	mFluid.InterpolateFromGrid(mMACGrid);
 

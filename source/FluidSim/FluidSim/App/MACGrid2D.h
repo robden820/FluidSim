@@ -22,6 +22,8 @@ public:
 	void ApplyForces(float deltaTime);
 	void Project(ApplicationData& inOutData);
 
+	void ExtrapolateVelocityField(bool extrapolateIntVelocities);
+
 	int GetNumCells() const { return mNumCellHeight * mNumCellWidth; }
 	int GetNumCellsWidth() const { return mNumCellWidth; }
 	int GetNumCellsHeight() const { return mNumCellHeight; }

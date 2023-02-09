@@ -302,6 +302,210 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 	}
 }
 
+void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
+{
+	int maxSearchDepth = mNumCells;
+	std::vector<int> marker;
+	marker.assign(mNumCells, maxSearchDepth);
+
+	std::vector<int> wavefrontIndices;
+	wavefrontIndices.reserve(mNumCells);
+
+	// Mark known velocities as zero.
+	for (int cellIndex = 0; cellIndex < mNumCells; cellIndex++)
+	{
+		if (mCellType[cellIndex] == CellType::eFLUID)
+		{
+			marker[cellIndex] = 0;
+		}
+	}
+
+	// Initialise first wave for search.
+	for (int cellIndex = 0; cellIndex < mNumCells; cellIndex++)
+	{
+		int x, y;
+		std::tie(x, y) = GetXYFromIndex(cellIndex);
+
+		int numFluidNeighbours = 0;
+
+		if (x > 0)
+		{
+			int left = GetIndexFromXY(x - 1, y);
+			if (marker[left] == 0)
+			{
+				numFluidNeighbours++;
+			}
+		}
+		if (x < mNumCellWidth - 1)
+		{
+			int right = GetIndexFromXY(x + 1, y);
+			if (marker[right] == 0)
+			{
+				numFluidNeighbours++;
+			}
+		}
+		if (y > 0)
+		{
+			int bottom = GetIndexFromXY(x, y - 1);
+			if (marker[bottom] == 0)
+			{
+				numFluidNeighbours++;
+			}
+		}
+		if (y < mNumCellHeight - 1)
+		{
+			int top = GetIndexFromXY(x, y + 1);
+			if (marker[top] == 0)
+			{
+				numFluidNeighbours++;
+			}
+		}
+
+		// If at least one neighbour is a fluid, add the cell to the first wavefront.
+		if (numFluidNeighbours > 0)
+		{
+			marker[cellIndex] = 1;
+			wavefrontIndices.push_back(cellIndex);
+		}
+	}
+
+	int iteration = 0;
+
+	// Breadth first search extrapolation.
+	while (iteration < wavefrontIndices.size())
+	{
+		int cellIndex = wavefrontIndices[iteration];
+		int cellMarker = marker[cellIndex];
+
+		int x, y;
+		std::tie(x, y) = GetXYFromIndex(cellIndex);
+
+		int numSearchedNeighbours = 0;
+		double sumXVel = 0;
+		double sumYVel = 0;
+
+		if (x > 0)
+		{
+			int left = GetIndexFromXY(x - 1, y);
+
+			if (marker[left] < cellMarker)
+			{
+				if (extrapolateIntVelocities)
+				{
+					sumXVel += mIntXVelocities[left];
+					sumYVel += mIntYVelocities[left];
+				}
+				else
+				{
+					sumXVel += mCellXVelocities[left];
+					sumYVel += mCellYVelocities[left];
+				}
+
+				++numSearchedNeighbours;
+			}
+			else if(marker[left] == maxSearchDepth && mCellType[left] != CellType::eSOLID)
+			{
+				marker[left] = cellMarker + 1;
+				wavefrontIndices.push_back(left);
+			}
+		}
+
+		if (x < mNumCellWidth - 1)
+		{
+			int right = GetIndexFromXY(x + 1, y);
+
+			if (marker[right] < cellMarker)
+			{
+				if (extrapolateIntVelocities)
+				{
+					sumXVel += mIntXVelocities[right];
+					sumYVel += mIntYVelocities[right];
+				}
+				else
+				{
+					sumXVel += mCellXVelocities[right];
+					sumYVel += mCellYVelocities[right];
+				}
+
+				++numSearchedNeighbours;
+			}
+			else if(marker[right] == maxSearchDepth && mCellType[right] != CellType::eSOLID)
+			{
+				marker[right] = cellMarker + 1;
+				wavefrontIndices.push_back(right);
+			}
+		}
+
+		if (y > 0)
+		{
+			int bottom = GetIndexFromXY(x, y - 1);
+
+			if (marker[bottom] < cellMarker)
+			{
+				if (extrapolateIntVelocities)
+				{
+					sumXVel += mIntXVelocities[bottom];
+					sumYVel += mIntYVelocities[bottom];
+				}
+				else
+				{
+					sumXVel += mCellXVelocities[bottom];
+					sumYVel += mCellYVelocities[bottom];
+				}
+		
+				++numSearchedNeighbours;
+			}
+			else if(marker[bottom] == maxSearchDepth && mCellType[bottom] != CellType::eSOLID)
+			{
+				marker[bottom] = cellMarker + 1;
+				wavefrontIndices.push_back(bottom);
+			}
+		}
+		
+		if (y < mNumCellHeight - 1)
+		{
+			int top = GetIndexFromXY(x, y + 1);
+
+			if (marker[top] < cellMarker)
+			{
+				if (extrapolateIntVelocities)
+				{
+					sumXVel += mIntXVelocities[top];
+					sumYVel += mIntYVelocities[top];
+				}
+				else
+				{
+					sumXVel += mCellXVelocities[top];
+					sumYVel += mCellYVelocities[top];
+				}
+
+				++numSearchedNeighbours;
+			}
+			else if(marker[top] == maxSearchDepth && mCellType[top] != CellType::eSOLID)
+			{
+				marker[top] = cellMarker + 1;
+				wavefrontIndices.push_back(top);
+			}
+		}
+		
+		if (numSearchedNeighbours > 0)
+		{
+			if (extrapolateIntVelocities)
+			{
+				SetIntXVelocity(cellIndex, sumXVel / numSearchedNeighbours);
+				SetIntYVelocity(cellIndex, sumYVel / numSearchedNeighbours);
+			}
+			else
+			{
+				SetCellXVelocity(cellIndex, sumXVel / numSearchedNeighbours);
+				SetCellYVelocity(cellIndex, sumYVel / numSearchedNeighbours);
+			}
+		}
+
+		++iteration;
+	}
+}
+
 void MACGrid2D::CalculateCellDivergence(float deltaTime)
 {
 	float scale = -mInvCellSize;
@@ -320,11 +524,17 @@ void MACGrid2D::CalculateCellDivergence(float deltaTime)
 			double divergence = 0.0;
 
 			int neighbourRight = GetIndexFromXY(x + 1, y);
-			divergence += mIntXVelocities[neighbourRight] - mIntXVelocities[index];
-
+			if (mCellType[neighbourRight] != CellType::eSOLID)
+			{
+				divergence += mIntXVelocities[neighbourRight] - mIntXVelocities[index];
+			}
+			
 			int neighbourTop = GetIndexFromXY(x, y + 1);
-			divergence += mIntYVelocities[neighbourTop] - mIntYVelocities[index];
-
+			if (mCellType[neighbourTop] != CellType::eSOLID)
+			{
+				divergence += mIntYVelocities[neighbourTop] - mIntYVelocities[index];
+			}
+			
 			divergence *= scale;
 
 			mCellDivergence[index] = divergence;
