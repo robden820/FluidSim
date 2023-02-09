@@ -247,7 +247,7 @@ void MACGrid2D::ApplyForces(float deltaTime)
 {
 	for (int index = 0; index < mNumCells; index++)
 	{
-		if (mCellType[index] == CellType::eFLUID)
+		if (mCellType[index] != CellType::eSOLID)
 		{
 			mIntYVelocities[index] -= 9.8 * deltaTime;
 		}
