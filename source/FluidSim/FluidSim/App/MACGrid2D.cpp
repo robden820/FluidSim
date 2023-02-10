@@ -831,6 +831,11 @@ void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatri
 				if (mCellType[neighbourLeft] == CellType::eFLUID)
 				{
 					++numFluidNeighbours;
+					coefficients.push_back(Eigen::Triplet<double>(neighbourLeft, index, -scale));
+				}
+				else if (mCellType[neighbourLeft] != CellType::eSOLID)
+				{
+					++numFluidNeighbours;
 				}
 			}
 			// Handle right neighbour
@@ -842,7 +847,6 @@ void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatri
 				{
 					++numFluidNeighbours;
 					coefficients.push_back(Eigen::Triplet<double>(neighbourRight, index, -scale));
-					coefficients.push_back(Eigen::Triplet<double>(index, neighbourRight, -scale));
 				}
 				else if (mCellType[neighbourRight] != CellType::eSOLID)
 				{
@@ -857,6 +861,11 @@ void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatri
 				if (mCellType[neighbourBottom] == CellType::eFLUID)
 				{
 					++numFluidNeighbours;
+					coefficients.push_back(Eigen::Triplet<double>(neighbourBottom, index, -scale));
+				}
+				else if (mCellType[neighbourBottom] != CellType::eSOLID)
+				{
+					++numFluidNeighbours;
 				}
 			}
 			// Handle top neighbour
@@ -868,7 +877,6 @@ void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatri
 				{
 					++numFluidNeighbours;
 					coefficients.push_back(Eigen::Triplet<double>(neighbourTop, index, -scale));
-					coefficients.push_back(Eigen::Triplet<double>(index, neighbourTop, -scale));
 				}
 				else if (mCellType[neighbourTop] != CellType::eSOLID)
 				{
