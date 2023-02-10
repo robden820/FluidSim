@@ -4,6 +4,8 @@
 #include "oneapi/tbb.h"
 #include "GLFW/glfw3.h"
 
+#include "Interpolation.h"
+
 Fluid2D::Fluid2D(const ApplicationData& inOutData)
 {
 	double start = glfwGetTime();
@@ -233,7 +235,7 @@ void Fluid2D::InterpolateToGridBSpline(MACGrid2D& inMACGrid)
 					glm::vec2 particlePos = mParticles[particleIndex].GetPosition();
 					glm::vec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
 
-					glm::vec2 diff = particlePos - nearbyCellPos;
+					glm::vec2 diff = particlePos - nearbyCellPos + inMACGrid.GetCellSize() * 0.5f;
 
 					float k = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
@@ -360,7 +362,7 @@ void Fluid2D::InterpolateFromGridBSpline(const MACGrid2D& inMACGrid)
 					glm::vec2 particlePos = mParticles[particleIndex].GetPosition();
 					glm::vec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
 
-					glm::vec2 diff = particlePos - nearbyCellPos;
+					glm::vec2 diff = particlePos - nearbyCellPos + inMACGrid.GetCellSize() * 0.5f;
 
 					float k = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
@@ -385,31 +387,61 @@ glm::dvec2 Fluid2D::InterpolateFromGridCell(const MACGrid2D& inMACGrid, int part
 
 glm::dvec2 Fluid2D::InterpolateFromGridCell(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex)
 {
-	glm::vec2 cellPos = inMACGrid.GetCellCenter(cellIndex);
-
-	glm::vec2 diff = cellPos - particlePosition;
-
-	glm::dvec2 weight = diff * inMACGrid.GetInverseCellSize() + 0.5f;
-
-	double velocityX = inMACGrid.GetCellXVelocity(cellIndex) * weight.x;
-	double velocityY = inMACGrid.GetCellYVelocity(cellIndex) * weight.y;
-
 	int x, y;
 	std::tie(x, y) = inMACGrid.GetXYFromIndex(cellIndex);
 
-	if (x < inMACGrid.GetNumCellsWidth() - 1)
-	{
-		int neighbourRight = inMACGrid.GetIndexFromXY(x + 1, y);
+	double cellSize = inMACGrid.GetCellSize();
 
-		velocityX += inMACGrid.GetCellXVelocity(neighbourRight) * (1 - weight.x);
-	}
-	if (y < inMACGrid.GetNumCellsHeight() - 1)
+	double xVelocities[4][4];
+	double yVelocities[4][4];
+
+	// Initialise all velocities with z zero value in case we are close to the edge of the grid.
+	for (int i = 0; i < 4; i++)
 	{
-		int neighbourTop = inMACGrid.GetIndexFromXY(x, y + 1);
-		velocityY += inMACGrid.GetCellYVelocity(neighbourTop) * (1 - weight.y);
+		for (int j = 0; j < 4; j++)
+		{
+			xVelocities[i][j] = 0.0;
+			yVelocities[i][j] = 0.0;
+		}
 	}
 
-	return glm::dvec2(velocityX, velocityY);
+	// Find velocities for cells nearby where we are testing.
+	for (int i = 0; i < 4; i++)
+	{
+		int indexX = x + i - 1;
+
+		if (indexX < 0 || indexX > inMACGrid.GetNumCellsWidth() - 1)
+		{
+			continue;
+		}
+
+		for (int j = 0; j < 4; j++)
+		{
+			int indexY = y + j - 1;
+
+			if (indexY < 0 || indexY > inMACGrid.GetNumCellsHeight() - 1)
+			{
+				continue;
+			}
+
+			int nearbyCellIndex = inMACGrid.GetIndexFromXY(indexX, indexY);
+
+			xVelocities[j][i] = inMACGrid.GetCellXVelocity(nearbyCellIndex);
+			yVelocities[j][i] = inMACGrid.GetCellYVelocity(nearbyCellIndex);
+		}
+	}
+
+	// Put our particle position within the interval of a single grid cell.
+	glm::vec2 t = particlePosition - inMACGrid.GetCellCenter(cellIndex);
+
+	t.x += cellSize * 0.5;
+	t.y += cellSize * 0.5;
+
+	// Interpolate to find new velocities.
+	double xVel = Interpolation::BicubicInterpolate(xVelocities, cellSize, t);
+	double yVel = Interpolation::BicubicInterpolate(yVelocities, cellSize, t);
+
+	return glm::dvec2(xVel, yVel);
 }
 
 glm::dvec2 Fluid2D::InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex)
