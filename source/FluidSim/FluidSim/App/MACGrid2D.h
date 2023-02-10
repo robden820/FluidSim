@@ -63,7 +63,7 @@ private:
 	void InitializeGrid(const ApplicationData& inData) override;
 	void InitializeGridPressure();
 
-	void CalculateCellDivergence(float deltaTime);
+	void CalculateCellDivergence();
 
 	void UpdateCellPressure(float deltaTime, int maxIterations);
 	void UpdateCellPressureSpare(float deltaTime, int maxIterations);

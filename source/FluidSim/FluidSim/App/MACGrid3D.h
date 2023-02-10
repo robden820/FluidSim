@@ -41,7 +41,7 @@ private:
 	void InitializeGrid(const ApplicationData& inData) override;
 	void InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions);
 
-	void CalculateCellDivergence(float deltaTime) override;
+	void CalculateCellDivergence() override;
 
 	void AdvectCellVelocity(float deltaTime) override;
 	void UpdateCellPressure(float deltaTime, int maxIterations) override;

@@ -29,7 +29,7 @@ class MACGrid
 
 		virtual void InitializeGrid(const ApplicationData& inData) = 0;
 
-		virtual void CalculateCellDivergence(float deltaTime) = 0;
+		virtual void CalculateCellDivergence() = 0;
 
 		virtual void AdvectCellVelocity(float deltaTime) = 0;
 		virtual void UpdateCellPressure(float deltaTime, int maxIterations) = 0;

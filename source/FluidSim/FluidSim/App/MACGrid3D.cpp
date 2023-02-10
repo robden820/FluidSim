@@ -356,7 +356,7 @@ void MACGrid3D::UpdateCellVelocity(float deltaTime)
 	}
 }
 
-void MACGrid3D::CalculateCellDivergence(float deltaTime)
+void MACGrid3D::CalculateCellDivergence()
 {
 	float scale = mInvCellSize;
 
@@ -471,7 +471,7 @@ void MACGrid3D::UpdateCellPressure(float deltaTime, int maxIterations)
 	start = glfwGetTime();
 	std::cout << "Calculate cell divergence: ";
 
-	CalculateCellDivergence(deltaTime);
+	CalculateCellDivergence();
 
 	std::cout << glfwGetTime() - start << "\n";
 	

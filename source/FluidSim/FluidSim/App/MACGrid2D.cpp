@@ -63,7 +63,6 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 
 	//Initialize cell types and solid boundary.
 	mCellType.assign(mNumCells, CellType::eNONE);
-	//UpdateCellTypesFromParticles(inData.Get2DParticlePositions());
 
 	// TO DO: initialize solid boundary and initial fluid cells from file.
 	for (int index = 0; index < mNumCells; index++)
@@ -145,7 +144,7 @@ void MACGrid2D::Project(ApplicationData& inOutData)
 	// Calculate cell divergence
 	double start = glfwGetTime();
 
-	CalculateCellDivergence(deltaTime);
+	CalculateCellDivergence();
 
 	std::cout << "Calculate cell divergence: " << glfwGetTime() - start << "\n";
 
@@ -245,11 +244,13 @@ int MACGrid2D::GetClosestCell(const glm::vec2& inPos) const
 
 void MACGrid2D::ApplyForces(float deltaTime)
 {
+	float gravity = -9.8f * deltaTime;
+
 	for (int index = 0; index < mNumCells; index++)
 	{
 		if (mCellType[index] != CellType::eSOLID)
 		{
-			mIntYVelocities[index] -= 9.8 * deltaTime;
+			mIntYVelocities[index] += gravity;
 		}
 	}
 }
@@ -506,7 +507,7 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 	}
 }
 
-void MACGrid2D::CalculateCellDivergence(float deltaTime)
+void MACGrid2D::CalculateCellDivergence()
 {
 	float scale = -mInvCellSize;
 
@@ -516,6 +517,8 @@ void MACGrid2D::CalculateCellDivergence(float deltaTime)
 	// Calculate negative divergence of each cell.
 	for (int index = 0; index < mNumCells; index++)
 	{
+		mCellDivergence[index] = 0.0;
+
 		if (mCellType[index] == CellType::eFLUID)
 		{
 			int x, y;
@@ -539,10 +542,6 @@ void MACGrid2D::CalculateCellDivergence(float deltaTime)
 
 			mCellDivergence[index] = divergence;
 		}
-		else
-		{
-			mCellDivergence[index] = 0.0;
-		}
 	}
 	
 	// Update divergence to account for solid cells.
@@ -557,28 +556,28 @@ void MACGrid2D::CalculateCellDivergence(float deltaTime)
 
 			if (mCellType[neighbourLeft] == CellType::eSOLID)
 			{
-				mCellDivergence[index] -= scale * (mIntXVelocities[index] - solidXVel);
+				mCellDivergence[index] += scale * (mIntXVelocities[index] - solidXVel);
 			}
 
 			int neighbourRight = GetIndexFromXY(x + 1, y);
 
 			if (mCellType[neighbourRight] == CellType::eSOLID)
 			{
-				mCellDivergence[index] += scale * (mIntXVelocities[neighbourRight] - solidXVel);
+				mCellDivergence[index] -= scale * (mIntXVelocities[neighbourRight] - solidXVel);
 			}
 
 			int neighbourBottom = GetIndexFromXY(x, y - 1);
 
 			if (mCellType[neighbourBottom] == CellType::eSOLID)
 			{
-				mCellDivergence[index] -= scale * (mIntYVelocities[index] - solidYVel);
+				mCellDivergence[index] += scale * (mIntYVelocities[index] - solidYVel);
 			}
 
 			int neighbourTop = GetIndexFromXY(x, y + 1);
 
 			if (mCellType[neighbourTop] == CellType::eSOLID)
 			{
-				mCellDivergence[index] += scale * (mIntYVelocities[neighbourTop] - solidYVel);
+				mCellDivergence[index] -= scale * (mIntYVelocities[neighbourTop] - solidYVel);
 			}
 		}
 	}
@@ -790,7 +789,7 @@ void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
 		divergence[i] = mCellDivergence[i];
 	}
 
-	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>> solver;
+	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower|Eigen::Upper> solver;
 
 	solver.setMaxIterations(maxIterations);
 	solver.setTolerance(TOLERANCE);
@@ -843,6 +842,7 @@ void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatri
 				{
 					++numFluidNeighbours;
 					coefficients.push_back(Eigen::Triplet<double>(neighbourRight, index, -scale));
+					coefficients.push_back(Eigen::Triplet<double>(index, neighbourRight, -scale));
 				}
 				else if (mCellType[neighbourRight] != CellType::eSOLID)
 				{
@@ -868,6 +868,7 @@ void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatri
 				{
 					++numFluidNeighbours;
 					coefficients.push_back(Eigen::Triplet<double>(neighbourTop, index, -scale));
+					coefficients.push_back(Eigen::Triplet<double>(index, neighbourTop, -scale));
 				}
 				else if (mCellType[neighbourTop] != CellType::eSOLID)
 				{
