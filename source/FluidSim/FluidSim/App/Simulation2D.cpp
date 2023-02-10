@@ -21,26 +21,23 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 {
 	float deltaTime = inOutData.GetDeltaTime();
 
-//	mFluid.InterpolateToGrid(mMACGrid);
 	mFluid.InterpolateToGridBSpline(mMACGrid);
 
-//	mMACGrid.Advect(inOutData);
 	mMACGrid.ExtrapolateVelocityField(true);
+
 	mMACGrid.ApplyForces(deltaTime);
 	
 	mMACGrid.Project(inOutData);
+
 	mMACGrid.ExtrapolateVelocityField(false);
 
-	mFluid.InterpolateFromGrid(mMACGrid);
+	mFluid.InterpolateFromGridBSpline(mMACGrid);
 
-	//mFluid.StepParticles(deltaTime);
 	mFluid.StepParticlesRK3(deltaTime, mMACGrid);
 
 	mFluid.DeleteBadParticles(mMACGrid);
 
 	mFluid.UpdateApplicationData(inOutData);
 	mMACGrid.UpdateCellTypesFromParticles(inOutData.Get2DParticlePositions());
-
-	
 	mMACGrid.UpdateApplicationData(inOutData);
 }
