@@ -70,7 +70,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 		int x, y;
 		std::tie(x, y) = GetXYFromIndex(index);
 
-		if (x == 0 || x == mNumCellWidth - 1 || y == 0 || y == mNumCellHeight - 1)
+		if (x < 2 || x > mNumCellWidth - 3 || y < 2 || y > mNumCellHeight - 3)
 		{
 			mCellType[index] = CellType::eSOLID;
 		}
