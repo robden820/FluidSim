@@ -93,6 +93,68 @@ void Fluid2D::StepParticlesRK3(float deltaTime, const MACGrid2D& inMACGrid)
 		mParticles[particleIndex].StepRK3(deltaTime, K1, K2, K3);
 
 		mParticlePositions[particleIndex] = mParticles[particleIndex].GetPosition();
+
+		int finalCellIndex = ClosestCellToParticle(inMACGrid, mParticles[particleIndex]);
+
+		if (inMACGrid.GetCellType(finalCellIndex) == CellType::eSOLID)
+		{
+			// TO DO: project out using directions of level set.
+			int x, y;
+			std::tie(x, y) = inMACGrid.GetXYFromIndex(finalCellIndex);
+
+			if (x < 2)
+			{
+				// Could potentially have penetrated 2 cells deep into solid boundary.
+				for (int i = 0; i < 2; i++)
+				{
+					int right = inMACGrid.GetIndexFromXY(x + 1, y);
+					x++;
+					finalCellIndex = right;
+					mParticlePositions[particleIndex].x += inMACGrid.GetCellSize();
+					//mParticles[particleIndex].SetXVelocity(0.0f);
+				}
+			}
+			else if (x > inMACGrid.GetNumCellsWidth() - 3)
+			{
+				// Could potentially have penetrated 2 cells deep into solid boundary.
+				for (int i = 0; i < 2; i++)
+				{
+					int left = inMACGrid.GetIndexFromXY(x - 1, y);
+					x--;
+					finalCellIndex = left;
+					mParticlePositions[particleIndex].x -= inMACGrid.GetCellSize();
+					//mParticles[particleIndex].SetXVelocity(0.0f);
+				}
+			}
+
+			if (y < 2)
+			{
+				// Could potentially have penetrated 2 cells deep into solid boundary.
+				for (int i = 0; i < 2; i++)
+				{
+					int top = inMACGrid.GetIndexFromXY(x, y + 1);
+					y++;
+					finalCellIndex = top;
+					mParticlePositions[particleIndex].y += inMACGrid.GetCellSize();
+					//mParticles[particleIndex].SetYVelocity(0.0f);
+				}
+			}
+			else if (y > inMACGrid.GetNumCellsHeight() - 3)
+			{
+				// Could potentially have penetrated 2 cells deep into solid boundary.
+				for (int i = 0; i < 2; i++)
+				{
+					int bottom = inMACGrid.GetIndexFromXY(x, y - 1);
+					y--;
+					finalCellIndex = bottom;
+					mParticlePositions[particleIndex].y -= inMACGrid.GetCellSize();
+					//mParticles[particleIndex].SetYVelocity(0.0f);
+				}
+			}
+
+			mParticles[particleIndex].SetVelocity(glm::vec2(0.0f, 0.0f));
+			mParticles[particleIndex].SetPosition(mParticlePositions[particleIndex]);
+		}
 	}
 }
 
