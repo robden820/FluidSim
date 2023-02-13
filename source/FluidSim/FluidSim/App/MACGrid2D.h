@@ -34,6 +34,9 @@ public:
 	const double GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
 	const double GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
 
+	const double GetPrevCellXVelocity(int index) const { return mCellXVelocitiesPrev[index]; }
+	const double GetPrevCellYVelocity(int index) const { return mCellXVelocitiesPrev[index]; }
+
 	void SetCellXVelocity(int index, double inVelocity) { mCellXVelocities[index] = inVelocity; }
 	void SetCellYVelocity(int index, double inVelocity) { mCellYVelocities[index] = inVelocity; }
 
@@ -89,6 +92,9 @@ private:
 
 	std::vector<double> mCellXVelocities; // X velocity of the cell, staggered to the cells left edge.
 	std::vector<double> mCellYVelocities; // Y velocity of the cell, staggered to the cells bottom edge.
+
+	std::vector<double> mCellXVelocitiesPrev;
+	std::vector<double> mCellYVelocitiesPrev;
 
 	// Intermediate cell velocities
 	std::vector<double> mIntXVelocities;

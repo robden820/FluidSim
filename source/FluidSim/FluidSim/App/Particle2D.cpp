@@ -17,5 +17,5 @@ void Particle2D::StepRK3(float deltaTime, const glm::vec2& K1, const glm::vec2& 
 {
 	float scaledDt = deltaTime / 9.0f;
 
-	mPosition += (2.0f * scaledDt * K1) + (3.0f * scaledDt * K2) + (4.0f * scaledDt * K3);
+	mPosition += ((2.0f * K1) + (3.0f * K2) + (4.0f * K3)) * scaledDt;
 }

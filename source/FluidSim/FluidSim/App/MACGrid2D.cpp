@@ -52,6 +52,8 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellPressures.assign(mNumCells, 0.0);
 	mCellXVelocities.assign(mNumCells, 0.0);
 	mCellYVelocities.assign(mNumCells, 0.0);
+	mCellXVelocitiesPrev.assign(mNumCells, 0.0);
+	mCellYVelocitiesPrev.assign(mNumCells, 0.0);
 	mCellDivergence.assign(mNumCells, 0.0);
 	
 	mIntXVelocities.assign(mNumCells, 0.0);
@@ -243,6 +245,9 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 	float solidXVel = 0.0f;
 	float solidYVel = 0.0f;
 	float solidZVel = 0.0f;
+
+	mCellXVelocitiesPrev = mCellXVelocities;
+	mCellYVelocitiesPrev = mCellYVelocities;
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -469,7 +474,7 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 				wavefrontIndices.push_back(top);
 			}
 		}
-		
+
 		if (numSearchedNeighbours > 0)
 		{
 			if (extrapolateIntVelocities)
@@ -756,8 +761,6 @@ void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
 		divergence[i] = mCellDivergence[i];
 	}
 
-	CalculatePreconditionSparse(precon, A);
-
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower|Eigen::Upper> solver;
 
 	solver.setMaxIterations(maxIterations);
@@ -765,8 +768,7 @@ void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
 
 	solver.compute(A);
 
-//	pressure = solver.solve(divergence);
-	pressure = solver.solveWithGuess(divergence, precon);
+	pressure = solver.solve(divergence);
 
 	for (int i = 0; i < mNumCells; i++)
 	{

@@ -24,7 +24,7 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 
 	float deltaTime = inOutData.GetDeltaTime();
 
-	mFluid.InterpolateToGridBSpline(mMACGrid);
+	mFluid.InterpolateToGrid(mMACGrid);
 
 	std::cout << "Interpolate to grid: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
@@ -50,11 +50,13 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	start = glfwGetTime();
 
 	mFluid.InterpolateFromGridBSpline(mMACGrid);
+//	mFluid.InterpolateFromGridBSplineFLIP(mMACGrid);
 
 	std::cout << "Interpolate from grid: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
-	mFluid.StepParticles(deltaTime, mMACGrid);
+//	mFluid.StepParticles(deltaTime, mMACGrid);
+	mFluid.StepParticlesFLIP(deltaTime, mMACGrid);
 
 	std::cout << "Step particles (RK3): " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
