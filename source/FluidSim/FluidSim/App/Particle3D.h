@@ -11,7 +11,7 @@ public:
 
 	Particle3D(const glm::vec3& inPosition, const glm::vec3& inVelocity = glm::vec3(0.0f, 0.0f, 0.0f), float inMass = 1.0f, float inRadius = 0.1f);
 
-	void StepParticle(float deltaTime) override;
+	void StepParticle(float deltaTime);
 
 	const glm::vec3& GetPosition() const { return mPosition; }
 	void SetPosition(glm::vec3 inPos) { mPosition = inPos; }

@@ -1,7 +1,6 @@
 #include "MACGrid2D.h"
 
 #include <iostream>
-#include "GLFW/glfw3.h"
 
 #define TOLERANCE 0.0000001
 #define PRECON_TUNER 0.97
@@ -70,7 +69,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 		int x, y;
 		std::tie(x, y) = GetXYFromIndex(index);
 
-		if (x < 2 || x > mNumCellWidth - 3 || y < 2 || y > mNumCellHeight - 3)
+		if (x < 1 || x > mNumCellWidth - 2 || y < 1 || y > mNumCellHeight - 2)
 		{
 			mCellType[index] = CellType::eSOLID;
 		}
@@ -130,38 +129,20 @@ void MACGrid2D::Advect(ApplicationData& inOutData)
 {
 	float deltaTime = inOutData.GetDeltaTime();
 
-	//Advection
-	double start = glfwGetTime();
 	AdvectCellVelocity(deltaTime);
-
-	std::cout << "MAC: advect: " << glfwGetTime() - start << "\n";
 }
 
 void MACGrid2D::Project(ApplicationData& inOutData)
 {
 	float deltaTime = inOutData.GetDeltaTime();
 
-	// Calculate cell divergence
-	double start = glfwGetTime();
-
 	CalculateCellDivergence();
-
-	std::cout << "Calculate cell divergence: " << glfwGetTime() - start << "\n";
-
-	// Projection step
-	start = glfwGetTime();
 
 	//UpdateCellPressure(deltaTime, 200);
 	UpdateCellPressureSpare(deltaTime, 200);
 
-	std::cout << "MAC: Pressure: " << glfwGetTime() - start << "\n";
-	std::cout << "------------------------------\n";
-
 	// Velocity update
-	start = glfwGetTime();
 	UpdateCellVelocity(deltaTime);
-
-	std::cout << "MAC: cell update: " << glfwGetTime() - start << "\n";
 }
 
 void MACGrid2D::AdvectCellVelocity(float deltaTime)
@@ -593,13 +574,7 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 	Ax.assign(mNumCells, 0.0);
 	Ay.assign(mNumCells, 0.0);
 
-	std::cout << "--------------------------------\n";
-	double start = glfwGetTime();
-	std::cout << "Initialize linear system: ";
-
 	InitializeLinearSystem(deltaTime, Adiagonal, Ax, Ay);
-
-	std::cout << glfwGetTime() - start << "\n";
 
 	// Preconditioned Conjugate Gradient.
 	Eigen::VectorXd newPressure(mNumCells);
@@ -633,20 +608,11 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 	Eigen::VectorXd z(mNumCells);
 	z.fill(0.0);
 
-	start = glfwGetTime();
-	std::cout << "Calculate preconditioner: ";
-
 	std::vector<double> precon;
 	precon.assign(mNumCells, 0.0);
 	CalculatePreconditioner(precon, Adiagonal, Ax, Ay);
 
-	std::cout << glfwGetTime() - start << "\n";
-	start = glfwGetTime();
-	std::cout << "Apply preconditioner: ";
-
 	ApplyPreconditioner(z, residuals, precon, Ax, Ay);
-
-	std::cout << glfwGetTime() - start << "\n";
 
 	Eigen::VectorXd search = z;
 
@@ -783,11 +749,14 @@ void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
 
 	Eigen::VectorXd divergence(mNumCells);
 	Eigen::VectorXd pressure(mNumCells);
+	Eigen::VectorXd precon(mNumCells);
 
 	for (int i = 0; i < mNumCells; i++)
 	{
 		divergence[i] = mCellDivergence[i];
 	}
+
+	CalculatePreconditionSparse(precon, A);
 
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower|Eigen::Upper> solver;
 
@@ -796,7 +765,8 @@ void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
 
 	solver.compute(A);
 
-	pressure = solver.solve(divergence);
+//	pressure = solver.solve(divergence);
+	pressure = solver.solveWithGuess(divergence, precon);
 
 	for (int i = 0; i < mNumCells; i++)
 	{
@@ -983,7 +953,7 @@ void MACGrid2D::CalculatePreconditioner(std::vector<double>& inOutPrecon, const 
 
 			if (newPrecon < PRECON_SAFETY * inDiag[index])
 			{
-				newPrecon =  inDiag[index];
+				newPrecon = inDiag[index];
 			}
 
 			inOutPrecon[index] = 1.0 / sqrt(newPrecon);

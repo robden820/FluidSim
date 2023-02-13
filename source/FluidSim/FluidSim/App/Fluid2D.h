@@ -18,8 +18,7 @@ public:
 
 	Fluid2D(const ApplicationData& inOutData);
 
-	void StepParticles(float deltaTime);
-	void StepParticlesRK3(float deltaTime, const MACGrid2D& inMACGrid);
+	void StepParticles(float deltaTime, const MACGrid2D& inMACGrid); // RK3
 	void UpdateApplicationData(ApplicationData& inOutData);
 
 	void InterpolateToGrid(MACGrid2D& inMACGrid);

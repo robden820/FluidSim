@@ -2,19 +2,12 @@
 #include <iostream>
 
 #include "oneapi/tbb.h"
-#include "GLFW/glfw3.h"
 
 #include "Interpolation.h"
 
 Fluid2D::Fluid2D(const ApplicationData& inOutData)
 {
-	double start = glfwGetTime();
-	std::cout << "Initializing particles: ";
-
 	SeedParticles(inOutData);
-
-	std::cout << "Total : " << glfwGetTime() - start << "\n";
-	std::cout << "------------------------ \n";
 }
 
 void Fluid2D::SeedParticles(const ApplicationData& inOutData)
@@ -53,17 +46,9 @@ void Fluid2D::UpdateApplicationData(ApplicationData& inOutData)
 	inOutData.SetNumParticles(mParticles.size());
 }
 
-void Fluid2D::StepParticles(float deltaTime)
+void Fluid2D::StepParticles(float deltaTime, const MACGrid2D& inMACGrid)
 {
-	for (int p = 0; p < GetNumParticles(); p++)
-	{
-		mParticles[p].StepParticle(deltaTime);
-		mParticlePositions[p] = mParticles[p].GetPosition();
-	}
-}
-
-void Fluid2D::StepParticlesRK3(float deltaTime, const MACGrid2D& inMACGrid)
-{
+	// RK3
 	for (int particleIndex = 0; particleIndex < GetNumParticles(); particleIndex++)
 	{
 		int cellIndex = ClosestCellToParticle(inMACGrid, mParticles[particleIndex]);
@@ -96,60 +81,36 @@ void Fluid2D::StepParticlesRK3(float deltaTime, const MACGrid2D& inMACGrid)
 
 		int finalCellIndex = ClosestCellToParticle(inMACGrid, mParticles[particleIndex]);
 
-		if (inMACGrid.GetCellType(finalCellIndex) == CellType::eSOLID)
+		if (finalCellIndex >= 0 && inMACGrid.GetCellType(finalCellIndex) == CellType::eSOLID)
 		{
 			// TO DO: project out using directions of level set.
 			int x, y;
 			std::tie(x, y) = inMACGrid.GetXYFromIndex(finalCellIndex);
 
-			if (x < 2)
+			if (x < 1)
 			{
-				// Could potentially have penetrated 2 cells deep into solid boundary.
-				for (int i = 0; i < 2; i++)
-				{
-					int right = inMACGrid.GetIndexFromXY(x + 1, y);
-					x++;
-					finalCellIndex = right;
-					mParticlePositions[particleIndex].x += inMACGrid.GetCellSize();
-					//mParticles[particleIndex].SetXVelocity(0.0f);
-				}
+				int right = inMACGrid.GetIndexFromXY(x + 1, y);
+				x++;
+				mParticlePositions[particleIndex].x += inMACGrid.GetCellSize();
 			}
-			else if (x > inMACGrid.GetNumCellsWidth() - 3)
+			else if (x > inMACGrid.GetNumCellsWidth() - 2)
 			{
-				// Could potentially have penetrated 2 cells deep into solid boundary.
-				for (int i = 0; i < 2; i++)
-				{
-					int left = inMACGrid.GetIndexFromXY(x - 1, y);
-					x--;
-					finalCellIndex = left;
-					mParticlePositions[particleIndex].x -= inMACGrid.GetCellSize();
-					//mParticles[particleIndex].SetXVelocity(0.0f);
-				}
+				int left = inMACGrid.GetIndexFromXY(x - 1, y);
+				x--;
+				mParticlePositions[particleIndex].x -= inMACGrid.GetCellSize();
 			}
 
-			if (y < 2)
+			if (y < 1)
 			{
-				// Could potentially have penetrated 2 cells deep into solid boundary.
-				for (int i = 0; i < 2; i++)
-				{
-					int top = inMACGrid.GetIndexFromXY(x, y + 1);
-					y++;
-					finalCellIndex = top;
-					mParticlePositions[particleIndex].y += inMACGrid.GetCellSize();
-					//mParticles[particleIndex].SetYVelocity(0.0f);
-				}
+				int top = inMACGrid.GetIndexFromXY(x, y + 1);
+				y++;
+				mParticlePositions[particleIndex].y += inMACGrid.GetCellSize();
 			}
-			else if (y > inMACGrid.GetNumCellsHeight() - 3)
+			else if (y > inMACGrid.GetNumCellsHeight() - 2)
 			{
-				// Could potentially have penetrated 2 cells deep into solid boundary.
-				for (int i = 0; i < 2; i++)
-				{
-					int bottom = inMACGrid.GetIndexFromXY(x, y - 1);
-					y--;
-					finalCellIndex = bottom;
-					mParticlePositions[particleIndex].y -= inMACGrid.GetCellSize();
-					//mParticles[particleIndex].SetYVelocity(0.0f);
-				}
+				int bottom = inMACGrid.GetIndexFromXY(x, y - 1);
+				y--;
+				mParticlePositions[particleIndex].y -= inMACGrid.GetCellSize();
 			}
 
 			mParticles[particleIndex].SetVelocity(glm::vec2(0.0f, 0.0f));
@@ -515,6 +476,7 @@ glm::dvec2 Fluid2D::InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, i
 
 glm::dvec2 Fluid2D::InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex)
 {
+	// TO DO
 	return glm::vec2(0.0, 0.0);
 }
 
