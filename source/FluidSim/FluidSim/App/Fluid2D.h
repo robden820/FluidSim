@@ -18,17 +18,16 @@ public:
 
 	Fluid2D(const ApplicationData& inOutData);
 
-	void StepParticles(float deltaTime, const MACGrid2D& inMACGrid); // RK3
-	void StepParticlesFLIP(float deltaTime, const MACGrid2D& inMACGrid);
+	// Blend value is the weight of FLIP/PIC blend. A value of 1 is pure FLIP, a value of 0 is pure PIC.
+	void StepParticles(float deltaTime, const MACGrid2D& inMACGrid, float blend = 0.95f); // RK3
+
 	void UpdateApplicationData(ApplicationData& inOutData);
 
 	void InterpolateToGrid(MACGrid2D& inMACGrid);
-
-	void InterpolateFromGrid(const MACGrid2D& inMACGrid);
-	void InterpolateFromGridBSpline(const MACGrid2D& inMACGrid);
-
-	void InterpolateFromGridFLIP(const MACGrid2D& inMACGrid);
-	void InterpolateFromGridBSplineFLIP(const MACGrid2D& inMACGrid);
+	
+	// Blend value is the weight of FLIP/PIC blend. A value of 1 is pure FLIP, a value of 0 is pure PIC.
+	void InterpolateFromGrid(const MACGrid2D& inMACGrid, float blend = 0.95f);
+	void InterpolateFromGridBSpline(const MACGrid2D& inMACGrid, float blend = 0.95f);
 
 	const std::vector<Particle2D>& GetParticles() const { return mParticles; }
 	const Particle2D& GetParticle(int index) const { return mParticles[index]; }
@@ -50,14 +49,14 @@ private:
 
 	int ClosestCellToParticle(const MACGrid2D& inMACGrid, const Particle2D& particle);
 
-	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
+	glm::dvec2 InterpolateFromGridCellPIC(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
+	glm::dvec2 InterpolateFromGridCellPIC(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
 
 	glm::dvec2 InterpolateFromGridCellFLIP(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 	glm::dvec2 InterpolateFromGridCellFLIP(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
 
-	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
+	glm::dvec2 InterpolateFromGridCellBSplinePIC(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
+	glm::dvec2 InterpolateFromGridCellBSplinePIC(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
 
 	glm::dvec2 InterpolateFromGridCellBSplineFLIP(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 	glm::dvec2 InterpolateFromGridCellBSplineFLIP(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
