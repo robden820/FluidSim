@@ -52,8 +52,8 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellPressures.assign(mNumCells, 0.0);
 	mCellXVelocities.assign(mNumCells, 0.0);
 	mCellYVelocities.assign(mNumCells, 0.0);
-	mCellXVelocitiesPrev.assign(mNumCells, 0.0);
-	mCellYVelocitiesPrev.assign(mNumCells, 0.0);
+	mCellXVelocitiesDiff.assign(mNumCells, 0.0);
+	mCellYVelocitiesDiff.assign(mNumCells, 0.0);
 	mCellDivergence.assign(mNumCells, 0.0);
 	
 	mIntXVelocities.assign(mNumCells, 0.0);
@@ -143,7 +143,6 @@ void MACGrid2D::Project(ApplicationData& inOutData)
 	//UpdateCellPressure(deltaTime, 200);
 	UpdateCellPressureSpare(deltaTime, 200);
 
-	// Velocity update
 	UpdateCellVelocity(deltaTime);
 }
 
@@ -246,8 +245,8 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 	float solidYVel = 0.0f;
 	float solidZVel = 0.0f;
 
-	mCellXVelocitiesPrev = mCellXVelocities;
-	mCellYVelocitiesPrev = mCellYVelocities;
+	std::vector<double> cellXVelocitiesPrev = mCellXVelocities;
+	std::vector<double> cellYVelocitiesPrev = mCellYVelocities;
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -286,6 +285,12 @@ void MACGrid2D::UpdateCellVelocity(float deltaTime)
 				}
 			}
 		}
+	}
+
+	for (int cellIndex = 0; cellIndex < mNumCells; cellIndex++)
+	{
+		mCellXVelocitiesDiff[cellIndex] = mCellXVelocities[cellIndex] - cellXVelocitiesPrev[cellIndex];
+		mCellYVelocitiesDiff[cellIndex] = mCellYVelocities[cellIndex] - cellYVelocitiesPrev[cellIndex];
 	}
 }
 

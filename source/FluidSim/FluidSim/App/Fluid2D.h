@@ -59,6 +59,9 @@ private:
 	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
 
+	glm::dvec2 InterpolateFromGridCellBSplineFLIP(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
+	glm::dvec2 InterpolateFromGridCellBSplineFLIP(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
+
 	void ProjectParticleToFluid(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 
 	std::vector<Particle2D> mParticles;

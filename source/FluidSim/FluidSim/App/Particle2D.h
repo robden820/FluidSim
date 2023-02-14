@@ -16,8 +16,8 @@ public:
 	const glm::vec2& GetPosition() const { return mPosition; }
 	void SetPosition(const glm::vec2& inPos) { mPosition = inPos; }
 
-	const glm::vec2& GetVelocity() const { return mVelocity; }
-	void SetVelocity(const glm::vec2& inVel) { mVelocity = inVel; }
+	const glm::dvec2& GetVelocity() const { return mVelocity; }
+	void SetVelocity(const glm::dvec2& inVel) { mVelocity = inVel; }
 	void SetXVelocity(float inXVel) { mVelocity.x = inXVel; }
 	void SetYVelocity(float inYVel) { mVelocity.y = inYVel; }
 
@@ -28,7 +28,7 @@ public:
 
 private:
 	glm::vec2 mPosition;
-	glm::vec2 mVelocity;
+	glm::dvec2 mVelocity;
 	glm::vec2 mAcceleration;
 
 	glm::vec2 mForceAccumulator; // For applying non-gravitational forces.
