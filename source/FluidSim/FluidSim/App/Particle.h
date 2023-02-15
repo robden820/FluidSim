@@ -7,11 +7,11 @@ class Particle
 	public:
 		virtual ~Particle() = default;
 
-		float GetMass() const { return mMass; };
-		float GetRadius() const { return mRadius; };
+		double GetMass() const { return mMass; };
+		double GetRadius() const { return mRadius; };
 
 	protected:
 
-		float mMass;
-		float mRadius;
+		double mMass;
+		double mRadius;
 };

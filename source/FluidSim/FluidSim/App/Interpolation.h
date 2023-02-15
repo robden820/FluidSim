@@ -12,7 +12,7 @@ namespace Interpolation
 	double TricubicInterpolate();
 
 	double FiniteDifference(double point0, double point1, double intervalSize); // Returns tangent gradient at point 0.
-	double CardinalSpline(double point0, double point2, double intervalSize, float tension);   // Returns tangent gradient at point 1.
+	double CardinalSpline(double point0, double point2, double intervalSize, double tension);   // Returns tangent gradient at point 1.
 	double CatmullRomSpline(double point0, double point2, double intervalSize); // Returns tangent gradient at point 1.
 
 	// Used for normalized interpolation interval - [0,1].
@@ -21,6 +21,6 @@ namespace Interpolation
 	double NTricubicInterpolate();
 
 	double NFiniteDifference(double point0, double point1); // Returns tangent gradient at point 0.
-	double NCardinalSpline(double point0, double point2, float tension);   // Returns tangent gradient at point 1.
+	double NCardinalSpline(double point0, double point2, double tension);   // Returns tangent gradient at point 1.
 	double NCatmullRomSpline(double point0, double point2); // Returns tangent gradient at point 1.
 }

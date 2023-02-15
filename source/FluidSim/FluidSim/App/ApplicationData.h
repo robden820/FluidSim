@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include "glm/glm.hpp"
@@ -7,7 +8,7 @@
 // Class that holds all data relevant to different parts of the application.
 // All application components read/write data here, so reduces dependencies on each other.
 
-enum CellType
+enum class CellType : int
 {
 	eFLUID = 0,
 	eSOLID = 1,
@@ -24,11 +25,11 @@ class ApplicationData
 		// -------------------------------------------------- //
 		// Simulation Data
 	public:
-		float GetDeltaTime() { return mDeltaTime; }
-		void SetDeltaTime(float inDeltaTime) { mDeltaTime = inDeltaTime; }
+		double GetDeltaTime() { return mDeltaTime; }
+		void SetDeltaTime(double inDeltaTime) { mDeltaTime = inDeltaTime; }
 
 	private:
-		float mDeltaTime;
+		double mDeltaTime;
 
 		// -------------------------------------------------- //
 		// Fluid Data
@@ -36,24 +37,29 @@ class ApplicationData
 		int GetNumParticles() const { return mNumParticles; }
 		void SetNumParticles(int inNumParticles);
 
-		float GetFluidDensity() const { return mFluidDensity; }
-		void SetFluidDensity(float inDensity) { mFluidDensity = inDensity; }
+		double GetFluidDensity() const { return mFluidDensity; }
+		void SetFluidDensity(double inDensity) { mFluidDensity = inDensity; }
 
-		const std::vector<glm::vec2>& Get2DParticlePositions() const { return mParticlePositions2D; }
-		const glm::vec2& Get2DParticlePosition(int index) const;
-		void Set2DParticlePositions(const std::vector<glm::vec2>& inPositions);
+		double GetFLIPBlend() const { return mFLIPBlend; }
+		void SetFLIPBlend(double inBlend) { mFLIPBlend = std::clamp(inBlend, 0.0, 1.0); }
 
-		const std::vector<glm::vec3>& Get3DParticlePositions() const { return mParticlePositions3D; }
-		const glm::vec3& Get3DParticlePosition(int index) const;
-		void Set3DParticlePositions(const std::vector<glm::vec3>& inPositions);
+		const std::vector<glm::dvec2>& Get2DParticlePositions() const { return mParticlePositions2D; }
+		const glm::dvec2& Get2DParticlePosition(int index) const;
+		void Set2DParticlePositions(const std::vector<glm::dvec2>& inPositions);
+
+		const std::vector<glm::dvec3>& Get3DParticlePositions() const { return mParticlePositions3D; }
+		const glm::dvec3& Get3DParticlePosition(int index) const;
+		void Set3DParticlePositions(const std::vector<glm::dvec3>& inPositions);
 
 	private:
 		int mNumParticles;
 
-		float mFluidDensity;
+		double mFluidDensity;
 
-		std::vector<glm::vec2> mParticlePositions2D;
-		std::vector<glm::vec3> mParticlePositions3D;
+		double mFLIPBlend;
+
+		std::vector<glm::dvec2> mParticlePositions2D;
+		std::vector<glm::dvec3> mParticlePositions3D;
 
 	// -------------------------------------------------- //
 	// Grid Data
@@ -68,32 +74,32 @@ class ApplicationData
 		void SetNumGridCellsLength(int inNumCellsLength) { mNumGridCellsLength = inNumCellsLength; }
 		void UpdateNumGridCells(); // Call after setting number of grid cells in each dimension to reserve vector memory.
 
-		float GetGridLeft() const { return mGridLeft; }
-		float GetGridBottom() const { return mGridBottom; }
-		float GetGridBack() const { return mGridBack; }
+		double GetGridLeft() const { return mGridLeft; }
+		double GetGridBottom() const { return mGridBottom; }
+		double GetGridBack() const { return mGridBack; }
 
-		void SetGridLeft(float inGridLeft) { mGridLeft = inGridLeft; }
-		void SetGridBottom(float inGridBottom) { mGridBottom = inGridBottom; }
-		void SetGridBack(float inGridBack) { mGridBack = inGridBack; }
+		void SetGridLeft(double inGridLeft) { mGridLeft = inGridLeft; }
+		void SetGridBottom(double inGridBottom) { mGridBottom = inGridBottom; }
+		void SetGridBack(double inGridBack) { mGridBack = inGridBack; }
 
-		float GetGridCellSize() const { return mGridCellSize; }
-		void SetGridCellSize(float inGridCellSize) { mGridCellSize = inGridCellSize; }
+		double GetGridCellSize() const { return mGridCellSize; }
+		void SetGridCellSize(double inGridCellSize) { mGridCellSize = inGridCellSize; }
 
-		float GetGridWidth() const { return mNumGridCellsWidth * mGridCellSize; }
-		float GetGridHeight() const { return mNumGridCellsHeight * mGridCellSize; }
-		float GetGridLength() const { return mNumGridCellsLength * mGridCellSize; }
+		double GetGridWidth() const { return mNumGridCellsWidth * mGridCellSize; }
+		double GetGridHeight() const { return mNumGridCellsHeight * mGridCellSize; }
+		double GetGridLength() const { return mNumGridCellsLength * mGridCellSize; }
 
 		const std::vector<CellType>& GetCellTypes() const { return mCellTypes; }
 		CellType GetCellType(int index) const;
 		void SetCellTypes(const std::vector<CellType>& inCellTypes);
 
-		const std::vector<glm::vec2>& GetCellCenters2D() const { return mCellCenters2D; }
-		const glm::vec2& GetCellCenter2D(int index) const;
-		void SetCellCenters2D(const std::vector<glm::vec2>& inCellCenters);
+		const std::vector<glm::dvec2>& GetCellCenters2D() const { return mCellCenters2D; }
+		const glm::dvec2& GetCellCenter2D(int index) const;
+		void SetCellCenters2D(const std::vector<glm::dvec2>& inCellCenters);
 
-		const std::vector<glm::vec3>& GetCellCenters3D() const { return mCellCenters3D; }
-		const glm::vec3& GetCellCenter3D(int index) const;
-		void SetCellCenters3D(const std::vector<glm::vec3>& inCellCenters);
+		const std::vector<glm::dvec3>& GetCellCenters3D() const { return mCellCenters3D; }
+		const glm::dvec3& GetCellCenter3D(int index) const;
+		void SetCellCenters3D(const std::vector<glm::dvec3>& inCellCenters);
 
 	private:
 		int mNumGridCellsWidth = 1;
@@ -102,15 +108,15 @@ class ApplicationData
 
 		int mNumGridCells;
 
-		float mGridLeft;
-		float mGridBottom;
-		float mGridBack;
+		double mGridLeft;
+		double mGridBottom;
+		double mGridBack;
 
-		float mGridCellSize; // Only support grid with regular sized cells;
+		double mGridCellSize; // Only support grid with regular sized cells;
 
 		std::vector<CellType> mCellTypes;
-		std::vector<glm::vec2> mCellCenters2D;
-		std::vector<glm::vec3> mCellCenters3D;
+		std::vector<glm::dvec2> mCellCenters2D;
+		std::vector<glm::dvec3> mCellCenters3D;
 
 	// -------------------------------------------------- //
 	// Rendering Data

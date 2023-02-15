@@ -20,18 +20,18 @@ public:
 
 	int GetNumCells() const override { return mNumCellWidth * mNumCellHeight * mNumCellLength; }
 
-	const glm::vec3& GetCellCenter(int index) const { return mCellCenters[index]; }
-	int GetClosestCell(const glm::vec3& inPosition);
+	const glm::dvec3& GetCellCenter(int index) const { return mCellCenters[index]; }
+	int GetClosestCell(const glm::dvec3& inPosition);
 
-	const float GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
-	const float GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
-	const float GetCellZVelocity(int index) const { return mCellZVelocities[index]; }
+	const double GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
+	const double GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
+	const double GetCellZVelocity(int index) const { return mCellZVelocities[index]; }
 
-	void SetCellXVelocity(int index, float inVelocity) { mCellXVelocities[index] = inVelocity; }
-	void SetCellYVelocity(int index, float inVelocity) { mCellYVelocities[index] = inVelocity; }
-	void SetCellZVelocity(int index, float inVelocity) { mCellZVelocities[index] = inVelocity; }
+	void SetCellXVelocity(int index, double inVelocity) { mCellXVelocities[index] = inVelocity; }
+	void SetCellYVelocity(int index, double inVelocity) { mCellYVelocities[index] = inVelocity; }
+	void SetCellZVelocity(int index, double inVelocity) { mCellZVelocities[index] = inVelocity; }
 
-	const CellType GetCellTypeFromPosition(const glm::vec3& inPosition);
+	const CellType GetCellTypeFromPosition(const glm::dvec3& inPosition);
 
 	std::tuple<int, int, int> GetXYZFromIndex(int index);
 	int GetIndexFromXYZ(int X, int Y, int Z);
@@ -39,38 +39,38 @@ public:
 private:
 
 	void InitializeGrid(const ApplicationData& inData) override;
-	void InitializeCellsFromParticles(const std::vector<glm::vec3>& inParticlePositions);
+	void InitializeCellsFromParticles(const std::vector<glm::dvec3>& inParticlePositions);
 
 	void CalculateCellDivergence() override;
 
-	void AdvectCellVelocity(float deltaTime) override;
-	void UpdateCellPressure(float deltaTime, int maxIterations) override;
-	void UpdateCellVelocity(float deltaTime) override;
+	void AdvectCellVelocity(double deltaTime) override;
+	void UpdateCellPressure(double deltaTime, int maxIterations) override;
+	void UpdateCellVelocity(double deltaTime) override;
 
-	void InitializeLinearSystem(float deltaTime, std::vector<float>& inDiag, std::vector<float>& inX, std::vector<float>& inY, std::vector<float>& inZ);
+	void InitializeLinearSystem(double deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY, std::vector<double>& inZ);
 
-	void CalculatePreconditioner(std::vector<float>& inOutPrecon, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
+	void CalculatePreconditioner(std::vector<double>& inOutPrecon, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY, const std::vector<double>& inZ);
 
-	void ApplyA(float deltaTime, std::vector<float>& outResult, const std::vector<float>& inVec, const std::vector<float>& inDiag, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
-	void ApplyPreconditioner(std::vector<float>& outResult, const std::vector<double>& inResidual, const std::vector<float>& inPrecon, const std::vector<float>& inX, const std::vector<float>& inY, const std::vector<float>& inZ);
+	void ApplyA(double deltaTime, std::vector<double>& outResult, const std::vector<double>& inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY, const std::vector<double>& inZ);
+	void ApplyPreconditioner(std::vector<double>& outResult, const std::vector<double>& inResidual, const std::vector<double>& inPrecon, const std::vector<double>& inX, const std::vector<double>& inY, const std::vector<double>& inZ);
 
 	int mNumCellWidth;
 	int mNumCellLength;
 	int mNumCellHeight;
 
-	float dLeft;
-	float dBottom;
-	float dBack;
+	double dLeft;
+	double dBottom;
+	double dBack;
 
-	std::vector<glm::vec3> mCellCenters;
+	std::vector<glm::dvec3> mCellCenters;
 
-	std::vector<float> mCellXVelocities;
-	std::vector<float> mCellYVelocities;
-	std::vector<float> mCellZVelocities;
+	std::vector<double> mCellXVelocities;
+	std::vector<double> mCellYVelocities;
+	std::vector<double> mCellZVelocities;
 
 	// Intermediate cell velocities for calculations.
-	std::vector<float> mIntXVelocities;
-	std::vector<float> mIntYVelocities;
-	std::vector<float> mIntZVelocities;
+	std::vector<double> mIntXVelocities;
+	std::vector<double> mIntYVelocities;
+	std::vector<double> mIntZVelocities;
 
 };

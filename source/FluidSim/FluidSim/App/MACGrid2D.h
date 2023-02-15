@@ -19,7 +19,7 @@ public:
 	void Update(ApplicationData& inOutData);
 
 	void Advect(ApplicationData& inOutData);
-	void ApplyForces(float deltaTime);
+	void ApplyForces(double deltaTime);
 	void Project(ApplicationData& inOutData);
 
 	void ExtrapolateVelocityField(bool extrapolateIntVelocities);
@@ -28,11 +28,14 @@ public:
 	int GetNumCellsWidth() const { return mNumCellWidth; }
 	int GetNumCellsHeight() const { return mNumCellHeight; }
 
-	const glm::vec2& GetCellCenter(int index) const { return mCellCenters[index]; }
-	int GetClosestCell(const glm::vec2& inPos) const;
+	const glm::dvec2& GetCellCenter(int index) const { return mCellCenters[index]; }
+	int GetClosestCell(const glm::dvec2& inPos) const;
 
 	const double GetCellXVelocity(int index) const { return mCellXVelocities[index]; }
 	const double GetCellYVelocity(int index) const { return mCellYVelocities[index]; }
+
+	const double GetCellXVelocityDiff(int index) const { return mCellXVelocitiesDiff[index]; }
+	const double GetCellYVelocityDiff(int index) const { return mCellYVelocitiesDiff[index]; }
 
 	void SetCellXVelocity(int index, double inVelocity) { mCellXVelocities[index] = inVelocity; }
 	void SetCellYVelocity(int index, double inVelocity) { mCellYVelocities[index] = inVelocity; }
@@ -41,20 +44,20 @@ public:
 	void SetIntYVelocity(int index, double inVelocity) { mIntYVelocities[index] = inVelocity; }
 
 	const double GetCellPressure(int index) const { return mCellPressures[index]; }
-	void SetCellPressure(int index, float inPressure) { mCellPressures[index] = inPressure; }
+	void SetCellPressure(int index, double inPressure) { mCellPressures[index] = inPressure; }
 
 	const CellType GetCellType(int index) const { return mCellType[index]; }
 	const std::vector<CellType>& GetCellTypes() const { return mCellType; }
-	const CellType GetCellTypeFromPosition (const glm::vec2& inPos) const;
+	const CellType GetCellTypeFromPosition (const glm::dvec2& inPos) const;
 	void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
 
 	std::tuple<int, int> GetXYFromIndex(int index) const;
 	int GetIndexFromXY(int X, int Y) const;
 
-	float GetCellSize() const { return mCellSize; }
-	float GetInverseCellSize() const { return mInvCellSize; }
+	double GetCellSize() const { return mCellSize; }
+	double GetInverseCellSize() const { return mInvCellSize; }
 
-	void UpdateCellTypesFromParticles(const std::vector<glm::vec2>& inParticlePositions);
+	void UpdateCellTypesFromParticles(const std::vector<glm::dvec2>& inParticlePositions);
 
 	void UpdateApplicationData(ApplicationData& inOutData);
 
@@ -65,30 +68,33 @@ private:
 
 	void CalculateCellDivergence();
 
-	void UpdateCellPressure(float deltaTime, int maxIterations);
-	void UpdateCellPressureSpare(float deltaTime, int maxIterations);
+	void UpdateCellPressure(double deltaTime, int maxIterations);
+	void UpdateCellPressureSpare(double deltaTime, int maxIterations);
 
-	void AdvectCellVelocity(float deltaTime);
-	void UpdateCellVelocity(float deltaTime);
+	void AdvectCellVelocity(double deltaTime);
+	void UpdateCellVelocity(double deltaTime);
 
-	void InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY);
-	void InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<double>& A);
+	void InitializeLinearSystem(double deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY);
+	void InitializeLinearSystemSparse(double deltaTime, Eigen::SparseMatrix<double>& A);
 
 	void CalculatePreconditioner(std::vector<double>& inOutPrecon, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
 
-	void ApplyA(float deltaTime, Eigen::VectorXd& outResult, const Eigen::VectorXd &inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
+	void ApplyA(double deltaTime, Eigen::VectorXd& outResult, const Eigen::VectorXd &inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY);
 	void ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::VectorXd& inResidual, const std::vector<double>& inPrecon, const std::vector<double>& inX, const std::vector<double>& inY);
 
 	int mNumCellWidth;
 	int mNumCellHeight;
 
-	float dLeft;
-	float dBottom;
+	double dLeft;
+	double dBottom;
 
-	std::vector<glm::vec2> mCellCenters;
+	std::vector<glm::dvec2> mCellCenters;
 
 	std::vector<double> mCellXVelocities; // X velocity of the cell, staggered to the cells left edge.
 	std::vector<double> mCellYVelocities; // Y velocity of the cell, staggered to the cells bottom edge.
+
+	std::vector<double> mCellXVelocitiesDiff;
+	std::vector<double> mCellYVelocitiesDiff;
 
 	// Intermediate cell velocities
 	std::vector<double> mIntXVelocities;

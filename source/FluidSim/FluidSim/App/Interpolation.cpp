@@ -61,7 +61,7 @@ double Interpolation::FiniteDifference(double point0,double point1, double inter
 	return ((p0p1 / intervalSize) - (p1p0 / intervalSize)) * 0.5;
 }
 
-double Interpolation::CardinalSpline(double point0, double point2, double intervalSize, float tension)
+double Interpolation::CardinalSpline(double point0, double point2, double intervalSize, double tension)
 {
 	if (tension < 0 || tension > 1)
 	{
@@ -86,7 +86,7 @@ double Interpolation::NFiniteDifference(double point0, double point1)
 	return point1 - point0;
 }
 
-double Interpolation::NCardinalSpline(double point0, double point2, float tension)
+double Interpolation::NCardinalSpline(double point0, double point2, double tension)
 {
 	if (tension < 0 || tension > 1)
 	{

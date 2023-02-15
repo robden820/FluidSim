@@ -13,6 +13,13 @@
 class Fluid
 {
 	public:
+
+		enum class SimulationType : bool
+		{
+			ePIC = false,
+			eFLIP = true,
+		};
+
 		virtual ~Fluid() = default;
 
 		virtual void Update(ApplicationData& inOutData) = 0;

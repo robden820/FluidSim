@@ -29,12 +29,12 @@ const int SCREEN_HEIGHT = 600;
 // Camera
 Camera camera;
 // Timing 
-float deltaTime = 0.0f;   // Time between previous and current frame
-float lastFrame = 0.0f;   // Time of the last frame.
+double deltaTime = 0.0;   // Time between previous and current frame
+double lastFrame = 0.0;   // Time of the last frame.
 
 // Mouse input
-float lastX = SCREEN_WIDTH / 2;
-float lastY = SCREEN_HEIGHT / 2;
+double lastX = SCREEN_WIDTH / 2;
+double lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 
 int main()
@@ -86,7 +86,7 @@ int main()
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Here we can set up our camera ~~~~~ */
-	Camera cam(glm::vec3(0.0f, 0.0f, 27.0f));
+	Camera cam(glm::dvec3(0.0, 0.0, 27.0));
 	camera = cam;
 
 	/* ~~~~~ Set up our shaders ~~~~~ */
@@ -95,8 +95,8 @@ int main()
 	/* ~~~~~ Set those in the application ~~~~~ */
 	Application gApplication(camera, shader);
 
-	gApplication.SetScreenWidth((float)SCREEN_WIDTH);
-	gApplication.SetScreenHeight((float)SCREEN_HEIGHT);
+	gApplication.SetScreenWidth((double)SCREEN_WIDTH);
+	gApplication.SetScreenHeight((double)SCREEN_HEIGHT);
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -145,7 +145,7 @@ int main()
 		gApplication.Update();
 		// Do we need to do this every frame?
 		//glBindVertexArray(VAO);
-		float aspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+		double aspect = (double)SCREEN_WIDTH / (double)SCREEN_HEIGHT;
 		gApplication.Render(aspect);
 
 		// ~~~~~~~~~~~~~~~~~ //
@@ -197,8 +197,8 @@ void processInput(GLFWwindow* window)
 
 void mouse_callback(GLFWwindow* window, double xPosIn, double yPosIn)
 {
-	float xpos = static_cast<float>(xPosIn);
-	float ypos = static_cast<float>(yPosIn);
+	double xpos = static_cast<double>(xPosIn);
+	double ypos = static_cast<double>(yPosIn);
 
 	if (firstMouse)
 	{
@@ -207,8 +207,8 @@ void mouse_callback(GLFWwindow* window, double xPosIn, double yPosIn)
 		firstMouse = false;
 	}
 
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	double xoffset = xpos - lastX;
+	double yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
 
 	lastX = xpos;
 	lastY = ypos;
@@ -218,5 +218,5 @@ void mouse_callback(GLFWwindow* window, double xPosIn, double yPosIn)
 
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 {
-	camera.ProcessMouseScroll(static_cast<float>(yOffset));
+	camera.ProcessMouseScroll(static_cast<double>(yOffset));
 }

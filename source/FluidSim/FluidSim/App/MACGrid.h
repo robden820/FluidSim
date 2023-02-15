@@ -18,12 +18,12 @@ class MACGrid
 		virtual int GetNumCells() const = 0;
 
 		double GetCellPressure(int index) const { return mCellPressures[index]; }
-		void SetCellPressure(int index, float inPressure) { mCellPressures[index]= inPressure; }
+		void SetCellPressure(int index, double inPressure) { mCellPressures[index]= inPressure; }
 
 		const CellType GetCellType(int index) const { return mCellType[index]; }
 		void SetCellType(int index, CellType inCellType) { mCellType[index] = inCellType; }
 
-		float GetCellSize() { return mCellSize; }
+		double GetCellSize() { return mCellSize; }
 
 	protected:
 
@@ -31,17 +31,17 @@ class MACGrid
 
 		virtual void CalculateCellDivergence() = 0;
 
-		virtual void AdvectCellVelocity(float deltaTime) = 0;
-		virtual void UpdateCellPressure(float deltaTime, int maxIterations) = 0;
-		virtual void UpdateCellVelocity(float deltaTime) = 0;
+		virtual void AdvectCellVelocity(double deltaTime) = 0;
+		virtual void UpdateCellPressure(double deltaTime, int maxIterations) = 0;
+		virtual void UpdateCellVelocity(double deltaTime) = 0;
 
 		int mNumCells;
 
-		float mCellSize;    // deltaX
-		float mInvCellSize; // 1 / deltaX
+		double mCellSize;    // deltaX
+		double mInvCellSize; // 1 / deltaX
 
-		float mDensity;
-		float mInvDensity; // 1 / density;
+		double mDensity;
+		double mInvDensity; // 1 / density;
 
 		std::vector<double> mCellDivergence;
 

@@ -1,25 +1,25 @@
 #include "Particle3D.h"
 
-Particle3D::Particle3D(const glm::vec3& inPosition, const glm::vec3& inVelocity, float inMass, float inRadius)
+Particle3D::Particle3D(const glm::dvec3& inPosition, const glm::dvec3& inVelocity, double inMass, double inRadius)
 {
 	mPosition = inPosition;
 	mVelocity = inVelocity;
 	mMass = inMass;
 	mRadius = inRadius;
 
-	mAcceleration = { 0.0f, -9.8f, 0.0f }; // Acceleration due to gravity
+	mAcceleration = { 0.0, -9.8f, 0.0 }; // Acceleration due to gravity
 
-	float g = -9.8f * mMass; // Downwards force due to gravity;
-	mForceAccumulator = { 0.0f, g, 0.0f };
+	double g = -9.8f * mMass; // Downwards force due to gravity;
+	mForceAccumulator = { 0.0, g, 0.0 };
 }
 
-void Particle3D::StepParticle(float deltaTime)
+void Particle3D::StepParticle(double deltaTime)
 {
 
 	mPosition += mVelocity * deltaTime + mAcceleration * deltaTime * deltaTime;
 	mVelocity += mAcceleration * deltaTime;
 
-	float g = -9.8f * mMass; // Downwards force due to gravity;
+	double g = -9.8f * mMass; // Downwards force due to gravity;
 
-	mForceAccumulator = { 0.0f, g, 0.0f };
+	mForceAccumulator = { 0.0, g, 0.0 };
 }
