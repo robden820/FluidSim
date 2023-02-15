@@ -18,16 +18,16 @@ public:
 
 	Fluid2D(const ApplicationData& inOutData);
 
-	// Blend value is the weight of FLIP/PIC blend. A value of 1 is pure FLIP, a value of 0 is pure PIC.
-	void StepParticles(float deltaTime, const MACGrid2D& inMACGrid, float blend = 0.95f); // RK3
+	// FLIP/PIC blend.
+	void StepParticles(double deltaTime, const MACGrid2D& inMACGrid); // RK3
 
 	void UpdateApplicationData(ApplicationData& inOutData);
 
 	void InterpolateToGrid(MACGrid2D& inMACGrid);
 	
-	// Blend value is the weight of FLIP/PIC blend. A value of 1 is pure FLIP, a value of 0 is pure PIC.
-	void InterpolateFromGrid(const MACGrid2D& inMACGrid, float blend = 0.95f);
-	void InterpolateFromGridBSpline(const MACGrid2D& inMACGrid, float blend = 0.95f);
+	// FLIP/PIC blend.
+	void InterpolateFromGrid(const MACGrid2D& inMACGrid);
+	void InterpolateFromGridBSpline(const MACGrid2D& inMACGrid);
 
 	const std::vector<Particle2D>& GetParticles() const { return mParticles; }
 	const Particle2D& GetParticle(int index) const { return mParticles[index]; }
@@ -44,26 +44,22 @@ private:
 
 	void SeedParticles(const ApplicationData& inOutData);
 
-	float InterpolateSupport(const glm::vec2& diff, float invCellSize);
-	float BSpline(float input);
+	double InterpolateSupport(const glm::dvec2& diff, double invCellSize);
+	double BSpline(double input);
 
 	int ClosestCellToParticle(const MACGrid2D& inMACGrid, const Particle2D& particle);
 
-	glm::dvec2 InterpolateFromGridCellPIC(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-	glm::dvec2 InterpolateFromGridCellPIC(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
+	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex, SimulationType simType);
+	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex, SimulationType simType);
 
-	glm::dvec2 InterpolateFromGridCellFLIP(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-	glm::dvec2 InterpolateFromGridCellFLIP(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
-
-	glm::dvec2 InterpolateFromGridCellBSplinePIC(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-	glm::dvec2 InterpolateFromGridCellBSplinePIC(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
-
-	glm::dvec2 InterpolateFromGridCellBSplineFLIP(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-	glm::dvec2 InterpolateFromGridCellBSplineFLIP(const MACGrid2D& inMACGrid, const glm::vec2& particlePosition, int cellIndex);
+	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex, SimulationType simType);
+	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex, SimulationType simType);
 
 	void ProjectParticleToFluid(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 
 	std::vector<Particle2D> mParticles;
-	std::vector<glm::vec2> mParticlePositions;
+	std::vector<glm::dvec2> mParticlePositions;
+
+	double mFLIPBlend; // % FLIP Blend, clamped between [0, 1]
 };
 

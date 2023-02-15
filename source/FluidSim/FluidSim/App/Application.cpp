@@ -15,6 +15,7 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	// Initialise simulation data.
 	mApplicationData.SetDeltaTime(0.03);
 	mApplicationData.SetFluidDensity(1000.0);
+	mApplicationData.SetFLIPBlend(0.95);
 
 	// Set MACGrid data
 	mApplicationData.SetGridLeft(-10.0);

@@ -4,7 +4,6 @@ Particle2D::Particle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocit
 {
 	mPosition = inPosition;
 	mVelocity = inVelocity;
-	mInterpVelocity = glm::dvec2(0.0, 0.0);
 	mMass = inMass;
 	mRadius = inRadius;
 
@@ -19,5 +18,4 @@ void Particle2D::StepRK3(double deltaTime, const glm::dvec2& K1, const glm::dvec
 	double scaledDt = deltaTime / 9.0;
 
 	mPosition += ((2.0 * K1) + (3.0 * K2) + (4.0 * K3)) * scaledDt;
-	mVelocity = mInterpVelocity;
 }

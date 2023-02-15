@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include "glm/glm.hpp"
@@ -7,7 +8,7 @@
 // Class that holds all data relevant to different parts of the application.
 // All application components read/write data here, so reduces dependencies on each other.
 
-enum CellType
+enum class CellType : int
 {
 	eFLUID = 0,
 	eSOLID = 1,
@@ -39,6 +40,9 @@ class ApplicationData
 		double GetFluidDensity() const { return mFluidDensity; }
 		void SetFluidDensity(double inDensity) { mFluidDensity = inDensity; }
 
+		double GetFLIPBlend() const { return mFLIPBlend; }
+		void SetFLIPBlend(double inBlend) { mFLIPBlend = std::clamp(inBlend, 0.0, 1.0); }
+
 		const std::vector<glm::dvec2>& Get2DParticlePositions() const { return mParticlePositions2D; }
 		const glm::dvec2& Get2DParticlePosition(int index) const;
 		void Set2DParticlePositions(const std::vector<glm::dvec2>& inPositions);
@@ -51,6 +55,8 @@ class ApplicationData
 		int mNumParticles;
 
 		double mFluidDensity;
+
+		double mFLIPBlend;
 
 		std::vector<glm::dvec2> mParticlePositions2D;
 		std::vector<glm::dvec3> mParticlePositions3D;
