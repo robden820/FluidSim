@@ -61,7 +61,7 @@ CellType ApplicationData::GetCellType(int index) const
 	if (index < 0 || index > mCellTypes.size() - 1)
 	{
 		LogError("Attempting to access invalid cell type index.");
-		return eNONE;
+		return CellType::eNONE;
 	}
 
 	return mCellTypes[index];

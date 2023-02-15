@@ -7,7 +7,7 @@
 class VoxelFluid
 {
 	public:
-		enum VoxelState
+		enum class VoxelState : int
 		{
 			eFLUID = 0,
 			eSOLID = 1,
