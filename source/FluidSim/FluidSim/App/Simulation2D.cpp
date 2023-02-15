@@ -22,7 +22,7 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 {
 	double start = glfwGetTime();
 
-	float deltaTime = inOutData.GetDeltaTime();
+	double deltaTime = inOutData.GetDeltaTime();
 
 	mFluid.InterpolateToGrid(mMACGrid);
 

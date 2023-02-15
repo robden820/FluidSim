@@ -9,26 +9,26 @@ public:
 	Particle3D() = default;
 	~Particle3D() = default;
 
-	Particle3D(const glm::vec3& inPosition, const glm::vec3& inVelocity = glm::vec3(0.0f, 0.0f, 0.0f), float inMass = 1.0f, float inRadius = 0.1f);
+	Particle3D(const glm::dvec3& inPosition, const glm::dvec3& inVelocity = glm::dvec3(0.0, 0.0, 0.0), double inMass = 1.0, double inRadius = 0.1f);
 
-	void StepParticle(float deltaTime);
+	void StepParticle(double deltaTime);
 
-	const glm::vec3& GetPosition() const { return mPosition; }
-	void SetPosition(glm::vec3 inPos) { mPosition = inPos; }
+	const glm::dvec3& GetPosition() const { return mPosition; }
+	void SetPosition(glm::dvec3 inPos) { mPosition = inPos; }
 
-	const glm::vec3& GetVelocity() const { return mVelocity; }
-	void SetVelocity(const glm::vec3& inVel) { mVelocity = inVel; }
+	const glm::dvec3& GetVelocity() const { return mVelocity; }
+	void SetVelocity(const glm::dvec3& inVel) { mVelocity = inVel; }
 
-	const glm::vec3& GetAcceleration() const { return mAcceleration; }
-	void SetAcceleration(const glm::vec3& inAcc) { mAcceleration = inAcc; }
+	const glm::dvec3& GetAcceleration() const { return mAcceleration; }
+	void SetAcceleration(const glm::dvec3& inAcc) { mAcceleration = inAcc; }
 
-	void ApplyForce(const glm::vec3& inForce) { mForceAccumulator += inForce; }
+	void ApplyForce(const glm::dvec3& inForce) { mForceAccumulator += inForce; }
 
 private:
-	glm::vec3 mPosition;
-	glm::vec3 mVelocity;
-	glm::vec3 mAcceleration;
+	glm::dvec3 mPosition;
+	glm::dvec3 mVelocity;
+	glm::dvec3 mAcceleration;
 
-	glm::vec3 mForceAccumulator;
+	glm::dvec3 mForceAccumulator;
 };
 

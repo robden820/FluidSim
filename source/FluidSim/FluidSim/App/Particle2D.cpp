@@ -1,21 +1,23 @@
 #include "Particle2D.h"
 
-Particle2D::Particle2D(const glm::vec2& inPosition, const glm::vec2& inVelocity, float inMass, float inRadius)
+Particle2D::Particle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity, double inMass, double inRadius)
 {
 	mPosition = inPosition;
 	mVelocity = inVelocity;
+	mInterpVelocity = glm::dvec2(0.0, 0.0);
 	mMass = inMass;
 	mRadius = inRadius;
 
-	mAcceleration = { 0.0f, -9.8f}; // Acceleration due to gravity
+	mAcceleration = { 0.0, -9.8f}; // Acceleration due to gravity
 
-	float g = -9.8f * mMass; // Downwards force due to gravity;
-	mForceAccumulator = { 0.0f, g};
+	double g = -9.8f * mMass; // Downwards force due to gravity;
+	mForceAccumulator = { 0.0, g};
 }
 
-void Particle2D::StepRK3(float deltaTime, const glm::vec2& K1, const glm::vec2& K2, const glm::vec2& K3)
+void Particle2D::StepRK3(double deltaTime, const glm::dvec2& K1, const glm::dvec2& K2, const glm::dvec2& K3)
 {
-	float scaledDt = deltaTime / 9.0f;
+	double scaledDt = deltaTime / 9.0;
 
-	mPosition += ((2.0f * K1) + (3.0f * K2) + (4.0f * K3)) * scaledDt;
+	mPosition += ((2.0 * K1) + (3.0 * K2) + (4.0 * K3)) * scaledDt;
+	mVelocity = mInterpVelocity;
 }

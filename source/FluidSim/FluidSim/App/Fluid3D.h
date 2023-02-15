@@ -34,7 +34,7 @@ private:
 	int ClosestCellToParticle(const Particle3D& particle);
 
 	std::vector<Particle3D> mParticles;
-	std::vector<glm::vec3> mParticlePositions;
+	std::vector<glm::dvec3> mParticlePositions;
 
 	MACGrid3D mMACGrid;
 };

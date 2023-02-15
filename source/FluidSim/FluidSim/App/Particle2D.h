@@ -9,27 +9,31 @@ public:
 	Particle2D() = default;
 	~Particle2D() = default;
 
-	Particle2D(const glm::vec2& inPosition, const glm::vec2& inVelocity = glm::vec2(0.0f, 0.0f), float inMass = 1.0f, float inRadius = 0.1f);
+	Particle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity = glm::dvec2(0.0, 0.0), double inMass = 1.0, double inRadius = 0.1f);
 
-	void StepRK3(float deltaTime, const glm::vec2& K1, const glm::vec2& K2, const glm::vec2& K3);
+	void StepRK3(double deltaTime, const glm::dvec2& K1, const glm::dvec2& K2, const glm::dvec2& K3);
 
-	const glm::vec2& GetPosition() const { return mPosition; }
-	void SetPosition(const glm::vec2& inPos) { mPosition = inPos; }
+	const glm::dvec2& GetPosition() const { return mPosition; }
+	void SetPosition(const glm::dvec2& inPos) { mPosition = inPos; }
 
-	const glm::vec2& GetVelocity() const { return mVelocity; }
-	void SetVelocity(const glm::vec2& inVel) { mVelocity = inVel; }
-	void SetXVelocity(float inXVel) { mVelocity.x = inXVel; }
-	void SetYVelocity(float inYVel) { mVelocity.y = inYVel; }
+	const glm::dvec2& GetVelocity() const { return mVelocity; }
+	void SetVelocity(const glm::dvec2& inVel) { mVelocity = inVel; }
+	void SetXVelocity(double inXVel) { mVelocity.x = inXVel; }
+	void SetYVelocity(double inYVel) { mVelocity.y = inYVel; }
 
-	const glm::vec2& GetAcceleration() const { return mAcceleration; }
-	void SetAcceleration(const glm::vec2& inAcc) { mAcceleration = inAcc; }
+	const glm::dvec2& GetInterpolatedVelocity() const { return mInterpVelocity; }
+	void SetInterpolatedVelocity(const glm::dvec2& inVel) { mInterpVelocity = inVel; }
 
-	void ApplyForce(const glm::vec2& inForce) { mForceAccumulator += inForce; }
+	const glm::dvec2& GetAcceleration() const { return mAcceleration; }
+	void SetAcceleration(const glm::dvec2& inAcc) { mAcceleration = inAcc; }
+
+	void ApplyForce(const glm::dvec2& inForce) { mForceAccumulator += inForce; }
 
 private:
-	glm::vec2 mPosition;
-	glm::vec2 mVelocity;
-	glm::vec2 mAcceleration;
+	glm::dvec2 mPosition;
+	glm::dvec2 mVelocity;
+	glm::dvec2 mInterpVelocity;
+	glm::dvec2 mAcceleration;
 
-	glm::vec2 mForceAccumulator; // For applying non-gravitational forces.
+	glm::dvec2 mForceAccumulator; // For applying non-gravitational forces.
 };

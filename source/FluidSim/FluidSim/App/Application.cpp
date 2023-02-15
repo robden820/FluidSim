@@ -13,18 +13,18 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	mApplicationData = newData;
 
 	// Initialise simulation data.
-	mApplicationData.SetDeltaTime(0.005f);
-	mApplicationData.SetFluidDensity(1000.0f);
+	mApplicationData.SetDeltaTime(0.03);
+	mApplicationData.SetFluidDensity(1000.0);
 
 	// Set MACGrid data
-	mApplicationData.SetGridLeft(-10.0f);
-	mApplicationData.SetGridBottom(-10.0f);
+	mApplicationData.SetGridLeft(-10.0);
+	mApplicationData.SetGridBottom(-10.0);
 
 	mApplicationData.SetNumGridCellsWidth(70);
 	mApplicationData.SetNumGridCellsHeight(80);
 	mApplicationData.UpdateNumGridCells();
 
-	mApplicationData.SetGridCellSize(0.2f);
+	mApplicationData.SetGridCellSize(0.2);
 }
 
 void Application::Initialize()
@@ -120,15 +120,12 @@ void Application::InitGLObjects()
 	// - The second parameter is the size of our attribute. Each vertex is a vec3, so the size of the vertex attribute is 3.
 	// - The third parameter is the type of data we are using.
 	// - The fourth specifies if we want to normalize the data.
-	// - The fifth argument is the stide of the data, and is the space between consecutive pieces of data. Since each vertex is separated by 3 floats, we note that as the stride here.
+	// - The fifth argument is the stide of the data, and is the space between consecutive pieces of data. Since each vertex is separated by 3 doubles, we note that as the stride here.
 	// - The final argument is the offset of where the data begins in the buffer, which for us is 0.
 
 	// Deals with out position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	// Deal with our color attribute
-//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // Our color data is offset by 3 floats.
-//	glEnableVertexAttribArray(1);
 
 	// We can now safely unbind our VAO and VBO.
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -165,7 +162,7 @@ void Application::Render(float inAspectRatio)
 	mShader.SetVector("color", glm::vec3(1.0f, 0.0f, 0.0f));
 	mShader.SetFloat("alpha", 1.0f);
 
-	float scale = mApplicationData.GetGridCellSize();
+	double scale = mApplicationData.GetGridCellSize();
 	
 	if (m3Dsimulation)
 	{
@@ -211,7 +208,7 @@ void Application::Render(float inAspectRatio)
 			glm::mat4 model = glm::mat4(1.0f);
 
 			glm::vec2 vec = mApplicationData.Get2DParticlePosition(p);
-			glm::vec3 particlePosition = { vec.x, vec.y, 0.f };
+			glm::vec3 particlePosition = { vec.x, vec.y, 0.0f };
 
 			model = glm::translate(model, particlePosition);
 			model = glm::scale(model, glm::vec3(scale * 0.5f));
@@ -223,8 +220,7 @@ void Application::Render(float inAspectRatio)
 
 		for (int v = 0; v < mVoxelFluid2D.GetVoxelCenters().size(); v++)
 		{
-			glm::mat4 model = glm::mat4(1.0f);
-			
+			glm::mat4 model = glm::mat4(1.0f);	
 			glm::vec3 vec = { mVoxelFluid2D.GetVoxelCenter(v).x, mVoxelFluid2D.GetVoxelCenter(v).y, 0.0f };
 
 			model = glm::translate(model, vec);

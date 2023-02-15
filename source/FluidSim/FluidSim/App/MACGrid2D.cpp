@@ -34,7 +34,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellSize = inData.GetGridCellSize();
 	mInvCellSize = 1 / mCellSize;
 
-	float halfCell = mCellSize * 0.5f;
+	double halfCell = mCellSize * 0.5f;
 
 	mCellCenters.reserve(mNumCells);
 
@@ -43,10 +43,10 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 		int x, y;
 		std::tie(x, y) = GetXYFromIndex(index);
 
-		float centerX = dLeft + (x * mCellSize) + halfCell;
-		float centerY = dBottom + (y * mCellSize) + halfCell;
+		double centerX = dLeft + (x * mCellSize) + halfCell;
+		double centerY = dBottom + (y * mCellSize) + halfCell;
 
-		mCellCenters.push_back(glm::vec2(centerX, centerY));
+		mCellCenters.push_back(glm::dvec2(centerX, centerY));
 	}
 
 	mCellPressures.assign(mNumCells, 0.0);
@@ -60,7 +60,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mIntYVelocities.assign(mNumCells, 0.0);
 
 	mDensity = inData.GetFluidDensity();
-	mInvDensity = 1.0f / mDensity;
+	mInvDensity = 1.0 / mDensity;
 
 	//Initialize cell types and solid boundary.
 	mCellType.assign(mNumCells, CellType::eNONE);
@@ -94,7 +94,7 @@ void MACGrid2D::InitializeGridPressure()
 	}
 }
 
-void MACGrid2D::UpdateCellTypesFromParticles(const std::vector<glm::vec2>& inParticlePositions)
+void MACGrid2D::UpdateCellTypesFromParticles(const std::vector<glm::dvec2>& inParticlePositions)
 {
 	tbb::parallel_for(0, mNumCells, 1, [&](int cIndex)
 	{
@@ -118,7 +118,7 @@ void MACGrid2D::UpdateCellTypesFromParticles(const std::vector<glm::vec2>& inPar
 
 void MACGrid2D::Update(ApplicationData& inOutData)
 {
-	float deltaTime = inOutData.GetDeltaTime();
+	double deltaTime = inOutData.GetDeltaTime();
 
 	Advect(inOutData);
 
@@ -129,14 +129,14 @@ void MACGrid2D::Update(ApplicationData& inOutData)
 
 void MACGrid2D::Advect(ApplicationData& inOutData)
 {
-	float deltaTime = inOutData.GetDeltaTime();
+	double deltaTime = inOutData.GetDeltaTime();
 
 	AdvectCellVelocity(deltaTime);
 }
 
 void MACGrid2D::Project(ApplicationData& inOutData)
 {
-	float deltaTime = inOutData.GetDeltaTime();
+	double deltaTime = inOutData.GetDeltaTime();
 
 	CalculateCellDivergence();
 
@@ -146,7 +146,7 @@ void MACGrid2D::Project(ApplicationData& inOutData)
 	UpdateCellVelocity(deltaTime);
 }
 
-void MACGrid2D::AdvectCellVelocity(float deltaTime)
+void MACGrid2D::AdvectCellVelocity(double deltaTime)
 {
 	tbb::parallel_for(0, mNumCells, 1, [&](int index)
 	{
@@ -155,11 +155,11 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 			int x, y;
 			std::tie(x, y) = GetXYFromIndex(index);
 
-			glm::vec2 cellVelocity = { mCellXVelocities[index], mCellYVelocities[index] };
+			glm::dvec2 cellVelocity = { mCellXVelocities[index], mCellYVelocities[index] };
 
 			//Runge Kutta
 			// First take a half step backwards over half the timestep to find the average velocity
-			glm::vec2 halfPrevPosition = mCellCenters[index] - cellVelocity * 0.5f * deltaTime;
+			glm::dvec2 halfPrevPosition = mCellCenters[index] - cellVelocity * 0.5 * deltaTime;
 
 			int midStepIndex = GetClosestCell(halfPrevPosition);
 
@@ -170,17 +170,17 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 			int midStepNeighbourTop = GetIndexFromXY(midStepX, midStepY + 1);
 
 			// Compute the avgerage velocity by interpolating the velocity of the mid step position.
-			glm::vec2 diff = mCellCenters[midStepIndex] - halfPrevPosition;
+			glm::dvec2 diff = mCellCenters[midStepIndex] - halfPrevPosition;
 
-			glm::dvec2 weight = (diff * mInvCellSize) + 0.5f;
+			glm::dvec2 weight = (diff * mInvCellSize) + 0.5;
 
 			double avgStepXVelocity = (mCellXVelocities[midStepIndex] * weight.x) + (mCellXVelocities[midStepNeighbourRight] * (1 - weight.x));
 			double avgStepYVelocity = (mCellYVelocities[midStepIndex] * weight.y) + (mCellYVelocities[midStepNeighbourTop] * (1 - weight.y));
 
-			glm::vec2 avgStepVelocity = { avgStepXVelocity, avgStepYVelocity };
+			glm::dvec2 avgStepVelocity = { avgStepXVelocity, avgStepYVelocity };
 
 			// Now that we have the average velocity of the step, we can work out the original position at the beginning of the step.
-			glm::vec2 prevPosition = mCellCenters[index] - avgStepVelocity * deltaTime;
+			glm::dvec2 prevPosition = mCellCenters[index] - avgStepVelocity * deltaTime;
 
 			int prevCellIndex = GetClosestCell(prevPosition);
 
@@ -193,7 +193,7 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 			// Recalculate our weights for interpolation
 			diff = mCellCenters[prevCellIndex] - prevPosition;
 
-			weight = (diff * mInvCellSize) + 0.5f;
+			weight = (diff * mInvCellSize) + 0.5;
 
 			double prevXVelocity = (mCellXVelocities[prevCellIndex] * weight.x) + (mCellXVelocities[prevNeighbourRight] * (1 - weight.x));
 			double prevYVelocity = (mCellYVelocities[prevCellIndex] * weight.y) + (mCellYVelocities[prevNeighbourTop] * (1 - weight.y));
@@ -209,7 +209,7 @@ void MACGrid2D::AdvectCellVelocity(float deltaTime)
 	});
 }
 
-int MACGrid2D::GetClosestCell(const glm::vec2& inPos) const
+int MACGrid2D::GetClosestCell(const glm::dvec2& inPos) const
 {
 	int x = static_cast<int>(round((inPos.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize));
 	int y = static_cast<int>(round((inPos.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize));
@@ -224,9 +224,9 @@ int MACGrid2D::GetClosestCell(const glm::vec2& inPos) const
 	return approxIndex;
 }
 
-void MACGrid2D::ApplyForces(float deltaTime)
+void MACGrid2D::ApplyForces(double deltaTime)
 {
-	float gravity = -9.8f * deltaTime;
+	double gravity = -9.8f * deltaTime;
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -237,13 +237,13 @@ void MACGrid2D::ApplyForces(float deltaTime)
 	}
 }
 
-void MACGrid2D::UpdateCellVelocity(float deltaTime)
+void MACGrid2D::UpdateCellVelocity(double deltaTime)
 {
 	double scale = (double)deltaTime * mInvCellSize * mInvDensity;
 
-	float solidXVel = 0.0f;
-	float solidYVel = 0.0f;
-	float solidZVel = 0.0f;
+	double solidXVel = 0.0;
+	double solidYVel = 0.0;
+	double solidZVel = 0.0;
 
 	std::vector<double> cellXVelocitiesPrev = mCellXVelocities;
 	std::vector<double> cellYVelocitiesPrev = mCellYVelocities;
@@ -500,10 +500,10 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 
 void MACGrid2D::CalculateCellDivergence()
 {
-	float scale = -mInvCellSize;
+	double scale = -mInvCellSize;
 
-	float solidXVel = 0.0f;
-	float solidYVel = 0.0f;
+	double solidXVel = 0.0;
+	double solidYVel = 0.0;
 
 	// Calculate negative divergence of each cell.
 	for (int index = 0; index < mNumCells; index++)
@@ -574,7 +574,7 @@ void MACGrid2D::CalculateCellDivergence()
 	}
 }
 
-void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
+void MACGrid2D::UpdateCellPressure(double deltaTime, int maxIterations)
 {
 	std::vector<double> Adiagonal;
 	std::vector<double> Ax;
@@ -686,7 +686,7 @@ void MACGrid2D::UpdateCellPressure(float deltaTime, int maxIterations)
 	}
 }
 
-void MACGrid2D::InitializeLinearSystem(float deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY)
+void MACGrid2D::InitializeLinearSystem(double deltaTime, std::vector<double>& inDiag, std::vector<double>& inX, std::vector<double>& inY)
 {
 	double scale = (double)deltaTime * mInvCellSize * mInvCellSize * mInvDensity;
 
@@ -751,7 +751,7 @@ void MACGrid2D::InitializeLinearSystem(float deltaTime, std::vector<double>& inD
 	}
 }
 
-void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
+void MACGrid2D::UpdateCellPressureSpare(double deltaTime, int maxIterations)
 {
 	Eigen::SparseMatrix<double> A(mNumCells, mNumCells);
 
@@ -784,7 +784,7 @@ void MACGrid2D::UpdateCellPressureSpare(float deltaTime, int maxIterations)
 	std::cout << "PRESSURE SOLVE ERROR: " << solver.error() << "\n";
 }
 
-void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatrix<double>& A)
+void MACGrid2D::InitializeLinearSystemSparse(double deltaTime, Eigen::SparseMatrix<double>& A)
 {
 	double scale = (double)deltaTime * mInvCellSize * mInvCellSize * mInvDensity;
 
@@ -869,7 +869,7 @@ void MACGrid2D::InitializeLinearSystemSparse(float deltaTime, Eigen::SparseMatri
 	A.setFromTriplets(coefficients.begin(), coefficients.end());
 }
 
-void MACGrid2D::ApplyA(float deltaTime, Eigen::VectorXd& outResult, const Eigen::VectorXd& inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY)
+void MACGrid2D::ApplyA(double deltaTime, Eigen::VectorXd& outResult, const Eigen::VectorXd& inVec, const std::vector<double>& inDiag, const std::vector<double>& inX, const std::vector<double>& inY)
 {
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -917,14 +917,14 @@ void MACGrid2D::CalculatePreconditioner(std::vector<double>& inOutPrecon, const 
 
 		if (mCellType[index] == CellType::eFLUID)
 		{
-			double Axi = 0.0f; // Aplusi_iminus1
-			double Axj = 0.0f; // Aplusi_jminus1
+			double Axi = 0.0; // Aplusi_iminus1
+			double Axj = 0.0; // Aplusi_jminus1
 
-			double Ayi = 0.0f; // Aplusj_iminus1
-			double Ayj = 0.0f; // Aplusj_jminus1
+			double Ayi = 0.0; // Aplusj_iminus1
+			double Ayj = 0.0; // Aplusj_jminus1
 
-			double preconi = 0.0f; // precon_iminus1
-			double preconj = 0.0f; // precon_jminus1
+			double preconi = 0.0; // precon_iminus1
+			double preconj = 0.0; // precon_jminus1
 
 			if (x > 0)
 			{
@@ -981,14 +981,14 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 		if (mCellType[index] == CellType::eFLUID)
 		{
 
-			double Axi = 0.0f; // Aplusi_iminus1
-			double Ayj = 0.0f; // Aplusj_jminus1
+			double Axi = 0.0; // Aplusi_iminus1
+			double Ayj = 0.0; // Aplusj_jminus1
 
-			double preconi = 0.0f; // precon_iminus1
-			double preconj = 0.0f; // precon_jminus1
+			double preconi = 0.0; // precon_iminus1
+			double preconj = 0.0; // precon_jminus1
 
-			double intermediatei = 0.0f; // qminusi
-			double intermediatej = 0.0f; // qminusj
+			double intermediatei = 0.0; // qminusi
+			double intermediatej = 0.0; // qminusj
 
 			int neighbourLeft = GetIndexFromXY(x - 1, y);
 
@@ -1016,8 +1016,8 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 
 		if (mCellType[index] == CellType::eFLUID)
 		{
-			double zi = 0.0f;
-			double zj = 0.0f;
+			double zi = 0.0;
+			double zj = 0.0;
 
 			int neighbourRight = GetIndexFromXY(x + 1, y);
 
@@ -1035,7 +1035,7 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 	}
 }
 
-const CellType MACGrid2D::GetCellTypeFromPosition(const glm::vec2& inPos) const
+const CellType MACGrid2D::GetCellTypeFromPosition(const glm::dvec2& inPos) const
 {
 	int index = GetClosestCell(inPos);
 
