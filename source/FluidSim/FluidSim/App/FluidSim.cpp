@@ -23,7 +23,7 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
 // Screen settings
-const int SCREEN_WIDTH = 800;
+const int SCREEN_WIDTH = 600;
 const int SCREEN_HEIGHT = 600;
 
 // Camera
@@ -74,7 +74,7 @@ int main()
 
 	// Tell OpenGL the size of the rendering window so it knows how to display data with respect to the window.
 	// First two parameters set the location of the lower left corner of the window, then its the width and height parameters.
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	// Register our framesize function with GLFW so that when the window gets resized, so does the viewport.
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -86,7 +86,7 @@ int main()
 
 	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 	/* ~~~~~ Here we can set up our camera ~~~~~ */
-	Camera cam(glm::dvec3(0.0, 0.0, 27.0));
+	Camera cam(glm::dvec3(0.0, -2.0, 27.0));
 	camera = cam;
 
 	/* ~~~~~ Set up our shaders ~~~~~ */
