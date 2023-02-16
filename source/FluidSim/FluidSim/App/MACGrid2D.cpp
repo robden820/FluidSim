@@ -766,6 +766,7 @@ void MACGrid2D::UpdateCellPressureSpare(double deltaTime, int maxIterations)
 		divergence[i] = mCellDivergence[i];
 	}
 
+	// Use full matrix rather than just upper as in RBridson as this achieves better performance in Eigen.
 	Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower|Eigen::Upper> solver;
 
 	solver.setMaxIterations(maxIterations);
