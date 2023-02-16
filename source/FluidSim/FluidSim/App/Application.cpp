@@ -165,82 +165,61 @@ void Application::Render(float inAspectRatio)
 
 	double scale = mApplicationData.GetGridCellSize();
 	
-	if (m3Dsimulation)
+	for (int p = 0; p < mApplicationData.GetNumParticles(); p++)
 	{
-		for (int p = 0; p < mApplicationData.GetNumParticles(); p++)
+		glm::mat4 model = glm::mat4(1.0f);
+		glm::vec3 particlePosition(0.0f, 0.0f, 0.0f);
+
+		if (m3Dsimulation)
 		{
-			glm::mat4 model = glm::mat4(1.0f);
-			glm::vec3 particlePosition = mApplicationData.Get3DParticlePosition(p);
-
-			model = glm::translate(model, particlePosition);
-			model = glm::scale(model, glm::vec3(scale * 0.25f));
-
-			mShader.SetMatrix("model", model);
-
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			particlePosition = mApplicationData.Get3DParticlePosition(p);
 		}
-
-		for (int v = 0; v < mVoxelFluid3D.GetVoxelCenters().size(); v++)
+		else
 		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, mVoxelFluid3D.GetVoxelCenter(v));
-			model = glm::scale(model, glm::vec3(scale));
-
-			mShader.SetMatrix("model", model);
-
-			if (mVoxelFluid3D.GetVoxelState(v) == VoxelFluid::VoxelState::eFLUID)
-			{
-				mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
-				mShader.SetFloat("alpha", 1.0f);
-				glDrawArrays(GL_LINES, 0, 36);
-			}
-			else if (mVoxelFluid3D.GetVoxelState(v) == VoxelFluid::VoxelState::eSOLID)
-			{
-				mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
-				mShader.SetFloat("alpha", 0.1f);
-				glDrawArrays(GL_LINES, 0, 36);
-			}
-		}
-	}
-	else
-	{
-		for (int p = 0; p < mApplicationData.GetNumParticles(); p++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-
 			glm::vec2 vec = mApplicationData.Get2DParticlePosition(p);
-			glm::vec3 particlePosition = { vec.x, vec.y, 0.0f };
-
-			model = glm::translate(model, particlePosition);
-			model = glm::scale(model, glm::vec3(scale * 0.5f));
-
-			mShader.SetMatrix("model", model);
-
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			particlePosition = { vec, 0.0f };
 		}
 
-		for (int v = 0; v < mVoxelFluid2D.GetVoxelCenters().size(); v++)
+		model = glm::translate(model, particlePosition);
+		model = glm::scale(model, glm::vec3(scale * 0.25f));
+
+		mShader.SetMatrix("model", model);
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+
+	for (int v = 0; v < mApplicationData.GetNumGridCells(); v++)
+	{
+		glm::mat4 model = glm::mat4(1.0f);
+
+		glm::vec3 cellCenter(0.0f, 0.0f, 0.0f);
+
+		if (m3Dsimulation)
 		{
-			glm::mat4 model = glm::mat4(1.0f);	
-			glm::vec3 vec = { mVoxelFluid2D.GetVoxelCenter(v).x, mVoxelFluid2D.GetVoxelCenter(v).y, 0.0f };
+			cellCenter = mApplicationData.GetCellCenter3D(v);
+		}
+		else
+		{
+			glm::vec2 center = mApplicationData.GetCellCenter2D(v);
+			cellCenter = { center, 0.0f };
+		}
 
-			model = glm::translate(model, vec);
-			model = glm::scale(model, glm::vec3(scale));
+		model = glm::translate(model, cellCenter);
+		model = glm::scale(model, glm::vec3(scale));
 
-			mShader.SetMatrix("model", model);
+		mShader.SetMatrix("model", model);
 
-			if (mApplicationData.GetCellType(v) == CellType::eFLUID)
-			{
-				mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
-				mShader.SetFloat("alpha", 1.0f);
-				glDrawArrays(GL_LINES, 0, 36);
-			}
-			else if (mApplicationData.GetCellType(v) == CellType::eSOLID)
-			{
-				mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
-				mShader.SetFloat("alpha", 0.1f);
-				glDrawArrays(GL_LINES, 0, 36);
-			}
+		if (mApplicationData.GetCellType(v) == CellType::eFLUID)
+		{
+			mShader.SetVector("color", glm::vec3(0.0f, 0.0f, 1.0f));
+			mShader.SetFloat("alpha", 1.0f);
+			glDrawArrays(GL_LINES, 0, 36);
+		}
+		else if (mApplicationData.GetCellType(v) == CellType::eSOLID)
+		{
+			mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
+			mShader.SetFloat("alpha", 1.0f);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 	}
 }
