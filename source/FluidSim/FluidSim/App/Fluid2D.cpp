@@ -62,31 +62,31 @@ void Fluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		}
 
 		glm::dvec2 particlePosition = mParticles[particleIndex].GetPosition();
-		glm::dvec2 particleVelocity = mParticles[particleIndex].GetVelocity();
+		glm::dvec2 prevVelocity = mParticles[particleIndex].GetPreviousVelocity();
 
 		// Calculate K1 value.
 		glm::dvec2 K1PIC = InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::ePIC);
-		glm::dvec2 K1FLIP = particleVelocity + InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
+		glm::dvec2 K1FLIP = prevVelocity + InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
 
-		glm::dvec2 K1 = (K1FLIP * mFLIPBlend) + (K1PIC * (1.0 - mFLIPBlend));
+		glm::dvec2 K1 = glm::mix(K1PIC, K1FLIP, mFLIPBlend);
 
 		// Calculate K2 value.
 		glm::dvec2 K2Pos = particlePosition + deltaTime * 0.5 * K1;
 		int K2CellIndex = inMACGrid.GetClosestCell(K2Pos);
 
 		glm::dvec2 K2PIC = InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::ePIC);
-		glm::dvec2 K2FLIP = particleVelocity + InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::eFLIP);
+		glm::dvec2 K2FLIP = prevVelocity + InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::eFLIP);
 
-		glm::dvec2 K2 = (K2FLIP * mFLIPBlend) + (K2PIC * (1.0 - mFLIPBlend));
+		glm::dvec2 K2 = glm::mix(K2PIC, K2FLIP, mFLIPBlend);
 
 		// Calculate K3 value.
 		glm::dvec2 K3Pos = particlePosition + deltaTime * 0.75 * K2;
 		int K3CellIndex = inMACGrid.GetClosestCell(K3Pos);
 
 		glm::dvec2 K3PIC = InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::ePIC);
-		glm::dvec2 K3FLIP = particleVelocity + InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::eFLIP);
+		glm::dvec2 K3FLIP = prevVelocity + InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::eFLIP);
 
-		glm::dvec2 K3 = (K3FLIP * mFLIPBlend) + (K3PIC * (1.0 - mFLIPBlend));
+		glm::dvec2 K3 = glm::mix(K3PIC, K3FLIP, mFLIPBlend);
 
 		// Step particle
 		mParticles[particleIndex].StepRK3(deltaTime, K1, K2, K3);
@@ -191,7 +191,7 @@ void Fluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 					glm::dvec2 particlePos = mParticles[particleIndex].GetPosition();
 					glm::dvec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
 
-					glm::dvec2 diff = particlePos - nearbyCellPos + inMACGrid.GetCellSize() * 0.5f;
+					glm::dvec2 diff = particlePos - nearbyCellPos + inMACGrid.GetCellSize() * 0.5;
 
 					double k = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
@@ -257,9 +257,9 @@ double Fluid2D::BSpline(double input)
 
 void Fluid2D::InterpolateFromGrid(const MACGrid2D& inMACGrid)
 {
-	for (int p = 0; p < GetNumParticles(); p++)
+	for (int particleIndex = 0; particleIndex < GetNumParticles(); particleIndex++)
 	{
-		int cellIndex = ClosestCellToParticle(inMACGrid, mParticles[p]);
+		int cellIndex = ClosestCellToParticle(inMACGrid, mParticles[particleIndex]);
 
 		if (cellIndex < 0)
 		{
@@ -270,21 +270,17 @@ void Fluid2D::InterpolateFromGrid(const MACGrid2D& inMACGrid)
 		if (inMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
 		{
 			// Interpolate new velocity for PIC.
-			glm::dvec2 velocityPIC = InterpolateFromGridCell(inMACGrid, p, cellIndex, SimulationType::ePIC);
+			glm::dvec2 velocityPIC = InterpolateFromGridCell(inMACGrid, particleIndex, cellIndex, SimulationType::ePIC);
 
 			// Interpolate difference for FLIP
-			glm::dvec2 velocityDiffFLIP = InterpolateFromGridCell(inMACGrid, p, cellIndex, SimulationType::eFLIP);
-			glm::dvec2 velocityFLIP = mParticles[p].GetVelocity() + velocityDiffFLIP;
+			glm::dvec2 velocityDiffFLIP = InterpolateFromGridCell(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
+			glm::dvec2 velocityFLIP = mParticles[particleIndex].GetVelocity() + velocityDiffFLIP;
 
 			// Blend together to get final velocity
-			//glm::dvec2 finalVelocity = (velocityFLIP * mFLIPBlend) + (velocityPIC * (1.0 - mFLIPBlend));
-			glm::dvec2 finalVelocity = velocityFLIP + mFLIPBlend * (velocityPIC - velocityFLIP);
-			mParticles[p].SetVelocity(finalVelocity);
+			glm::dvec2 finalVelocity = glm::mix(velocityPIC, velocityFLIP, mFLIPBlend);
 
-			if ((finalVelocity.x > velocityFLIP.x && finalVelocity.x > velocityPIC.x) || (finalVelocity.y > velocityFLIP.y && finalVelocity.y > velocityPIC.y) || (finalVelocity.x < velocityFLIP.x && finalVelocity.x < velocityPIC.x) || (finalVelocity.y < velocityFLIP.y && finalVelocity.y < velocityPIC.y))
-			{
-				std::cout << "error";
-			}
+			mParticles[particleIndex].SetPreviousVelocity();
+			mParticles[particleIndex].SetVelocity(finalVelocity);
 		}
 	}
 }
@@ -309,14 +305,10 @@ void Fluid2D::InterpolateFromGridBSpline(const MACGrid2D& inMACGrid)
 		glm::dvec2 velocityFLIP = mParticles[particleIndex].GetVelocity() + velocityDiffFLIP;
 
 		// Blend together to get final velocity
-		//glm::dvec2 finalVelocity = (velocityFLIP * mFLIPBlend) + (velocityPIC * (1.0 - mFLIPBlend));
-		glm::dvec2 finalVelocity = velocityFLIP + mFLIPBlend * (velocityPIC - velocityFLIP);
-		mParticles[particleIndex].SetVelocity(finalVelocity);
+		glm::dvec2 finalVelocity = glm::mix(velocityPIC, velocityFLIP, mFLIPBlend);
 
-		if ((finalVelocity.x > velocityFLIP.x && finalVelocity.x > velocityPIC.x) || (finalVelocity.y > velocityFLIP.y && finalVelocity.y > velocityPIC.y) || (finalVelocity.x < velocityFLIP.x && finalVelocity.x < velocityPIC.x) || (finalVelocity.y < velocityFLIP.y && finalVelocity.y < velocityPIC.y))
-		{
-			std::cout << "error";
-		}
+		mParticles[particleIndex].SetPreviousVelocity();
+		mParticles[particleIndex].SetVelocity(finalVelocity);
 	}
 }
 
@@ -335,8 +327,8 @@ glm::dvec2 Fluid2D::InterpolateFromGridCell(const MACGrid2D& inMACGrid, const gl
 	double cellSize = inMACGrid.GetCellSize();
 
 	// Initialise all velocities with z zero value in case we are close to the edge of the grid.
-	double xVelocities[4][4] = { {0.0, 0.0, 0.0, 0.0},{0.0, 0.0, 0.0, 0.0},{0.0, 0.0, 0.0, 0.0},{0.0, 0.0, 0.0, 0.0} };
-	double yVelocities[4][4] = { {0.0, 0.0, 0.0, 0.0},{0.0, 0.0, 0.0, 0.0},{0.0, 0.0, 0.0, 0.0},{0.0, 0.0, 0.0, 0.0} };
+	double xVelocities[4][4] = { {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0} };
+	double yVelocities[4][4] = { {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0} };
 
 	// Find velocities for cells nearby where we are testing.
 	for (int i = 0; i < 4; i++)

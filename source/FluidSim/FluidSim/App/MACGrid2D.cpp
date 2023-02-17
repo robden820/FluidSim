@@ -76,7 +76,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 			mCellType[index] = CellType::eSOLID;
 		}
 
-		if (x > 20 && x < 50 && y > 30 && y < 70)
+		if (x > 5 && x < 30 && y > 20 && y < 70)
 		{
 			mCellType[index] = CellType::eFLUID;
 		}
@@ -292,6 +292,8 @@ void MACGrid2D::UpdateCellVelocity(double deltaTime)
 		mCellXVelocitiesDiff[cellIndex] = mCellXVelocities[cellIndex] - cellXVelocitiesPrev[cellIndex];
 		mCellYVelocitiesDiff[cellIndex] = mCellYVelocities[cellIndex] - cellYVelocitiesPrev[cellIndex];
 	}
+
+	std::cout << "\n";
 }
 
 void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
@@ -759,7 +761,6 @@ void MACGrid2D::UpdateCellPressureSpare(double deltaTime, int maxIterations)
 
 	Eigen::VectorXd divergence(mNumCells);
 	Eigen::VectorXd pressure(mNumCells);
-	Eigen::VectorXd precon(mNumCells);
 
 	for (int i = 0; i < mNumCells; i++)
 	{
