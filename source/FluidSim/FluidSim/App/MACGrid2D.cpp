@@ -292,8 +292,6 @@ void MACGrid2D::UpdateCellVelocity(double deltaTime)
 		mCellXVelocitiesDiff[cellIndex] = mCellXVelocities[cellIndex] - cellXVelocitiesPrev[cellIndex];
 		mCellYVelocitiesDiff[cellIndex] = mCellYVelocities[cellIndex] - cellYVelocitiesPrev[cellIndex];
 	}
-
-	std::cout << "\n";
 }
 
 void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
@@ -321,6 +319,11 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 		std::tie(x, y) = GetXYFromIndex(cellIndex);
 
 		int numFluidNeighbours = 0;
+
+		if (marker[cellIndex] == 0)
+		{
+			continue;
+		}
 
 		if (x > 0)
 		{
