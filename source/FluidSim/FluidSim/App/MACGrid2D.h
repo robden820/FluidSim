@@ -61,6 +61,8 @@ public:
 
 	void UpdateApplicationData(ApplicationData& inOutData);
 
+	void CalculateVelocityChange();
+
 private:
 
 	void InitializeGrid(const ApplicationData& inData) override;
@@ -95,6 +97,9 @@ private:
 
 	std::vector<double> mCellXVelocitiesDiff;
 	std::vector<double> mCellYVelocitiesDiff;
+
+	std::vector<double> mCellXVelocitiesPrev;
+	std::vector<double> mCellYVelocitiesPrev;
 
 	// Intermediate cell velocities
 	std::vector<double> mIntXVelocities;

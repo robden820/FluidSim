@@ -245,8 +245,8 @@ void MACGrid2D::UpdateCellVelocity(double deltaTime)
 	double solidYVel = 0.0;
 	double solidZVel = 0.0;
 
-	std::vector<double> cellXVelocitiesPrev = mCellXVelocities;
-	std::vector<double> cellYVelocitiesPrev = mCellYVelocities;
+	mCellXVelocitiesPrev = mCellXVelocities;
+	mCellYVelocitiesPrev = mCellYVelocities;
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -285,12 +285,6 @@ void MACGrid2D::UpdateCellVelocity(double deltaTime)
 				}
 			}
 		}
-	}
-
-	for (int cellIndex = 0; cellIndex < mNumCells; cellIndex++)
-	{
-		mCellXVelocitiesDiff[cellIndex] = mCellXVelocities[cellIndex] - cellXVelocitiesPrev[cellIndex];
-		mCellYVelocitiesDiff[cellIndex] = mCellYVelocities[cellIndex] - cellYVelocitiesPrev[cellIndex];
 	}
 }
 
@@ -1037,6 +1031,15 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 
 			outResult[index] = t * inPrecon[index];
 		}
+	}
+}
+
+void MACGrid2D::CalculateVelocityChange()
+{
+	for (int cellIndex = 0; cellIndex < mNumCells; cellIndex++)
+	{
+		mCellXVelocitiesDiff[cellIndex] = mCellXVelocities[cellIndex] - mCellXVelocitiesPrev[cellIndex];
+		mCellYVelocitiesDiff[cellIndex] = mCellYVelocities[cellIndex] - mCellYVelocitiesPrev[cellIndex];
 	}
 }
 
