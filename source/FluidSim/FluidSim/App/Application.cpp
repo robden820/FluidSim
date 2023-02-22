@@ -15,17 +15,17 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	// Initialise simulation data.
 	mApplicationData.SetDeltaTime(0.03);
 	mApplicationData.SetFluidDensity(1000.0);
-	mApplicationData.SetFLIPBlend(0.95);
+	mApplicationData.SetFLIPBlend(1.0);
 
 	// Set MACGrid data
 	mApplicationData.SetGridLeft(-6.0);
 	mApplicationData.SetGridBottom(-10.0);
 
-	mApplicationData.SetNumGridCellsWidth(30);
-	mApplicationData.SetNumGridCellsHeight(40);
+	mApplicationData.SetNumGridCellsWidth(60);
+	mApplicationData.SetNumGridCellsHeight(80);
 	mApplicationData.UpdateNumGridCells();
 
-	mApplicationData.SetGridCellSize(0.4);
+	mApplicationData.SetGridCellSize(0.2);
 }
 
 void Application::Initialize()

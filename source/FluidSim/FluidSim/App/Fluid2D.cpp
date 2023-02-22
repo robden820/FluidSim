@@ -30,8 +30,8 @@ void Fluid2D::SeedParticles(const ApplicationData& inOutData)
 			{
 				glm::dvec2 particlePos = inOutData.GetCellCenter2D(cellIndex);
 
-				particlePos.x += (rand() % 100 - 50.0) * 0.01 * gridCellSize + halfGridCell;
-				particlePos.y += (rand() % 100 - 50.0) * 0.01 * gridCellSize + halfGridCell;
+				particlePos.x += (rand() % 100) * 0.01 * gridCellSize + halfGridCell;
+				particlePos.y += (rand() % 100) * 0.01 * gridCellSize + halfGridCell;
 
 				Particle2D particle(particlePos);
 
@@ -63,11 +63,11 @@ void Fluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 
 		glm::dvec2 particlePosition = mParticles[particleIndex].GetPosition();
 
-		glm::dvec2 K1prevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, particleIndex, cellIndex);
+		glm::dvec2 K1PrevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, particlePosition, cellIndex);
 
 		// Calculate K1 value.
 		glm::dvec2 K1PIC = InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::ePIC);
-		glm::dvec2 K1FLIP = K1prevVel + InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
+		glm::dvec2 K1FLIP = K1PrevVel + InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
 
 		glm::dvec2 K1 = glm::mix(K1PIC, K1FLIP, mFLIPBlend);
 
@@ -75,10 +75,10 @@ void Fluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		glm::dvec2 K2Pos = particlePosition + deltaTime * 0.5 * K1;
 		int K2CellIndex = inMACGrid.GetClosestCell(K2Pos);
 
-		glm::dvec2 K2prevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, K2Pos, K2CellIndex);
+		glm::dvec2 K2PrevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, K2Pos, K2CellIndex);
 
 		glm::dvec2 K2PIC = InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::ePIC);
-		glm::dvec2 K2FLIP = K2prevVel + InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::eFLIP);
+		glm::dvec2 K2FLIP = K2PrevVel + InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::eFLIP);
 
 		glm::dvec2 K2 = glm::mix(K2PIC, K2FLIP, mFLIPBlend);
 
@@ -86,10 +86,10 @@ void Fluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		glm::dvec2 K3Pos = particlePosition + deltaTime * 0.75 * K2;
 		int K3CellIndex = inMACGrid.GetClosestCell(K3Pos);
 
-		glm::dvec2 K3prevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, K3Pos, K3CellIndex);
+		glm::dvec2 K3PrevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, K3Pos, K3CellIndex);
 
 		glm::dvec2 K3PIC = InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::ePIC);
-		glm::dvec2 K3FLIP = K3prevVel + InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::eFLIP);
+		glm::dvec2 K3FLIP = K3PrevVel + InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::eFLIP);
 
 		glm::dvec2 K3 = glm::mix(K3PIC, K3FLIP, mFLIPBlend);
 
@@ -279,7 +279,7 @@ void Fluid2D::InterpolateFromGrid(const MACGrid2D& inMACGrid)
 
 			// Interpolate difference for FLIP
 			glm::dvec2 velocityDiffFLIP = InterpolateFromGridCell(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
-			glm::dvec2 velocityFLIP = mParticles[particleIndex].GetVelocity() + velocityDiffFLIP;
+			glm::dvec2 velocityFLIP = InterpolateFromGridCellBSplinePrev(inMACGrid, particleIndex, cellIndex) + velocityDiffFLIP;
 
 			// Blend together to get final velocity
 			glm::dvec2 finalVelocity = glm::mix(velocityPIC, velocityFLIP, mFLIPBlend);
@@ -306,7 +306,7 @@ void Fluid2D::InterpolateFromGridBSpline(const MACGrid2D& inMACGrid)
 
 		// Interpolate difference for FLIP
 		glm::dvec2 velocityDiffFLIP = InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
-		glm::dvec2 velocityFLIP = mParticles[particleIndex].GetVelocity() + velocityDiffFLIP;
+		glm::dvec2 velocityFLIP = InterpolateFromGridCellBSplinePrev(inMACGrid, particleIndex, cellIndex) + velocityDiffFLIP;
 
 		// Blend together to get final velocity
 		glm::dvec2 finalVelocity = glm::mix(velocityPIC, velocityFLIP, mFLIPBlend);
