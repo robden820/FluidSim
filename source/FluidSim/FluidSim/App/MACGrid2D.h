@@ -37,6 +37,9 @@ public:
 	const double GetCellXVelocityDiff(int index) const { return mCellXVelocitiesDiff[index]; }
 	const double GetCellYVelocityDiff(int index) const { return mCellYVelocitiesDiff[index]; }
 
+	const double GetCellXVelocityPrev(int index) const { return mCellXVelocitiesPrev[index]; }
+	const double GetCellYVelocityPrev(int index) const { return mCellYVelocitiesPrev[index]; }
+
 	void SetCellXVelocity(int index, double inVelocity) { mCellXVelocities[index] = inVelocity; }
 	void SetCellYVelocity(int index, double inVelocity) { mCellYVelocities[index] = inVelocity; }
 
