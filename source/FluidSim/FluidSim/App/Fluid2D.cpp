@@ -30,8 +30,8 @@ void Fluid2D::SeedParticles(const ApplicationData& inOutData)
 			{
 				glm::dvec2 particlePos = inOutData.GetCellCenter2D(cellIndex);
 
-				particlePos.x += (rand() % 100) * 0.01 * gridCellSize + halfGridCell;
-				particlePos.y += (rand() % 100) * 0.01 * gridCellSize + halfGridCell;
+				particlePos.x += (rand() % 100 - 50.0) * 0.01 * gridCellSize + halfGridCell;
+				particlePos.y += (rand() % 100 - 50.0) * 0.01 * gridCellSize + halfGridCell;
 
 				Particle2D particle(particlePos);
 
@@ -62,11 +62,12 @@ void Fluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		}
 
 		glm::dvec2 particlePosition = mParticles[particleIndex].GetPosition();
-		glm::dvec2 prevVelocity = mParticles[particleIndex].GetPreviousVelocity();
+
+		glm::dvec2 K1prevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, particleIndex, cellIndex);
 
 		// Calculate K1 value.
 		glm::dvec2 K1PIC = InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::ePIC);
-		glm::dvec2 K1FLIP = prevVelocity + InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
+		glm::dvec2 K1FLIP = K1prevVel + InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::eFLIP);
 
 		glm::dvec2 K1 = glm::mix(K1PIC, K1FLIP, mFLIPBlend);
 
@@ -74,8 +75,10 @@ void Fluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		glm::dvec2 K2Pos = particlePosition + deltaTime * 0.5 * K1;
 		int K2CellIndex = inMACGrid.GetClosestCell(K2Pos);
 
+		glm::dvec2 K2prevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, K2Pos, K2CellIndex);
+
 		glm::dvec2 K2PIC = InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::ePIC);
-		glm::dvec2 K2FLIP = prevVelocity + InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::eFLIP);
+		glm::dvec2 K2FLIP = K2prevVel + InterpolateFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex, SimulationType::eFLIP);
 
 		glm::dvec2 K2 = glm::mix(K2PIC, K2FLIP, mFLIPBlend);
 
@@ -83,8 +86,10 @@ void Fluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		glm::dvec2 K3Pos = particlePosition + deltaTime * 0.75 * K2;
 		int K3CellIndex = inMACGrid.GetClosestCell(K3Pos);
 
+		glm::dvec2 K3prevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, K3Pos, K3CellIndex);
+
 		glm::dvec2 K3PIC = InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::ePIC);
-		glm::dvec2 K3FLIP = prevVelocity + InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::eFLIP);
+		glm::dvec2 K3FLIP = K3prevVel + InterpolateFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex, SimulationType::eFLIP);
 
 		glm::dvec2 K3 = glm::mix(K3PIC, K3FLIP, mFLIPBlend);
 
@@ -279,7 +284,6 @@ void Fluid2D::InterpolateFromGrid(const MACGrid2D& inMACGrid)
 			// Blend together to get final velocity
 			glm::dvec2 finalVelocity = glm::mix(velocityPIC, velocityFLIP, mFLIPBlend);
 
-			mParticles[particleIndex].SetPreviousVelocity();
 			mParticles[particleIndex].SetVelocity(finalVelocity);
 		}
 	}
@@ -307,7 +311,6 @@ void Fluid2D::InterpolateFromGridBSpline(const MACGrid2D& inMACGrid)
 		// Blend together to get final velocity
 		glm::dvec2 finalVelocity = glm::mix(velocityPIC, velocityFLIP, mFLIPBlend);
 
-		mParticles[particleIndex].SetPreviousVelocity();
 		mParticles[particleIndex].SetVelocity(finalVelocity);
 	}
 }
@@ -428,6 +431,59 @@ glm::dvec2 Fluid2D::InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, c
 					velocitySum.y += inMACGrid.GetCellYVelocity(nearbyCellIndex) * k;
 				}
 				
+				totalWeight += k;
+			}
+		}
+	}
+
+	return (velocitySum / (double)totalWeight);
+}
+
+glm::dvec2 Fluid2D::InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex)
+{
+	glm::dvec2 particlePos = mParticles[particleIndex].GetPosition();
+
+	return InterpolateFromGridCellBSplinePrev(inMACGrid, particlePos, cellIndex);
+}
+
+glm::dvec2 Fluid2D::InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex)
+{
+	int x, y;
+	std::tie(x, y) = inMACGrid.GetXYFromIndex(cellIndex);
+
+	glm::dvec2 velocitySum(0.0, 0.0);
+	double totalWeight = 0.0;
+
+	// Interpolate to cells that may be close enough to particle.
+	for (int i = x - 3; i <= x + 3; i++)
+	{
+		// If there isn't a cell where we are looking, continue.
+		if (i < 0 || i > inMACGrid.GetNumCellsWidth() - 1)
+		{
+			continue;
+		}
+
+		for (int j = y - 3; j <= y + 3; j++)
+		{
+			// If there isn't a cell where we are looking, continue.
+			if (j < 0 || j > inMACGrid.GetNumCellsHeight() - 1)
+			{
+				continue;
+			}
+
+			int nearbyCellIndex = inMACGrid.GetIndexFromXY(i, j);
+
+			if (inMACGrid.GetCellType(nearbyCellIndex) != CellType::eSOLID)
+			{
+				glm::dvec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
+
+				glm::dvec2 diff = particlePosition - nearbyCellPos + inMACGrid.GetCellSize() * 0.5f;
+
+				double k = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
+
+				velocitySum.x += inMACGrid.GetCellXVelocityPrev(nearbyCellIndex) * k;
+				velocitySum.y += inMACGrid.GetCellYVelocityPrev(nearbyCellIndex) * k;
+
 				totalWeight += k;
 			}
 		}
