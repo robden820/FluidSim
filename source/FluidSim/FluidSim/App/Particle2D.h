@@ -21,9 +21,6 @@ public:
 	void SetXVelocity(double inXVel) { mVelocity.x = inXVel; }
 	void SetYVelocity(double inYVel) { mVelocity.y = inYVel; }
 
-	const glm::dvec2& GetPreviousVelocity() const { return mPrevVelocity; }
-	void SetPreviousVelocity() { mPrevVelocity = mVelocity; }
-
 	const glm::dvec2& GetAcceleration() const { return mAcceleration; }
 	void SetAcceleration(const glm::dvec2& inAcc) { mAcceleration = inAcc; }
 
@@ -32,7 +29,6 @@ public:
 private:
 	glm::dvec2 mPosition;
 	glm::dvec2 mVelocity;
-	glm::dvec2 mPrevVelocity;
 	glm::dvec2 mAcceleration;
 
 	glm::dvec2 mForceAccumulator; // For applying non-gravitational forces.

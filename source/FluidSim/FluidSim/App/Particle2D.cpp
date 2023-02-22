@@ -4,7 +4,6 @@ Particle2D::Particle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocit
 {
 	mPosition = inPosition;
 	mVelocity = inVelocity;
-	mPrevVelocity = inVelocity;
 	mMass = inMass;
 	mRadius = inRadius;
 
