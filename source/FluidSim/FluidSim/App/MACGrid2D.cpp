@@ -8,8 +8,8 @@
 
 MACGrid2D::MACGrid2D()
 {
-	dLeft = 0.f;
-	dBottom = 0.f;
+	dLeft = 0.0;
+	dBottom = 0.0;
 
 	mNumCellWidth = 0;
 	mNumCellHeight = 0;
@@ -34,7 +34,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellSize = inData.GetGridCellSize();
 	mInvCellSize = 1 / mCellSize;
 
-	double halfCell = mCellSize * 0.5f;
+	double halfCell = mCellSize * 0.5;
 
 	mCellCenters.reserve(mNumCells);
 
@@ -211,8 +211,8 @@ void MACGrid2D::AdvectCellVelocity(double deltaTime)
 
 int MACGrid2D::GetClosestCell(const glm::dvec2& inPos) const
 {
-	int x = static_cast<int>(round((inPos.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize));
-	int y = static_cast<int>(round((inPos.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize));
+	int x = static_cast<int>(round((inPos.x - dLeft - (mCellSize * 0.5)) * mInvCellSize));
+	int y = static_cast<int>(round((inPos.y - dBottom - (mCellSize * 0.5)) * mInvCellSize));
 
 	int approxIndex = GetIndexFromXY(x, y);
 
@@ -226,7 +226,7 @@ int MACGrid2D::GetClosestCell(const glm::dvec2& inPos) const
 
 void MACGrid2D::ApplyForces(double deltaTime)
 {
-	double gravity = -9.8f * deltaTime;
+	double gravity = -9.8 * deltaTime;
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -243,7 +243,6 @@ void MACGrid2D::UpdateCellVelocity(double deltaTime)
 
 	double solidXVel = 0.0;
 	double solidYVel = 0.0;
-	double solidZVel = 0.0;
 
 	mCellXVelocitiesPrev = mCellXVelocities;
 	mCellYVelocitiesPrev = mCellYVelocities;
