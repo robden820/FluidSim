@@ -49,6 +49,8 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	std::cout << "Extrapolate velocity field: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
+	mMACGrid.CalculateVelocityChange();
+
 	mFluid.InterpolateFromGridBSpline(mMACGrid);
 
 	std::cout << "Interpolate from grid: " << glfwGetTime() - start << "\n";

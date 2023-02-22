@@ -8,8 +8,8 @@
 
 MACGrid2D::MACGrid2D()
 {
-	dLeft = 0.f;
-	dBottom = 0.f;
+	dLeft = 0.0;
+	dBottom = 0.0;
 
 	mNumCellWidth = 0;
 	mNumCellHeight = 0;
@@ -34,7 +34,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellSize = inData.GetGridCellSize();
 	mInvCellSize = 1 / mCellSize;
 
-	double halfCell = mCellSize * 0.5f;
+	double halfCell = mCellSize * 0.5;
 
 	mCellCenters.reserve(mNumCells);
 
@@ -76,7 +76,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 			mCellType[index] = CellType::eSOLID;
 		}
 
-		if (x > 20 && x < 50 && y > 30 && y < 70)
+		if (x > 5 && x < 20 && y > 10 && y < 75)
 		{
 			mCellType[index] = CellType::eFLUID;
 		}
@@ -211,8 +211,8 @@ void MACGrid2D::AdvectCellVelocity(double deltaTime)
 
 int MACGrid2D::GetClosestCell(const glm::dvec2& inPos) const
 {
-	int x = static_cast<int>(round((inPos.x - dLeft - (mCellSize * 0.5f)) * mInvCellSize));
-	int y = static_cast<int>(round((inPos.y - dBottom - (mCellSize * 0.5f)) * mInvCellSize));
+	int x = static_cast<int>(round((inPos.x - dLeft - (mCellSize * 0.5)) * mInvCellSize));
+	int y = static_cast<int>(round((inPos.y - dBottom - (mCellSize * 0.5)) * mInvCellSize));
 
 	int approxIndex = GetIndexFromXY(x, y);
 
@@ -226,7 +226,7 @@ int MACGrid2D::GetClosestCell(const glm::dvec2& inPos) const
 
 void MACGrid2D::ApplyForces(double deltaTime)
 {
-	double gravity = -9.8f * deltaTime;
+	double gravity = -9.8 * deltaTime;
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -243,10 +243,9 @@ void MACGrid2D::UpdateCellVelocity(double deltaTime)
 
 	double solidXVel = 0.0;
 	double solidYVel = 0.0;
-	double solidZVel = 0.0;
 
-	std::vector<double> cellXVelocitiesPrev = mCellXVelocities;
-	std::vector<double> cellYVelocitiesPrev = mCellYVelocities;
+	mCellXVelocitiesPrev = mCellXVelocities;
+	mCellYVelocitiesPrev = mCellYVelocities;
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -286,12 +285,6 @@ void MACGrid2D::UpdateCellVelocity(double deltaTime)
 			}
 		}
 	}
-
-	for (int cellIndex = 0; cellIndex < mNumCells; cellIndex++)
-	{
-		mCellXVelocitiesDiff[cellIndex] = mCellXVelocities[cellIndex] - cellXVelocitiesPrev[cellIndex];
-		mCellYVelocitiesDiff[cellIndex] = mCellYVelocities[cellIndex] - cellYVelocitiesPrev[cellIndex];
-	}
 }
 
 void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
@@ -319,6 +312,11 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 		std::tie(x, y) = GetXYFromIndex(cellIndex);
 
 		int numFluidNeighbours = 0;
+
+		if (marker[cellIndex] == 0)
+		{
+			continue;
+		}
 
 		if (x > 0)
 		{
@@ -759,7 +757,6 @@ void MACGrid2D::UpdateCellPressureSpare(double deltaTime, int maxIterations)
 
 	Eigen::VectorXd divergence(mNumCells);
 	Eigen::VectorXd pressure(mNumCells);
-	Eigen::VectorXd precon(mNumCells);
 
 	for (int i = 0; i < mNumCells; i++)
 	{
@@ -1033,6 +1030,15 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 
 			outResult[index] = t * inPrecon[index];
 		}
+	}
+}
+
+void MACGrid2D::CalculateVelocityChange()
+{
+	for (int cellIndex = 0; cellIndex < mNumCells; cellIndex++)
+	{
+		mCellXVelocitiesDiff[cellIndex] = mCellXVelocities[cellIndex] - mCellXVelocitiesPrev[cellIndex];
+		mCellYVelocitiesDiff[cellIndex] = mCellYVelocities[cellIndex] - mCellYVelocitiesPrev[cellIndex];
 	}
 }
 

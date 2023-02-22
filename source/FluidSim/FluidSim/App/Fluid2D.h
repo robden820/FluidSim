@@ -49,11 +49,16 @@ private:
 
 	int ClosestCellToParticle(const MACGrid2D& inMACGrid, const Particle2D& particle);
 
+	// Interpolate from current cell velocities.
 	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex, SimulationType simType);
 	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex, SimulationType simType);
 
 	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex, SimulationType simType);
 	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex, SimulationType simType);
+
+	// Interpolate from previous cell velocities
+	glm::dvec2 InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
+	glm::dvec2 InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex);
 
 	void ProjectParticleToFluid(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 
