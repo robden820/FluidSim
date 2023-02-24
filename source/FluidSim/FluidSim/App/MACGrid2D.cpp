@@ -320,7 +320,7 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 		if (x > 0)
 		{
 			int left = GetIndexFromXY(x - 1, y);
-			if (marker[left] == 0)
+			if (mCellType[left] == CellType::eFLUID)
 			{
 				numFluidNeighbours++;
 			}
@@ -328,7 +328,7 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 		if (x < mNumCellWidth - 1)
 		{
 			int right = GetIndexFromXY(x + 1, y);
-			if (marker[right] == 0)
+			if (mCellType[right] == CellType::eFLUID)
 			{
 				numFluidNeighbours++;
 			}
@@ -336,7 +336,7 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 		if (y > 0)
 		{
 			int bottom = GetIndexFromXY(x, y - 1);
-			if (marker[bottom] == 0)
+			if (mCellType[bottom] == CellType::eFLUID)
 			{
 				numFluidNeighbours++;
 			}
@@ -344,7 +344,7 @@ void MACGrid2D::ExtrapolateVelocityField(bool extrapolateIntVelocities)
 		if (y < mNumCellHeight - 1)
 		{
 			int top = GetIndexFromXY(x, y + 1);
-			if (marker[top] == 0)
+			if (mCellType[top] == CellType::eFLUID)
 			{
 				numFluidNeighbours++;
 			}
@@ -1060,7 +1060,7 @@ std::tuple<int, int> MACGrid2D::GetXYFromIndex(int index) const
 	int y = 0;
 
 	y = index % mNumCellHeight;
-	x = static_cast<int>(round((index - y) / mNumCellHeight)) % mNumCellWidth;
+	x = static_cast<int>(round(index / mNumCellHeight)) % mNumCellWidth;
 
 	return std::tuple<int, int>(x, y);
 }

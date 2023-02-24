@@ -301,7 +301,7 @@ void Fluid2D::InterpolateFromGrid(const MACGrid2D& inMACGrid)
 	{
 		int cellIndex = ClosestCellToParticle(inMACGrid, mParticles[particleIndex]);
 
-		if (cellIndex < 0 || inMACGrid.GetCellType(cellIndex) != CellType::eSOLID)
+		if (cellIndex < 0 || inMACGrid.GetCellType(cellIndex) == CellType::eSOLID)
 		{
 			// Invalid cell index returned if no closest cell found, i.e. particle has left grid.
 			continue;
@@ -366,25 +366,22 @@ glm::dvec2 Fluid2D::InterpolateFromGridCell(const MACGrid2D& inMACGrid, const gl
 	double yVelocities[4][4] = { {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0} };
 
 	// Find velocities for cells nearby where we are testing.
-	for (int i = 0; i < 4; i++)
+	for (int i = x - 1; i <= x + 2; i++)
 	{
-		int indexX = x + i - 1;
-
-		if (indexX < 0 || indexX > inMACGrid.GetNumCellsWidth() - 1)
+		if (i < 0 || i > inMACGrid.GetNumCellsWidth() - 1)
 		{
 			continue;
 		}
 
-		for (int j = 0; j < 4; j++)
+		for (int j = y - 1; j <= y + 2; j++)
 		{
-			int indexY = y + j - 1;
 
-			if (indexY < 0 || indexY > inMACGrid.GetNumCellsHeight() - 1)
+			if (j < 0 || j > inMACGrid.GetNumCellsHeight() - 1)
 			{
 				continue;
 			}
 
-			int nearbyCellIndex = inMACGrid.GetIndexFromXY(indexX, indexY);
+			int nearbyCellIndex = inMACGrid.GetIndexFromXY(i, j);
 
 			if (simType == SimulationType::eFLIP) // If using FLIP interpolate the change in velocity.
 			{
