@@ -20,6 +20,7 @@ public:
 
 	// FLIP/PIC blend.
 	void StepParticles(double deltaTime, const MACGrid2D& inMACGrid); // RK3
+	void StepParticlesEuler(double deltaTime, const MACGrid2D& inMACGrid);
 
 	void UpdateApplicationData(ApplicationData& inOutData);
 

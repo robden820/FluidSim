@@ -56,7 +56,8 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	std::cout << "Interpolate from grid: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
-	mFluid.StepParticles(deltaTime, mMACGrid);
+	//mFluid.StepParticles(deltaTime, mMACGrid);
+	mFluid.StepParticlesEuler(deltaTime, mMACGrid);
 
 	std::cout << "Step particles (RK3): " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
