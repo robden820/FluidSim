@@ -76,7 +76,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 			mCellType[index] = CellType::eSOLID;
 		}
 
-		if (x > 5 && x < 20 && y > 10 && y < 75)
+		if (x > 5 && x < 20 && y > 10 && y < 35)
 		{
 			mCellType[index] = CellType::eFLUID;
 		}
@@ -141,7 +141,7 @@ void MACGrid2D::Project(ApplicationData& inOutData)
 	CalculateCellDivergence();
 
 	//UpdateCellPressure(deltaTime, 200);
-	UpdateCellPressureSpare(deltaTime, 200);
+	UpdateCellPressureSparse(deltaTime, 200);
 
 	UpdateCellVelocity(deltaTime);
 }
@@ -239,13 +239,12 @@ void MACGrid2D::ApplyForces(double deltaTime)
 
 void MACGrid2D::UpdateCellVelocity(double deltaTime)
 {
+	SavePreviousVelocities();
+
 	double scale = (double)deltaTime * mInvCellSize * mInvDensity;
 
 	double solidXVel = 0.0;
 	double solidYVel = 0.0;
-
-	mCellXVelocitiesPrev = mCellXVelocities;
-	mCellYVelocitiesPrev = mCellYVelocities;
 
 	for (int index = 0; index < mNumCells; index++)
 	{
@@ -749,7 +748,7 @@ void MACGrid2D::InitializeLinearSystem(double deltaTime, std::vector<double>& in
 	}
 }
 
-void MACGrid2D::UpdateCellPressureSpare(double deltaTime, int maxIterations)
+void MACGrid2D::UpdateCellPressureSparse(double deltaTime, int maxIterations)
 {
 	Eigen::SparseMatrix<double> A(mNumCells, mNumCells);
 
@@ -1031,6 +1030,12 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 			outResult[index] = t * inPrecon[index];
 		}
 	}
+}
+
+void MACGrid2D::SavePreviousVelocities()
+{
+	mCellXVelocitiesPrev = mCellXVelocities;
+	mCellYVelocitiesPrev = mCellYVelocities;
 }
 
 void MACGrid2D::CalculateVelocityChange()

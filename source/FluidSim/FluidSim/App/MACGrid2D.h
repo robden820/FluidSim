@@ -73,8 +73,10 @@ private:
 
 	void CalculateCellDivergence();
 
+	void SavePreviousVelocities();
+
 	void UpdateCellPressure(double deltaTime, int maxIterations);
-	void UpdateCellPressureSpare(double deltaTime, int maxIterations);
+	void UpdateCellPressureSparse(double deltaTime, int maxIterations);
 
 	void AdvectCellVelocity(double deltaTime);
 	void UpdateCellVelocity(double deltaTime);
