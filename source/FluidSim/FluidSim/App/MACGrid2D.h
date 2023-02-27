@@ -64,6 +64,7 @@ public:
 
 	void UpdateApplicationData(ApplicationData& inOutData);
 
+	void SavePreviousVelocities();
 	void CalculateVelocityChange();
 
 private:
@@ -72,8 +73,6 @@ private:
 	void InitializeGridPressure();
 
 	void CalculateCellDivergence();
-
-	void SavePreviousVelocities();
 
 	void UpdateCellPressure(double deltaTime, int maxIterations);
 	void UpdateCellPressureSparse(double deltaTime, int maxIterations);

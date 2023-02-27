@@ -76,7 +76,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 			mCellType[index] = CellType::eSOLID;
 		}
 
-		if (x > 5 && x < 20 && y > 10 && y < 35)
+		if (x > 5 && x < 13 && y > 10 && y < 37)
 		{
 			mCellType[index] = CellType::eFLUID;
 		}
@@ -239,8 +239,6 @@ void MACGrid2D::ApplyForces(double deltaTime)
 
 void MACGrid2D::UpdateCellVelocity(double deltaTime)
 {
-	SavePreviousVelocities();
-
 	double scale = (double)deltaTime * mInvCellSize * mInvDensity;
 
 	double solidXVel = 0.0;
@@ -1034,8 +1032,8 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 
 void MACGrid2D::SavePreviousVelocities()
 {
-	mCellXVelocitiesPrev = mCellXVelocities;
-	mCellYVelocitiesPrev = mCellYVelocities;
+	mCellXVelocitiesPrev = mIntXVelocities;
+	mCellYVelocitiesPrev = mIntYVelocities;
 }
 
 void MACGrid2D::CalculateVelocityChange()
