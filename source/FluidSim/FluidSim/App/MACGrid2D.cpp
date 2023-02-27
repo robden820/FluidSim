@@ -76,7 +76,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 			mCellType[index] = CellType::eSOLID;
 		}
 
-		if (x > 5 && x < 13 && y > 10 && y < 37)
+		if (x > 10 && x < 26 && y > 20 && y < 70)
 		{
 			mCellType[index] = CellType::eFLUID;
 		}

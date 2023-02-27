@@ -95,7 +95,6 @@ void Fluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		glm::dvec2 particlePosition = mParticles[particleIndex].GetPosition();
 
 		glm::dvec2 K1PrevVel = InterpolateFromGridCellBSplinePrev(inMACGrid, particlePosition, cellIndex);
-		glm::dvec2 prevVel = mParticles[particleIndex].GetVelocity();
 
 		// Calculate K1 value.
 		glm::dvec2 K1PIC = InterpolateFromGridCellBSpline(inMACGrid, particleIndex, cellIndex, SimulationType::ePIC);

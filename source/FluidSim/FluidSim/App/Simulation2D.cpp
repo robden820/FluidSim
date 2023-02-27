@@ -69,8 +69,7 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	start = glfwGetTime();
 
 	// Advance the particles through the velocity field.
-	//mFluid.StepParticles(deltaTime, mMACGrid);
-	mFluid.StepParticlesEuler(deltaTime, mMACGrid);
+	mFluid.StepParticles(deltaTime, mMACGrid);
 
 	std::cout << "Step particles (Euler): " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
