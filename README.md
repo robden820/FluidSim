@@ -13,11 +13,9 @@ FLIP 0.9 fluid simulation:
 https://user-images.githubusercontent.com/23746310/221607056-872dce20-f780-4a6d-863b-cb95ffa5b49d.mp4
 
 To do:
- - **Fix issues with FLIP simulation**
  - Parallel computing.
  - - CUDA: to do.
  - Remove unused parts of Eigen library.
- - Correct handling of solid cells and domain boundaries.
  
 
 Long term:
