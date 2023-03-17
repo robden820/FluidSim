@@ -3,6 +3,8 @@
 #include <iostream>
 #include "GLFW/glfw3.h"
 
+#include "FLIPFluid2D.h"
+
 Simulation2D::Simulation2D(ApplicationData& inOutData)
 {
 	// Initialise new staggered Mac grid.
@@ -12,10 +14,10 @@ Simulation2D::Simulation2D(ApplicationData& inOutData)
 	mMACGrid.UpdateApplicationData(inOutData);
 
 	// Initialise new fluid.
-	Fluid2D fluid(inOutData);
-	mFluid = fluid;
+	FLIPFluid2D fluid(inOutData);
+	mFluid = std::make_unique<FLIPFluid2D>(fluid);
 
-	mFluid.UpdateApplicationData(inOutData);
+	mFluid->UpdateApplicationData(inOutData);
 }
 
 void Simulation2D::StepSimulation(ApplicationData& inOutData)
@@ -25,7 +27,7 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	double deltaTime = inOutData.GetDeltaTime();
 
 	// Interpolate the velocities of the particles to the grid.
-	mFluid.InterpolateToGrid(mMACGrid);
+	mFluid->InterpolateToGrid(mMACGrid);
 
 	std::cout << "Interpolate to grid: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
@@ -63,25 +65,25 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	mMACGrid.CalculateVelocityChange();
 
 	// Interpolate the velocities of the grid to the particles.
-	mFluid.InterpolateFromGridBSpline(mMACGrid);
+	mFluid->InterpolateFromGridBSpline(mMACGrid);
 
 	std::cout << "Interpolate from grid: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
 	// Advance the particles through the velocity field.
-	mFluid.StepParticles(deltaTime, mMACGrid);
+	mFluid->StepParticles(deltaTime, mMACGrid);
 
 	std::cout << "Step particles (Euler): " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
 	// Delete any particles that have left the grid.
-	mFluid.DeleteBadParticles(mMACGrid);
+	mFluid->DeleteBadParticles(mMACGrid);
 
 	std::cout << "Remove bad particles: " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
 
 	// Update all the data for the simulation.
-	mFluid.UpdateApplicationData(inOutData);
+	mFluid->UpdateApplicationData(inOutData);
 	mMACGrid.UpdateCellTypesFromParticles(inOutData.Get2DParticlePositions());
 	mMACGrid.UpdateApplicationData(inOutData);
 
