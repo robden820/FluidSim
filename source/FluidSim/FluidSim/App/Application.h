@@ -52,7 +52,7 @@ private:
 
 	std::unique_ptr<Fluid> mFluid;
 
-	Simulation2D mSimulation;
+	Simulation2D* mSimulation;
 
 	Sphere mSphere; // Contains vertex & index information to draw particles.
 

@@ -63,11 +63,7 @@ void Application::Initialize()
 	{
 		double start = glfwGetTime();
 
-//		Fluid2D fluid(mApplicationData);
-//		mFluid = std::make_unique<Fluid2D>(fluid);
-
-		Simulation2D sim(mApplicationData);
-		mSimulation = sim;
+		mSimulation = new Simulation2D(mApplicationData);
 
 		std::cout << "Initializing fluid: " << glfwGetTime() - start << "\n";
 		start = glfwGetTime();
@@ -147,7 +143,7 @@ void Application::SetShader(Shader& inShader)
 void Application::Update()
 {
 	//mFluid->Update(mApplicationData);
-	mSimulation.StepSimulation(mApplicationData);
+	mSimulation->StepSimulation(mApplicationData);
 }
 
 void Application::Render(float inAspectRatio)
