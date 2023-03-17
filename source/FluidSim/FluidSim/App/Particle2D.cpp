@@ -1,12 +1,10 @@
 #include "Particle2D.h"
 
-Particle2D::Particle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity, double inMass, double inRadius)
+Particle2D::Particle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity, double inMass)
+	: mPosition(inPosition),
+	mVelocity(inVelocity)
 {
-	mPosition = inPosition;
-	mVelocity = inVelocity;
 	mMass = inMass;
-	mRadius = inRadius;
-
 	mAcceleration = { 0.0, -9.8f}; // Acceleration due to gravity
 
 	double g = -9.8f * mMass; // Downwards force due to gravity;

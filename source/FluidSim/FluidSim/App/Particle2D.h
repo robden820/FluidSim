@@ -9,7 +9,7 @@ public:
 	Particle2D() = default;
 	~Particle2D() = default;
 
-	Particle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity = glm::dvec2(0.0, 0.0), double inMass = 1.0, double inRadius = 0.1);
+	Particle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity = glm::dvec2(0.0, 0.0), double inMass = 1.0);
 
 	void StepRK3(double deltaTime, const glm::dvec2& K1, const glm::dvec2& K2, const glm::dvec2& K3);
 
@@ -26,7 +26,7 @@ public:
 
 	void ApplyForce(const glm::dvec2& inForce) { mForceAccumulator += inForce; }
 
-private:
+protected:
 	glm::dvec2 mPosition;
 	glm::dvec2 mVelocity;
 	glm::dvec2 mAcceleration;
