@@ -1,71 +1,57 @@
 #pragma once
 
-#include <vector>
-#include <memory>
+#include "Fluid.h"
 
 #include "glm/glm.hpp"
 
-#include "Fluid.h"
-
-#include "Particle2D.h"
 #include "MACGrid2D.h"
 
-class Fluid2D : public Fluid
+#include "Particle2D.h"
+#include "APICParticle2D.h"
+
+class IFluid2D : public Fluid
 {
 public:
-	Fluid2D() = default;
-	~Fluid2D() = default;
+	virtual ~IFluid2D() = default;
 
-	Fluid2D(const ApplicationData& inOutData);
+	virtual void StepParticles(double deltaTime, const MACGrid2D& inMACGrid) = 0;
+	virtual void StepParticlesEuler(double deltaTime, const MACGrid2D& inMACGrid) = 0;
+
+	virtual void UpdateApplicationData(ApplicationData& inOutData) = 0;
+
+	virtual void InterpolateToGrid(MACGrid2D& inMACGrid) = 0;
 
 	// FLIP/PIC blend.
-	void StepParticles(double deltaTime, const MACGrid2D& inMACGrid); // RK3
-	void StepParticlesEuler(double deltaTime, const MACGrid2D& inMACGrid);
+	virtual void InterpolateFromGrid(const MACGrid2D& inMACGrid) = 0;
+	virtual void InterpolateFromGridBSpline(const MACGrid2D& inMACGrid) = 0;
 
-	void UpdateApplicationData(ApplicationData& inOutData);
+	virtual void DeleteBadParticles(const MACGrid2D& inMACGrid) = 0;
+};
 
-	void InterpolateToGrid(MACGrid2D& inMACGrid);
-	
-	// FLIP/PIC blend.
-	void InterpolateFromGrid(const MACGrid2D& inMACGrid);
-	void InterpolateFromGridBSpline(const MACGrid2D& inMACGrid);
-
-	const std::vector<Particle2D>& GetParticles() const { return mParticles; }
-	const Particle2D& GetParticle(int index) const { return mParticles[index]; }
-	size_t GetNumParticles() const { return mParticles.size(); }
-
-	void DeleteBadParticles(const MACGrid2D& inMACGrid);
-
-	// TO DO: remove the use of these functions. Requires updating Fluid class. Will do this when updating Fluid3D.
-	void Update(ApplicationData& inOutData) override {};
-	void InterpolateToGrid() override {};
-	void InterpolateFromGrid() override {};
-
-private:
+template <typename Tparticle>
+class Fluid2D : public IFluid2D
+{
+public:
+	virtual ~Fluid2D() = default;
 
 	void SeedParticles(const ApplicationData& inOutData);
 
+	int ClosestCellToParticle(const MACGrid2D& inMACGrid, const Tparticle& particle);
+	void ProjectParticleToFluid(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
+
+	void DeleteBadParticles(const MACGrid2D& inMACGrid) override;
+
+	const std::vector<Tparticle>& GetParticles() const { return mParticles; }
+	const Tparticle& GetParticle(int index) const { return mParticles[index]; }
+	size_t GetNumParticles() const { return mParticles.size(); }
+
+protected:
 	double InterpolateSupport(const glm::dvec2& diff, double invCellSize);
 	double BSpline(double input);
 
-	int ClosestCellToParticle(const MACGrid2D& inMACGrid, const Particle2D& particle);
-
-	// Interpolate from current cell velocities.
-	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex, SimulationType simType);
-	glm::dvec2 InterpolateFromGridCell(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex, SimulationType simType);
-
-	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex, SimulationType simType);
-	glm::dvec2 InterpolateFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex, SimulationType simType);
-
-	// Interpolate from previous cell velocities
-	glm::dvec2 InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-	glm::dvec2 InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex);
-
-	void ProjectParticleToFluid(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-
-	std::vector<Particle2D> mParticles;
+	std::vector<Tparticle> mParticles;
 	std::vector<glm::dvec2> mParticlePositions;
-
-	double mFLIPBlend; // % FLIP Blend, clamped between [0, 1]
 };
 
+template class Fluid2D<Particle2D>;
+template class Fluid2D<APICParticle2D>;
