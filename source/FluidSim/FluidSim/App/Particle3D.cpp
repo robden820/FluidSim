@@ -1,11 +1,10 @@
 #include "Particle3D.h"
 
-Particle3D::Particle3D(const glm::dvec3& inPosition, const glm::dvec3& inVelocity, double inMass, double inRadius)
+Particle3D::Particle3D(const glm::dvec3& inPosition, const glm::dvec3& inVelocity, double inMass)
 {
 	mPosition = inPosition;
 	mVelocity = inVelocity;
 	mMass = inMass;
-	mRadius = inRadius;
 
 	mAcceleration = { 0.0, -9.8f, 0.0 }; // Acceleration due to gravity
 

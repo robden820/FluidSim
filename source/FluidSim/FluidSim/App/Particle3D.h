@@ -9,7 +9,7 @@ public:
 	Particle3D() = default;
 	~Particle3D() = default;
 
-	Particle3D(const glm::dvec3& inPosition, const glm::dvec3& inVelocity = glm::dvec3(0.0, 0.0, 0.0), double inMass = 1.0, double inRadius = 0.1f);
+	Particle3D(const glm::dvec3& inPosition, const glm::dvec3& inVelocity = glm::dvec3(0.0, 0.0, 0.0), double inMass = 1.0);
 
 	void StepParticle(double deltaTime);
 

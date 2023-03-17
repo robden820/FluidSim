@@ -8,10 +8,8 @@ class Particle
 		virtual ~Particle() = default;
 
 		double GetMass() const { return mMass; };
-		double GetRadius() const { return mRadius; };
 
 	protected:
 
 		double mMass;
-		double mRadius;
 };
