@@ -40,6 +40,8 @@ public:
 	const double GetCellXVelocityPrev(int index) const { return mCellXVelocitiesPrev[index]; }
 	const double GetCellYVelocityPrev(int index) const { return mCellYVelocitiesPrev[index]; }
 
+	const glm::dvec2& GetCellVelocity(int index) const;
+
 	void SetCellXVelocity(int index, double inVelocity) { mCellXVelocities[index] = inVelocity; }
 	void SetCellYVelocity(int index, double inVelocity) { mCellYVelocities[index] = inVelocity; }
 
@@ -48,6 +50,9 @@ public:
 
 	const double GetCellPressure(int index) const { return mCellPressures[index]; }
 	void SetCellPressure(int index, double inPressure) { mCellPressures[index] = inPressure; }
+
+	const double GetCellMass(int index) const { return mCellMasses[index]; }
+	void SetCellMass(int index, double inMass) { mCellMasses[index] = inMass; }
 
 	const CellType GetCellType(int index) const { return mCellType[index]; }
 	const std::vector<CellType>& GetCellTypes() const { return mCellType; }
@@ -110,4 +115,7 @@ private:
 	std::vector<double> mIntYVelocities;
 
 	std::vector<double> mCellPressures;
+
+	// Mass contributed by particles in the cell. Weighted by distance from cell center.
+	std::vector<double> mCellMasses;
 };

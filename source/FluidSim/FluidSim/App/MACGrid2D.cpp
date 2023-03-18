@@ -55,6 +55,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellXVelocitiesDiff.assign(mNumCells, 0.0);
 	mCellYVelocitiesDiff.assign(mNumCells, 0.0);
 	mCellDivergence.assign(mNumCells, 0.0);
+	mCellMasses.assign(mNumCells, 0.0);
 	
 	mIntXVelocities.assign(mNumCells, 0.0);
 	mIntYVelocities.assign(mNumCells, 0.0);
@@ -1028,6 +1029,25 @@ void MACGrid2D::ApplyPreconditioner(Eigen::VectorXd& outResult, const Eigen::Vec
 			outResult[index] = t * inPrecon[index];
 		}
 	}
+}
+
+const glm::dvec2& MACGrid2D::GetCellVelocity(int index) const
+{                                                        
+	int x, y;
+	std::tie(x, y) = GetXYFromIndex(index);
+
+	if (x >= mNumCellWidth - 1 || y >= mNumCellHeight - 1)
+	{
+		return glm::dvec2(0.0, 0.0);
+	}
+
+	int neighbourRight = GetIndexFromXY(x + 1, y);
+	int neighbourTop = GetIndexFromXY(x, y + 1);
+
+	double xVelocity = GetCellXVelocity(index) + GetCellXVelocity(neighbourRight);
+	double yVelocity = GetCellYVelocity(index) + GetCellYVelocity(neighbourTop);
+
+	return glm::dvec2(xVelocity, yVelocity);
 }
 
 void MACGrid2D::SavePreviousVelocities()
