@@ -1,10 +1,10 @@
 #include "APICParticle2D.h"
 
-APICParticle2D::APICParticle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity, double inAngularMomentum, double inMass) 
+APICParticle2D::APICParticle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity, const glm::dvec3& inAngularVelocity, double inMass) 
 {
 	mPosition = inPosition;
 	mVelocity = inVelocity;
-	mAngularMomentum = inAngularMomentum;
+	mAngularVelocity = inAngularVelocity;
 	mMass = inMass;
 	mAcceleration = { 0.0, -9.8f }; // Acceleration due to gravity
 

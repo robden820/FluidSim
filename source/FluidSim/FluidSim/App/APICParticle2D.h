@@ -9,11 +9,12 @@ class APICParticle2D : public Particle2D
 		APICParticle2D() = default;
 		~APICParticle2D() = default;
 
-		APICParticle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity = glm::dvec2(0.0, 0.0), double inAngularMomentum = 0.0, double inMass = 1.0);
+		APICParticle2D(const glm::dvec2& inPosition, const glm::dvec2& inVelocity = glm::dvec2(0.0, 0.0), const glm::dvec3& inAngularVelocity = glm::dvec3(0.0, 0.0, 0.0), double inMass = 1.0);
 
-		const double GetAngularMomentum() const { return mAngularMomentum; }
-		void SetAngularMomentum(const double inAngMomentum) { mAngularMomentum = inAngMomentum; }
+		const glm::dvec3& GetAngularVelocity() const { return mAngularVelocity; }
+		void SetAngularVelocity(const glm::dvec3& inAngVel) { mAngularVelocity = inAngVel; }
 
 	private:
-		double mAngularMomentum;
+		// Vec 3 even in 2D fluid as angular momentum will point in the z direction.
+		glm::dvec3 mAngularVelocity;
 };
