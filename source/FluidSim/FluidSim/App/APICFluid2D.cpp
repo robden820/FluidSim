@@ -205,9 +205,12 @@ void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 		}
 
 		// Update MACGrid values.
-		inMACGrid.SetIntXVelocity(c, interpXVelocities[c]);
-		inMACGrid.SetIntYVelocity(c, interpYVelocities[c]);
-		inMACGrid.SetCellMass(c, interpMass[c]);
+		if (interpMass[c] != 0.0)
+		{
+			inMACGrid.SetIntXVelocity(c, interpXVelocities[c] / interpMass[c]);
+			inMACGrid.SetIntYVelocity(c, interpYVelocities[c] / interpMass[c]);
+			inMACGrid.SetCellMass(c, interpMass[c]);
+		}
 	}
 }
 
@@ -421,7 +424,9 @@ glm::dvec3 APICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& i
 			glm::dmat3 crossMatDiff(0.0, 0.0, diff.y,
 									0.0, 0.0, diff.x,
 									-diff.y, diff.x, 0.0);
-			glm::dmat3 transpose = glm::transpose(crossMatDiff);
+			glm::dmat3 transpose(0.0, 0.0, -diff.y,
+								 0.0, 0.0, diff.x,
+								 diff.y, diff.x, 0.0);
 
 			glm::dmat3 cellInertiaTensor = crossMatDiff * transpose;
 			cellInertiaTensor *= weight * particleMass;
