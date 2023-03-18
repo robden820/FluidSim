@@ -29,8 +29,14 @@ void APICFluid2D::StepParticlesEuler(double deltaTime, const MACGrid2D& inMACGri
 		}
 
 		glm::dvec2 particlePosition = mParticles[particleIndex].GetPosition();
+		glm::dvec2 cellPos = inMACGrid.GetCellCenter(cellIndex);
 
-		glm::dvec2 vel = mParticles[particleIndex].GetVelocity();
+		glm::dvec2 diff = cellPos - particlePosition;
+
+		// Is this correct?
+		glm::dvec3 linearVelocity = glm::cross(mParticles[particleIndex].GetAngularVelocity(), glm::dvec3(diff.x, diff.y, 0.0));
+
+		glm::dvec2 vel = mParticles[particleIndex].GetVelocity() + glm::dvec2(linearVelocity.x, linearVelocity.y);
 
 		glm::dvec2 newPos = particlePosition + vel * deltaTime;
 
@@ -96,17 +102,22 @@ void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 {
 	std::vector<double> contributedXWeights;
 	std::vector<double> contributedYWeights;
+	std::vector<double> contributedMassWeights;
 
 	std::vector<double> interpXVelocities;
 	std::vector<double> interpYVelocities;
+	std::vector<double> interpMass;
 
 	int numCells = inMACGrid.GetNumCells();
 
 	interpXVelocities.assign(numCells, 0.0);
 	interpYVelocities.assign(numCells, 0.0);
 
+	interpMass.assign(numCells, 0.0);
+
 	contributedXWeights.assign(numCells, 0.0);
 	contributedYWeights.assign(numCells, 0.0);
+	contributedMassWeights.assign(numCells, 0.0);
 
 	for (int particleIndex = 0; particleIndex < GetNumParticles(); particleIndex++)
 	{
@@ -148,23 +159,38 @@ void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 				glm::dvec2 particlePos = mParticles[particleIndex].GetPosition();
 				glm::dvec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
 
-				glm::dvec2 diff = particlePos - nearbyCellPos + inMACGrid.GetCellSize() * 0.5;
+				glm::dvec2 diffToCenter = particlePos - nearbyCellPos;
+				glm::dvec2 diffToVelocities = diffToCenter + inMACGrid.GetCellSize() * 0.5;
+				
+				double cellWeight = InterpolateSupport(diffToCenter, inMACGrid.GetInverseCellSize());
+				double velocityWeight = InterpolateSupport(diffToVelocities, inMACGrid.GetInverseCellSize());
 
-				double k = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
+				// Calculate contribution to cell mass
+				double particleMass = mParticles[particleIndex].GetMass();
+				interpMass[nearbyCellIndex] += mParticles[particleIndex].GetMass() * cellWeight;
 
-				glm::dvec2 newVelocity = mParticles[particleIndex].GetVelocity() * k;
+				// Calculate contribution to cell velocity.
+				glm::dvec3 angularVelocity = mParticles[particleIndex].GetAngularVelocity();
+				glm::dvec3 linearVelocity = glm::cross(angularVelocity, glm::dvec3(-diffToCenter.x, -diffToCenter.y, 0.0));
 
-				interpXVelocities[nearbyCellIndex] += newVelocity.x;
-				interpYVelocities[nearbyCellIndex] += newVelocity.y;
+				glm::dvec2 particleVelocity = mParticles[particleIndex].GetVelocity();
 
-				contributedXWeights[nearbyCellIndex] += k;
-				contributedYWeights[nearbyCellIndex] += k;
+				glm::dvec3 velocityContribution = velocityWeight * particleMass * (glm::dvec3(particleVelocity.x, particleVelocity.y, 0.0) + linearVelocity);
+
+				interpXVelocities[nearbyCellIndex] += velocityContribution.x;
+				interpYVelocities[nearbyCellIndex] += velocityContribution.y;
+
+				// Update contributed weights.
+				contributedXWeights[nearbyCellIndex] += velocityWeight;
+				contributedYWeights[nearbyCellIndex] += velocityWeight;
+				contributedMassWeights[nearbyCellIndex] += cellWeight;
 			}
 		}
 	}
 
 	for (int c = 0; c < numCells; c++)
 	{
+		// Normalize all values by dividing by weight.
 		if (contributedXWeights[c] != 0.0)
 		{
 			interpXVelocities[c] *= 1.0 / contributedXWeights[c];
@@ -173,9 +199,15 @@ void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 		{
 			interpYVelocities[c] *= 1.0 / contributedYWeights[c];
 		}
+		if (contributedMassWeights[c] != 0.0)
+		{
+			interpMass[c] *= 1.0 / contributedMassWeights[c];
+		}
 
+		// Update MACGrid values.
 		inMACGrid.SetIntXVelocity(c, interpXVelocities[c]);
 		inMACGrid.SetIntYVelocity(c, interpYVelocities[c]);
+		inMACGrid.SetCellMass(c, interpMass[c]);
 	}
 }
 
@@ -210,10 +242,11 @@ void APICFluid2D::InterpolateFromGridBSpline(const MACGrid2D& inMACGrid)
 		}
 
 		glm::dvec2 newVelocity = InterpolateVelocityFromGridCellBSpline(inMACGrid, particleIndex, cellIndex);
-		double newAngularMomentum = InterpolateAngularFromGridCellBSpline(inMACGrid, particleIndex, cellIndex);
+
+		glm::dvec3 newAngularVelocity = InterpolateAngularFromGridCellBSpline(inMACGrid, particleIndex, cellIndex);
 
 		mParticles[particleIndex].SetVelocity(newVelocity);
-		mParticles[particleIndex].SetAngularMomentum(newAngularMomentum);
+		mParticles[particleIndex].SetAngularVelocity(newAngularVelocity);
 	}
 }
 
@@ -325,7 +358,7 @@ glm::dvec2 APICFluid2D::InterpolateVelocityFromGridCellBSpline(const MACGrid2D& 
 }
 
 
-double APICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex)
+glm::dvec3 APICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex)
 {
 	glm::dvec2 particlePos = mParticles[particleIndex].GetPosition();
 	double particleMass = mParticles[particleIndex].GetMass();
@@ -333,15 +366,14 @@ double APICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& inMAC
 	return InterpolateAngularFromGridCellBSpline(inMACGrid, particlePos, particleMass, cellIndex);
 }
 
-double APICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, const double particleMass, int cellIndex)
+glm::dvec3 APICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, const double particleMass, int cellIndex)
 {
 	int x, y;
 	std::tie(x, y) = inMACGrid.GetXYFromIndex(cellIndex);
 
-	double angularSum = 0.0;
+	glm::dvec3 angularSum(0.0);
+	glm::dmat3 inertiaSum(0.0);
 	double totalWeight = 0.0;
-
-	double halfCell = inMACGrid.GetCellSize() * 0.5f;
 
 	// Interpolate to cells that may be close enough to particle.
 	for (int i = x - 3; i <= x + 3; i++)
@@ -371,45 +403,37 @@ double APICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& inMAC
 
 			glm::dvec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
 
-			// Add half the cell size because the velocities are offset. 
-			glm::dvec2 diff = particlePosition - nearbyCellPos + halfCell;
-			// TO DO: how to use the weight?
+			glm::dvec2 diff = nearbyCellPos - particlePosition;
 			double weight = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
-			glm::dvec2 diffToX = particlePosition - nearbyCellPos + glm::dvec2(halfCell, 0.0);
-			glm::dvec2 diffToY = particlePosition - nearbyCellPos + glm::dvec2(0.0, halfCell);
+			// Vector 3
+			glm::dvec3 weightedDiff(diff.x * weight, diff.y * weight, 0.0);
 
-			double diffToXLen = glm::length(diffToX);
-			double diffToYLen = glm::length(diffToY);
-			
-			// Calculat vectors of equal length to diff but perpendicular.
-			glm::dvec2 perpX(1.0, -1.0 * diffToX.x / diffToX.y);
-			glm::normalize(perpX);
-			perpX *= diffToXLen * weight;
+			// Calculate the angular momentum contributed by the cell.
+			glm::dvec2 cellVelocity = inMACGrid.GetCellVelocity(nearbyCellIndex);
+			// Vector 3
+			glm::dvec3 cellMomentum(cellVelocity.x * particleMass, cellVelocity.y * particleMass, 0.0);
 
-			glm::dvec2 perpY(1.0, -1.0 * diffToY.x / diffToY.y);
-			glm::normalize(perpY);
-			perpY *= diffToXLen * weight;
-
-			glm::dvec2 velocity(inMACGrid.GetCellXVelocity(nearbyCellIndex), inMACGrid.GetCellYVelocity(nearbyCellIndex));
-			glm::dvec2 momentum = particleMass * velocity;
-
-			double angularMomentumX = glm::dot(perpX, momentum) / diffToXLen;
-			double angularMomentumY = glm::dot(perpY, momentum) / diffToYLen;
-
-			double signX = diffToX.x * inMACGrid.GetCellXVelocity(nearbyCellIndex);
-			signX /= abs(signX);
-
-			double signY = diffToY.y * inMACGrid.GetCellYVelocity(nearbyCellIndex);
-			signY /= abs(signY);
-
-			angularSum += angularMomentumX * signX;
-			angularSum += angularMomentumY * signY;
-
-
+			angularSum += glm::cross(weightedDiff, cellMomentum);
 			totalWeight += weight;
+
+			// Calculate the cells contribution to the inertia tensor.
+			glm::dmat3 crossMatDiff(0.0, 0.0, diff.y,
+									0.0, 0.0, diff.x,
+									-diff.y, diff.x, 0.0);
+			glm::dmat3 transpose = glm::transpose(crossMatDiff);
+
+			glm::dmat3 cellInertiaTensor = crossMatDiff * transpose;
+			cellInertiaTensor *= weight * particleMass;
+
+			inertiaSum += cellInertiaTensor;
 		}
 	}
 
-	return (angularSum / (double)totalWeight);
+	glm::dvec3 angularMomentum = angularSum / totalWeight;
+	glm::dmat3 inertiaTensor = inertiaSum / totalWeight;
+
+	glm::dvec3 angularVelocity = glm::inverse(inertiaTensor) * angularMomentum;
+
+	return angularVelocity;
 }
