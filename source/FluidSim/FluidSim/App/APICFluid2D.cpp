@@ -31,7 +31,7 @@ void APICFluid2D::StepParticlesEuler(double deltaTime, const MACGrid2D& inMACGri
 		glm::dvec2 particlePosition = mParticles[particleIndex].GetPosition();
 		glm::dvec2 cellPos = inMACGrid.GetCellCenter(cellIndex);
 
-		glm::dvec2 diff = cellPos - particlePosition;
+		glm::dvec2 diff = particlePosition - cellPos;
 
 		// Is this correct?
 		glm::dvec3 linearVelocity = glm::cross(mParticles[particleIndex].GetAngularVelocity(), glm::dvec3(diff.x, diff.y, 0.0));
@@ -397,16 +397,9 @@ glm::dvec3 APICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& i
 
 			int nearbyCellIndex = inMACGrid.GetIndexFromXY(i, j);
 
-			/*
-			if (inMACGrid.GetCellType(nearbyCellIndex) == CellType::eSOLID)
-			{
-				continue;
-			}
-			*/
-
 			glm::dvec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
 
-			glm::dvec2 diff = nearbyCellPos - particlePosition;
+			glm::dvec2 diff = particlePosition - nearbyCellPos;
 			double weight = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
 			// Vector 3
