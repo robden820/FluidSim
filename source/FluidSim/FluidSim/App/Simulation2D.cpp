@@ -4,6 +4,7 @@
 #include "GLFW/glfw3.h"
 
 #include "FLIPFluid2D.h"
+#include "APICFluid2D.h"
 
 Simulation2D::Simulation2D(ApplicationData& inOutData)
 {
@@ -14,8 +15,10 @@ Simulation2D::Simulation2D(ApplicationData& inOutData)
 	mMACGrid.UpdateApplicationData(inOutData);
 
 	// Initialise new fluid.
-	FLIPFluid2D fluid(inOutData);
-	mFluid = std::make_unique<FLIPFluid2D>(fluid);
+//	FLIPFluid2D fluid(inOutData);
+//	mFluid = std::make_unique<FLIPFluid2D>(fluid);
+	APICFluid2D fluid(inOutData);
+	mFluid = std::make_unique<APICFluid2D>(fluid);
 
 	mFluid->UpdateApplicationData(inOutData);
 }
@@ -72,6 +75,7 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 
 	// Advance the particles through the velocity field.
 	mFluid->StepParticles(deltaTime, mMACGrid);
+	//mFluid->StepParticlesEuler(deltaTime, mMACGrid);
 
 	std::cout << "Step particles (Euler): " << glfwGetTime() - start << "\n";
 	start = glfwGetTime();
@@ -88,4 +92,6 @@ void Simulation2D::StepSimulation(ApplicationData& inOutData)
 	mMACGrid.UpdateApplicationData(inOutData);
 
 	std::cout << "Update data: " << glfwGetTime() - start << "\n";
+
+	mFluid->CalculateSystemEnergy();
 }
