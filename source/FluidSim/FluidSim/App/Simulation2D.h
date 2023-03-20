@@ -9,6 +9,12 @@
 
 class Simulation2D
 {
+	enum class FluidType : bool
+	{
+		eFLIP = false,
+		eAPIC = true,
+	};
+
 public:
 	Simulation2D(ApplicationData& inOutData);
 	Simulation2D() = default;
@@ -19,6 +25,6 @@ public:
 
 private:
 
-	Fluid2D mFluid;
+	std::unique_ptr<IFluid2D> mFluid;
 	MACGrid2D mMACGrid;
 };

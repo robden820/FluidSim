@@ -18,7 +18,7 @@ public:
 
 	Fluid3D(const ApplicationData& inOutData);
 
-	void Update(ApplicationData& inOutData) override;
+	void Update(ApplicationData& inOutData);
 
 	const std::vector<Particle3D>& GetParticles() const { return mParticles; }
 	const Particle3D& GetParticle(int index) const { return mParticles[index]; }
@@ -28,8 +28,8 @@ public:
 
 private:
 
-	void InterpolateToGrid() override;
-	void InterpolateFromGrid() override;
+	void InterpolateToGrid();
+	void InterpolateFromGrid();
 
 	int ClosestCellToParticle(const Particle3D& particle);
 
