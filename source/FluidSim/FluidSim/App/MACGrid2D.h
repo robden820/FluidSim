@@ -51,8 +51,11 @@ public:
 	const double GetCellPressure(int index) const { return mCellPressures[index]; }
 	void SetCellPressure(int index, double inPressure) { mCellPressures[index] = inPressure; }
 
-	const double GetCellMass(int index) const { return mCellMasses[index]; }
-	void SetCellMass(int index, double inMass) { mCellMasses[index] = inMass; }
+	const double GetCellMassX(int index) const { return mCellMassX[index]; }
+	void SetCellMassX(int index, double inMass) { mCellMassX[index] = inMass; }
+
+	const double GetCellMassY(int index) const { return mCellMassY[index]; }
+	void SetCellMassY(int index, double inMass) { mCellMassY[index] = inMass; }
 
 	const CellType GetCellType(int index) const { return mCellType[index]; }
 	const std::vector<CellType>& GetCellTypes() const { return mCellType; }
@@ -116,6 +119,7 @@ private:
 
 	std::vector<double> mCellPressures;
 
-	// Mass contributed by particles in the cell. Weighted by distance from cell center.
-	std::vector<double> mCellMasses;
+	// Mass contributed by particles to each face of the cell. Same face as the velocity.
+	std::vector<double> mCellMassX;
+	std::vector<double> mCellMassY;
 };

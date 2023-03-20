@@ -55,7 +55,8 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 	mCellXVelocitiesDiff.assign(mNumCells, 0.0);
 	mCellYVelocitiesDiff.assign(mNumCells, 0.0);
 	mCellDivergence.assign(mNumCells, 0.0);
-	mCellMasses.assign(mNumCells, 0.0);
+	mCellMassX.assign(mNumCells, 0.0);
+	mCellMassY.assign(mNumCells, 0.0);
 	
 	mIntXVelocities.assign(mNumCells, 0.0);
 	mIntYVelocities.assign(mNumCells, 0.0);
