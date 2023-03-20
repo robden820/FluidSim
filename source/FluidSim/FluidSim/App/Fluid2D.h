@@ -26,6 +26,8 @@ public:
 	virtual void InterpolateFromGridBSpline(const MACGrid2D& inMACGrid) = 0;
 
 	virtual void DeleteBadParticles(const MACGrid2D& inMACGrid) = 0;
+
+	virtual void CalculateSystemEnergy() = 0;
 };
 
 template <typename Tparticle>
@@ -44,6 +46,8 @@ public:
 	const std::vector<Tparticle>& GetParticles() const { return mParticles; }
 	const Tparticle& GetParticle(int index) const { return mParticles[index]; }
 	size_t GetNumParticles() const { return mParticles.size(); }
+
+	void CalculateSystemEnergy() override;
 
 protected:
 	double InterpolateSupport(const glm::dvec2& diff, double invCellSize);

@@ -1,4 +1,5 @@
 # include "Fluid2D.h"
+#include <iostream>
 
 template <typename Tparticle>
 void Fluid2D<Tparticle>::SeedParticles(const ApplicationData& inOutData)
@@ -132,4 +133,24 @@ double Fluid2D<Tparticle>::BSpline(double input)
 	}
 
 	return output;
+}
+
+template <typename Tparticle>
+void Fluid2D<Tparticle>::CalculateSystemEnergy()
+{
+	double kineticEnergy = 0.0;
+	double potentialEnergy = 0.0;
+
+	for (int p = 0; p < mParticles.size(); p++)
+	{
+		double particleMass = mParticles[p].GetMass();
+
+		kineticEnergy += particleMass + glm::length(mParticles[p].GetVelocity()) * glm::length(mParticles[p].GetVelocity());
+
+		potentialEnergy += particleMass * 9.8 * (mParticlePositions[p].y + 10);
+	}
+
+	std::cout << "System KE: " << kineticEnergy << "\n";
+	std::cout << "System PE: " << potentialEnergy << "\n";
+	std::cout << "Total system energy: " << kineticEnergy + potentialEnergy << "\n";
 }
