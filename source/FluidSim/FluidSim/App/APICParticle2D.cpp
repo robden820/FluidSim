@@ -10,5 +10,8 @@ APICParticle2D::APICParticle2D(const glm::dvec2& inPosition, const glm::dvec2& i
 	double g = -9.8f * mMass; // Downwards force due to gravity;
 	mForceAccumulator = { 0.0, g };
 
-	mAffineState = glm::dvec2(0.0);
+	mAffineState = glm::dmat2(0.0);
+	mInertiaAnalog = glm::dmat2(0.0);
+
+	mValidInertiaAnalog = false;
 }
