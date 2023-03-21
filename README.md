@@ -12,6 +12,9 @@ FLIP 0.9 fluid simulation:
 
 https://user-images.githubusercontent.com/23746310/221607056-872dce20-f780-4a6d-863b-cb95ffa5b49d.mp4
 
+Work in Progress:
+ - APIC simulation overly damps and doesn't preserve vorticity.
+
 To do:
  - Parallel computing.
  - - CUDA: to do.
