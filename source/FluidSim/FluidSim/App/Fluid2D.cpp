@@ -114,7 +114,7 @@ double Fluid2D<Tparticle>::BSpline(double input)
 {
 	double output = 0.0;
 
-	// If input is in [-1.5, 0.5)
+	// If input is in [-1.5, -0.5)
 	if (input >= -1.5 && input < -0.5)
 	{
 		double a = input + 1.5;
