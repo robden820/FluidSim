@@ -39,6 +39,5 @@ private:
 	glm::dvec2 InterpolateVelocityFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 	glm::dvec2 InterpolateVelocityFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, int cellIndex);
 
-	glm::dvec2 InterpolateAffineFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
-	glm::dvec2 InterpolateAffineFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, const double particleMass, int cellIndex);
+	void InterpolateAffineFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex);
 };

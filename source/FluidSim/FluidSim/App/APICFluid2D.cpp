@@ -1,6 +1,5 @@
 #include "APICFluid2D.h"
 
-
 #include "oneapi/tbb.h"
 
 #include "Interpolation.h"
@@ -95,24 +94,20 @@ void APICFluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 
 void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 {
-	std::vector<double> contributedXWeights;
-	std::vector<double> contributedYWeights;
+	std::vector<double> contributedWeights;
 
 	std::vector<double> interpXVelocities;
 	std::vector<double> interpYVelocities;
-	std::vector<double> interpXMass;
-	std::vector<double> interpYMass;
+	std::vector<double> interpMass;
 
 	int numCells = inMACGrid.GetNumCells();
 
 	interpXVelocities.assign(numCells, 0.0);
 	interpYVelocities.assign(numCells, 0.0);
 
-	interpXMass.assign(numCells, 0.0);
-	interpYMass.assign(numCells, 0.0);
+	interpMass.assign(numCells, 0.0);
 
-	contributedXWeights.assign(numCells, 0.0);
-	contributedYWeights.assign(numCells, 0.0);
+	contributedWeights.assign(numCells, 0.0);
 
 	for (int particleIndex = 0; particleIndex < GetNumParticles(); particleIndex++)
 	{
@@ -127,8 +122,13 @@ void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 		int x, y;
 		std::tie(x, y) = inMACGrid.GetXYFromIndex(cellIndex);
 
+		std::vector<std::vector<double>> weights;
+		std::vector<double> zeros;
+		zeros.assign(5, 0.0);
+		weights.assign(5, zeros);
+
 		// Interpolate to cells that may be close enough to particle.
-		for (int i = x - 3; i <= x + 3; i++)
+		for (int i = x - 1; i <= x + 2; i++)
 		{
 			// If there isn't a cell where we are looking, continue.
 			if (i < 0 || i > inMACGrid.GetNumCellsWidth() - 1)
@@ -136,7 +136,7 @@ void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 				continue;
 			}
 
-			for (int j = y - 3; j <= y + 3; j++)
+			for (int j = y - 1; j <= y + 2; j++)
 			{
 				// If there isn't a cell where we are looking, continue.
 				if (j < 0 || j > inMACGrid.GetNumCellsHeight() - 1)
@@ -153,33 +153,80 @@ void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 
 				glm::dvec2 particlePos = mParticles[particleIndex].GetPosition();
 				glm::dvec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
-				double cellSize = inMACGrid.GetCellSize();
 
-				glm::dvec2 diffToX = (nearbyCellPos - (cellSize * 0.5, 0.0)) - particlePos;
-				glm::dvec2 diffToY = (nearbyCellPos - (0.0, cellSize * 0.5)) - particlePos;
-				
+				glm::dvec2 diff = nearbyCellPos - particlePos;
+
 				// TO DO: different mass contribution weights for each face. SEE trilinear interpolating kernel.
-				double weightX = InterpolateSupport(diffToX, inMACGrid.GetInverseCellSize());
-				double weightY = InterpolateSupport(diffToY, inMACGrid.GetInverseCellSize());
+				double weight = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
+
+				int a = i - (x - 1);
+				int b = j - (y - 1);
+
+				weights[a][b] = weight;
+			}
+		}
+
+		// Interpolate to cells that may be close enough to particle.
+		for (int i = x - 1; i <= x + 2; i++)
+		{
+			// If there isn't a cell where we are looking, continue.
+			if (i < 0 || i > inMACGrid.GetNumCellsWidth() - 1)
+			{
+				continue;
+			}
+
+			for (int j = y - 1; j <= y + 2; j++)
+			{
+				// If there isn't a cell where we are looking, continue.
+				if (j < 0 || j > inMACGrid.GetNumCellsHeight() - 1)
+				{
+					continue;
+				}
+
+				int nearbyCellIndex = inMACGrid.GetIndexFromXY(i, j);
+
+				if (inMACGrid.GetCellType(nearbyCellIndex) == CellType::eSOLID)
+				{
+					continue;
+				}
+
+				glm::dvec2 particlePos = mParticles[particleIndex].GetPosition();
+				glm::dvec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
+
+				glm::dvec2 diff = nearbyCellPos - particlePos;
+				
+				double weight = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
 				// Calculate contribution to cell mass
 				double particleMass = mParticles[particleIndex].GetMass();
-				interpXMass[nearbyCellIndex] += particleMass * weightX;
-				interpYMass[nearbyCellIndex] += particleMass * weightY;
+				interpMass[nearbyCellIndex] += particleMass * weight;
 
 				// Calculate contribution to cell velocity.
-				glm::dvec2 velocity = mParticles[particleIndex].GetVelocity();
-				glm::dvec2 affineState = mParticles[particleIndex].GetAffineState();
+				glm::dvec2 particleVel = mParticles[particleIndex].GetVelocity();
+				
+				glm::dvec2 velocityContribution(0.0);
 
-				double velocityContributionX = particleMass * weightX * (velocity.x + affineState.x * diffToX.x);
-				double velocityContributionY = particleMass * weightY * (velocity.y + affineState.y * diffToY.y);
+				if (mParticles[particleIndex].HasValidInertiaAnalog())
+				{
+					velocityContribution += weight * particleMass * (particleVel + (mParticles[particleIndex].GetAffineState() * glm::inverse(mParticles[particleIndex].GetInertiaAnalog())) * glm::dvec3(diff, 0.0));
+				}
+				else
+				{
+					int a = i - (x - 1);
+					int b = j - (y - 1);
+					double deltaWeightX = weights[a + 1][b] - weights[a][b];
+					double deltaWeightY = weights[a][b + 1] - weights[a][b];
 
-				interpXVelocities[nearbyCellIndex] += velocityContributionX;
-				interpYVelocities[nearbyCellIndex] += velocityContributionY;
+					glm::dvec2 weightGradient(deltaWeightX, deltaWeightY);
+
+					velocityContribution += particleMass * (particleVel + mParticles[particleIndex].GetAffineState() * weightGradient);
+				}
+
+				interpXVelocities[nearbyCellIndex] += velocityContribution.x;
+				interpYVelocities[nearbyCellIndex] += velocityContribution.y;
 
 				// Update contributed weights.
-				contributedXWeights[nearbyCellIndex] += weightX;
-				contributedYWeights[nearbyCellIndex] += weightY;
+				contributedWeights[nearbyCellIndex] += weight;
 			}
 		}
 	}
@@ -187,30 +234,23 @@ void APICFluid2D::InterpolateToGrid(MACGrid2D& inMACGrid)
 	for (int c = 0; c < numCells; c++)
 	{
 		// Normalize all values by dividing by weight.
-		if (contributedXWeights[c] != 0.0)
+		if (contributedWeights[c] != 0.0)
 		{
-			interpXVelocities[c] *= 1.0 / contributedXWeights[c];
-			interpXMass[c] *= 1.0 / contributedXWeights[c];
-		}
-		if (contributedYWeights[c] != 0.0)
-		{
-			interpYVelocities[c] *= 1.0 / contributedYWeights[c];
-			interpYMass[c] *= 1.0 / contributedYWeights[c];
+			interpXVelocities[c] *= 1.0 / contributedWeights[c];
+			interpYVelocities[c] *= 1.0 / contributedWeights[c];
+			interpMass[c] *= 1.0 / contributedWeights[c];
 		}
 
 		// Update MACGrid values.
-		if (interpXMass[c] != 0.0)
+		if (interpMass[c] != 0.0)
 		{
-			inMACGrid.SetIntXVelocity(c, interpXVelocities[c] / interpXMass[c]);
-		}
-		if (interpYMass[c] != 0.0)
-		{
-			inMACGrid.SetIntYVelocity(c, interpYVelocities[c] / interpYMass[c]);
+			inMACGrid.SetIntXVelocity(c, interpXVelocities[c] / interpMass[c]);
+			inMACGrid.SetIntYVelocity(c, interpYVelocities[c] / interpMass[c]);
 		}
 		// TO DO: else set velocity to zero?
 		
-		inMACGrid.SetCellMassX(c, interpXMass[c]);
-		inMACGrid.SetCellMassY(c, interpYMass[c]);
+		inMACGrid.SetCellMassX(c, interpMass[c]);
+		inMACGrid.SetCellMassY(c, interpMass[c]);
 
 	}
 }
@@ -247,11 +287,10 @@ void APICFluid2D::InterpolateFromGridBSpline(const MACGrid2D& inMACGrid)
 
 		glm::dvec2 newVelocity = InterpolateVelocityFromGridCellBSpline(inMACGrid, particleIndex, cellIndex);
 
-		glm::dvec2 newAffineState = InterpolateAffineFromGridCellBSpline(inMACGrid, particleIndex, cellIndex);
+		InterpolateAffineFromGridCellBSpline(inMACGrid, particleIndex, cellIndex);
 
 
 		mParticles[particleIndex].SetVelocity(newVelocity);
-		mParticles[particleIndex].SetAffineState(newAffineState);
 	}
 }
 
@@ -363,27 +402,17 @@ glm::dvec2 APICFluid2D::InterpolateVelocityFromGridCellBSpline(const MACGrid2D& 
 }
 
 
-glm::dvec2 APICFluid2D::InterpolateAffineFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex)
+void APICFluid2D::InterpolateAffineFromGridCellBSpline(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex)
 {
 	glm::dvec2 particlePos = mParticles[particleIndex].GetPosition();
 	double particleMass = mParticles[particleIndex].GetMass();
 
-	return InterpolateAffineFromGridCellBSpline(inMACGrid, particlePos, particleMass, cellIndex);
-}
-
-glm::dvec2 APICFluid2D::InterpolateAffineFromGridCellBSpline(const MACGrid2D& inMACGrid, const glm::dvec2& particlePosition, const double particleMass, int cellIndex)
-{
 	int x, y;
 	std::tie(x, y) = inMACGrid.GetXYFromIndex(cellIndex);
 
-	double affineSumX(0.0);
-	double affineSumY(0.0);
+	glm::dmat2 affineSum(0.0);
+	glm::dmat2 inertiaSum(0.0);
 	double totalWeight = 0.0;
-
-	std::vector<std::vector<double>> weights;
-	std::vector<double> zeros;
-	zeros.assign(5, 0.0);
-	weights.assign(5, zeros);
 
 
 	// Interpolate to cells that may be close enough to particle.
@@ -406,56 +435,40 @@ glm::dvec2 APICFluid2D::InterpolateAffineFromGridCellBSpline(const MACGrid2D& in
 			int nearbyCellIndex = inMACGrid.GetIndexFromXY(i, j);
 
 			glm::dvec2 nearbyCellPos = inMACGrid.GetCellCenter(nearbyCellIndex);
+			glm::dvec2 nearbyCellVelocity = inMACGrid.GetCellVelocity(nearbyCellIndex);
 
-			glm::dvec2 diff = particlePosition - nearbyCellPos;
+			glm::dvec2 diff = particlePos - nearbyCellPos;
 
 			double weight = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
-			int a = i - (x - 1);
-			int b = j - (y - 1);
+			// Calculate contributions to inertia and affine state of cell.
+			glm::dmat2 inertiaAnalog = glm::outerProduct(diff, diff) * weight;
+			glm::dmat2 affineState = glm::outerProduct(nearbyCellVelocity, diff) * weight;
 
-			weights[a][b] = weight;
+			// Add to sum.
+			inertiaSum += inertiaAnalog;
+			affineSum += affineState;
 
 			totalWeight += weight;
 		}
 	}
 
-	// Interpolate to cells that may be close enough to particle.
-	for (int i = x - 1; i <= x + 2; i++)
+	// Normalize the sums incase weight doesn't add to 1.
+	inertiaSum /= totalWeight;
+	affineSum /= totalWeight;
+
+	// Set particle values.
+	mParticles[particleIndex].SetAffineState(affineSum);
+
+	// If the inertia sum has an index, calculate and return the velocity derivatives matrix.
+	if (glm::determinant(inertiaSum) != 0.0)
 	{
-		// If there isn't a cell where we are looking, continue.
-		if (i < 0 || i > inMACGrid.GetNumCellsWidth() - 1)
-		{
-			continue;
-		}
-
-		for (int j = y - 1; j <= y + 2; j++)
-		{
-			// If there isn't a cell where we are looking, continue.
-			if (j < 0 || j > inMACGrid.GetNumCellsHeight() - 1)
-			{
-				continue;
-			}
-
-			int nearbyCellIndex = inMACGrid.GetIndexFromXY(i, j);
-
-			int a = i - (x - 1);
-			int b = j - (y - 1);
-
-			double deltaWeightX = weights[a + 1][b] - weights[a][b];
-			double deltaWeightY = weights[a][b + 1] - weights[a][b];
-
-			double invCellSize = inMACGrid.GetInverseCellSize();
-
-			glm::dvec2 weightGrad(deltaWeightX * invCellSize, deltaWeightY * invCellSize);
-
-			affineSumX += weightGrad.x * inMACGrid.GetCellXVelocity(nearbyCellIndex);
-			affineSumY += weightGrad.y * inMACGrid.GetCellYVelocity(nearbyCellIndex);
-		}
+		mParticles[particleIndex].SetInertiaAnalog(inertiaSum);
+		mParticles[particleIndex].SetValidInertiaAnalog(true);
 	}
-
-	double affineStateX = affineSumX / totalWeight;
-	double affineStateY = affineSumY / totalWeight;
-
-	return glm::dvec2(affineStateX, affineStateY);
+	else
+	{
+		mParticles[particleIndex].SetInertiaAnalog(glm::dmat3(0.0));
+		mParticles[particleIndex].SetValidInertiaAnalog(false);
+	}
 }
