@@ -324,7 +324,7 @@ glm::dvec2 FLIPFluid2D::InterpolateFromGridCellBSpline(const MACGrid2D& inMACGri
 	double totalWeight = 0.0;
 
 	// Interpolate to cells that may be close enough to particle.
-	for (int i = x - 3; i <= x + 3; i++)
+	for (int i = x - 1; i <= x + 2; i++)
 	{
 		// If there isn't a cell where we are looking, continue.
 		if (i < 0 || i > inMACGrid.GetNumCellsWidth() - 1)
@@ -332,7 +332,7 @@ glm::dvec2 FLIPFluid2D::InterpolateFromGridCellBSpline(const MACGrid2D& inMACGri
 			continue;
 		}
 
-		for (int j = y - 3; j <= y + 3; j++)
+		for (int j = y - 1; j <= y + 2; j++)
 		{
 			// If there isn't a cell where we are looking, continue.
 			if (j < 0 || j > inMACGrid.GetNumCellsHeight() - 1)
@@ -368,7 +368,16 @@ glm::dvec2 FLIPFluid2D::InterpolateFromGridCellBSpline(const MACGrid2D& inMACGri
 		}
 	}
 
-	return (velocitySum / (double)totalWeight);
+	if (totalWeight > 0.0)
+	{
+		velocitySum /= totalWeight;
+	}
+	else
+	{
+		velocitySum = glm::dvec2(0.0);
+	}
+
+	return velocitySum;
 }
 
 glm::dvec2 FLIPFluid2D::InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMACGrid, int particleIndex, int cellIndex)
@@ -387,7 +396,7 @@ glm::dvec2 FLIPFluid2D::InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMA
 	double totalWeight = 0.0;
 
 	// Interpolate to cells that may be close enough to particle.
-	for (int i = x - 3; i <= x + 3; i++)
+	for (int i = x - 1; i <= x + 2; i++)
 	{
 		// If there isn't a cell where we are looking, continue.
 		if (i < 0 || i > inMACGrid.GetNumCellsWidth() - 1)
@@ -395,7 +404,7 @@ glm::dvec2 FLIPFluid2D::InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMA
 			continue;
 		}
 
-		for (int j = y - 3; j <= y + 3; j++)
+		for (int j = y - 1; j <= y + 2; j++)
 		{
 			// If there isn't a cell where we are looking, continue.
 			if (j < 0 || j > inMACGrid.GetNumCellsHeight() - 1)
@@ -424,5 +433,14 @@ glm::dvec2 FLIPFluid2D::InterpolateFromGridCellBSplinePrev(const MACGrid2D& inMA
 		}
 	}
 
-	return (velocitySum / (double)totalWeight);
+	if (totalWeight > 0.0)
+	{
+		velocitySum /= totalWeight;
+	}
+	else
+	{
+		velocitySum = glm::dvec2(0.0);
+	}
+
+	return velocitySum;
 }
