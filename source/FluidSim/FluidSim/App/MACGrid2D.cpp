@@ -78,7 +78,7 @@ void MACGrid2D::InitializeGrid(const ApplicationData& inData)
 			mCellType[index] = CellType::eSOLID;
 		}
 
-		if (x > 10 && x < 26 && y > 20 && y < 70)
+		if (x >= 1 && x < (mNumCellWidth / 4) && y >= 1 && y <= mNumCellHeight - 2)
 		{
 			mCellType[index] = CellType::eFLUID;
 		}
@@ -1045,8 +1045,8 @@ const glm::dvec2& MACGrid2D::GetCellVelocity(int index) const
 	int neighbourRight = GetIndexFromXY(x + 1, y);
 	int neighbourTop = GetIndexFromXY(x, y + 1);
 
-	double xVelocity = GetCellXVelocity(index) + GetCellXVelocity(neighbourRight);
-	double yVelocity = GetCellYVelocity(index) + GetCellYVelocity(neighbourTop);
+	double xVelocity = (GetCellXVelocity(index) + GetCellXVelocity(neighbourRight)) * 0.5;
+	double yVelocity = (GetCellYVelocity(index) + GetCellYVelocity(neighbourTop)) * 0.5;
 
 	return glm::dvec2(xVelocity, yVelocity);
 }
