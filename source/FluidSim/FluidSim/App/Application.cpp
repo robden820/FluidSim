@@ -15,17 +15,17 @@ Application::Application(Camera& inCamera, Shader& inShader)
 	// Initialise simulation data.
 	mApplicationData.SetDeltaTime(0.03);
 	mApplicationData.SetFluidDensity(1000.0);
-	mApplicationData.SetFLIPBlend(1.0);
+	mApplicationData.SetFLIPBlend(0.9);
 
 	// Set MACGrid data
-	mApplicationData.SetGridLeft(-6.0);
+	mApplicationData.SetGridLeft(-8.0);
 	mApplicationData.SetGridBottom(-10.0);
 
-	mApplicationData.SetNumGridCellsWidth(60);
-	mApplicationData.SetNumGridCellsHeight(80);
+	mApplicationData.SetNumGridCellsWidth(40);
+	mApplicationData.SetNumGridCellsHeight(50);
 	mApplicationData.UpdateNumGridCells();
 
-	mApplicationData.SetGridCellSize(0.2);
+	mApplicationData.SetGridCellSize(0.3);
 }
 
 void Application::Initialize()
@@ -156,7 +156,7 @@ void Application::Render(float inAspectRatio)
 	mShader.SetMatrix("view", view);
 	mShader.SetMatrix("projection", projection);
 
-	mShader.SetVector("color", glm::vec3(1.0f, 0.0f, 0.0f));
+	mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
 	mShader.SetFloat("alpha", 1.0f);
 
 	double scale = mApplicationData.GetGridCellSize();
@@ -213,7 +213,7 @@ void Application::Render(float inAspectRatio)
 		}
 		else if (mApplicationData.GetCellType(v) == CellType::eSOLID)
 		{
-			mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
+			mShader.SetVector("color", glm::vec3(0.6f, 0.6f, 0.6f));
 			mShader.SetFloat("alpha", 0.5f);
 			glDrawArrays(GL_LINES, 0, 36);
 		}
