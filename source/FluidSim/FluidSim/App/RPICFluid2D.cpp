@@ -443,11 +443,11 @@ glm::dvec3 RPICFluid2D::InterpolateAngularFromGridCellBSpline(const MACGrid2D& i
 
 			// Calculate contributions to inertia.
 			const glm::dmat3 crossProductMat(0.0, 0.0, diff.y,
-											 0.0, 0.0, diff.x,
-											-diff.y, -diff.x, 0.0);
+											 0.0, 0.0, -diff.x,
+											-diff.y, diff.x, 0.0);
 			const glm::dmat3 crossProductMatT(0.0, 0.0, -diff.y,
-											  0.0, 0.0, -diff.x,
-											  diff.y, diff.x, 0.0);
+											  0.0, 0.0, diff.x,
+											  diff.y, -diff.x, 0.0);
 
 			glm::dmat3 inertia = weight * particleMass * crossProductMat * crossProductMatT;
 
