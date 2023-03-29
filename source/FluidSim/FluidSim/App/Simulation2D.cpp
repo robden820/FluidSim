@@ -5,6 +5,7 @@
 
 #include "FLIPFluid2D.h"
 #include "APICFluid2D.h"
+#include "RPICFluid2D.h"
 
 Simulation2D::Simulation2D(ApplicationData& inOutData)
 {
@@ -14,11 +15,24 @@ Simulation2D::Simulation2D(ApplicationData& inOutData)
 
 	mMACGrid.UpdateApplicationData(inOutData);
 
+	const int fluidType = 2;
+
 	// Initialise new fluid.
-//	FLIPFluid2D fluid(inOutData);
-//	mFluid = std::make_unique<FLIPFluid2D>(fluid);
-	APICFluid2D fluid(inOutData);
-	mFluid = std::make_unique<APICFluid2D>(fluid);
+	if (fluidType == 0)
+	{
+		FLIPFluid2D fluid(inOutData);
+		mFluid = std::make_unique<FLIPFluid2D>(fluid);
+	}
+	else if (fluidType == 1)
+	{
+		APICFluid2D fluid(inOutData);
+		mFluid = std::make_unique<APICFluid2D>(fluid);
+	}
+	else if (fluidType == 2)
+	{
+		RPICFluid2D fluid(inOutData);
+		mFluid = std::make_unique<RPICFluid2D>(fluid);
+	}
 
 	mFluid->UpdateApplicationData(inOutData);
 }
