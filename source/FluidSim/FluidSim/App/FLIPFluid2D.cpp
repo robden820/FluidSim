@@ -16,6 +16,16 @@ void FLIPFluid2D::UpdateApplicationData(ApplicationData& inOutData)
 {
 	inOutData.Set2DParticlePositions(mParticlePositions);
 	inOutData.SetNumParticles(mParticles.size());
+
+	std::vector<double> speeds;
+	speeds.reserve(mParticles.size());
+
+	for (int i = 0; i < mParticles.size(); i++)
+	{
+		speeds.push_back(glm::length(mParticles[i].GetVelocity()));
+	}
+
+	inOutData.SetParticleSpeeds(speeds);
 }
 
 void FLIPFluid2D::StepParticlesEuler(double deltaTime, const MACGrid2D& inMACGrid)
