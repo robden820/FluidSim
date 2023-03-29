@@ -8,6 +8,7 @@
 
 #include "Particle2D.h"
 #include "APICParticle2D.h"
+#include "RPICParticle2D.h"
 
 class IFluid2D : public Fluid
 {
@@ -59,3 +60,4 @@ protected:
 
 template class Fluid2D<Particle2D>;
 template class Fluid2D<APICParticle2D>;
+template class Fluid2D<RPICParticle2D>;
