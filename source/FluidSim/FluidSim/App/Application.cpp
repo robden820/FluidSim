@@ -156,7 +156,7 @@ void Application::Render(float inAspectRatio)
 	mShader.SetMatrix("view", view);
 	mShader.SetMatrix("projection", projection);
 
-	mShader.SetVector("color", glm::vec3(1.0f, 1.0f, 0.0f));
+	
 	mShader.SetFloat("alpha", 1.0f);
 
 	double scale = mApplicationData.GetGridCellSize();
@@ -181,6 +181,15 @@ void Application::Render(float inAspectRatio)
 
 		mShader.SetMatrix("model", model);
 
+		double scaledSpeedG = mApplicationData.GetParticleSpeed(p) * 0.25;
+		double scaledSpeedR = 0.0;
+
+		if (scaledSpeedG > 1.0)
+		{
+			scaledSpeedR = scaledSpeedG - 1.0;
+		}
+
+		mShader.SetVector("color", glm::vec3(scaledSpeedR, scaledSpeedG, 1.0f));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 

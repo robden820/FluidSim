@@ -43,6 +43,10 @@ class ApplicationData
 		double GetFLIPBlend() const { return mFLIPBlend; }
 		void SetFLIPBlend(double inBlend) { mFLIPBlend = std::clamp(inBlend, 0.0, 1.0); }
 
+		const std::vector<double>& GetParticleSpeeds() const { return mParticleSpeeds; }
+		const double GetParticleSpeed(int index) const;
+		void SetParticleSpeeds(const std::vector<double>& inSpeeds);
+
 		const std::vector<glm::dvec2>& Get2DParticlePositions() const { return mParticlePositions2D; }
 		const glm::dvec2& Get2DParticlePosition(int index) const;
 		void Set2DParticlePositions(const std::vector<glm::dvec2>& inPositions);
@@ -57,6 +61,8 @@ class ApplicationData
 		double mFluidDensity;
 
 		double mFLIPBlend;
+
+		std::vector<double> mParticleSpeeds;
 
 		std::vector<glm::dvec2> mParticlePositions2D;
 		std::vector<glm::dvec3> mParticlePositions3D;

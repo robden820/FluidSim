@@ -10,6 +10,25 @@ void ApplicationData::SetNumParticles(int inNumParticles)
 	mParticlePositions3D.reserve(mNumParticles);
 }
 
+const double ApplicationData::GetParticleSpeed(int index) const
+{
+	if (index < 0 || index > mParticleSpeeds.size() - 1)
+	{
+		LogError("Attempting to access invalid particle speed index.");
+		return 0.0;
+	}
+
+	return mParticleSpeeds[index];
+}
+
+void ApplicationData::SetParticleSpeeds(const std::vector<double>& inSpeeds)
+{
+	mParticleSpeeds.clear();
+	mParticleSpeeds.reserve(inSpeeds.size());
+
+	mParticleSpeeds = inSpeeds;
+}
+
 const glm::dvec2& ApplicationData::Get2DParticlePosition(int index) const
 {
 	if (index < 0 || index > mParticlePositions2D.size() - 1)
