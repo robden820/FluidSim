@@ -76,8 +76,6 @@ void RPICFluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		glm::dvec2 diff = nearbyCellPos - particlePosition;
 		glm::dvec3 diff3(diff, 0.0);
 
-		double weight = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
-
 		// Calculate K1 value.
 		glm::dvec2 cellVel = InterpolateVelocityFromGridCellBSpline(inMACGrid, particleIndex, cellIndex);
 		glm::dvec3 vel3(cellVel, 0.0);
@@ -93,8 +91,6 @@ void RPICFluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		{
 			diff = inMACGrid.GetCellCenter(K2CellIndex) - K2Pos;
 			diff3 = glm::dvec3(diff, 0.0);
-
-			weight = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
 			cellVel = InterpolateVelocityFromGridCellBSpline(inMACGrid, K2Pos, K2CellIndex);
 			vel3 = glm::dvec3(cellVel, 0.0);
@@ -113,8 +109,6 @@ void RPICFluid2D::StepParticles(double deltaTime, const MACGrid2D& inMACGrid)
 		{
 			diff = inMACGrid.GetCellCenter(K3CellIndex) - K3Pos;
 			diff3 = glm::dvec3(diff, 0.0);
-
-			weight = InterpolateSupport(diff, inMACGrid.GetInverseCellSize());
 
 			cellVel = InterpolateVelocityFromGridCellBSpline(inMACGrid, K3Pos, K3CellIndex);
 			vel3 = glm::dvec3(cellVel, 0.0);
