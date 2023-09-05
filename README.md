@@ -17,7 +17,6 @@ Work in Progress:
 
 To do:
  - Parallel computing.
- - - CUDA: to do.
  - Remove unused parts of Eigen library.
  
 
